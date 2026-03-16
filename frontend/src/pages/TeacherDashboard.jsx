@@ -30,38 +30,38 @@ export default function TeacherDashboard() {
   const paginated = students.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10 py-8 animate-fade-in-up">
+    <div className="max-w-7xl mx-auto px-3 sm:px-8 lg:px-10 py-4 sm:py-8 animate-fade-in-up">
 
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">Teacher Dashboard</h1>
-        <p className="text-gray-500 mt-1 text-sm">Manage and oversee passed student records</p>
+      <div className="mb-4 sm:mb-8">
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-800">Teacher Dashboard</h1>
+        <p className="text-gray-500 mt-0.5 text-xs sm:text-sm">Manage and oversee passed student records</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-10">
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Total Students</p>
-          <p className="text-4xl font-bold text-brand-500">{loading ? '—' : studentCount}</p>
-          <p className="text-gray-400 text-xs mt-2">All records in database</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-5 sm:mb-10">
+        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 sm:p-6">
+          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Total Students</p>
+          <p className="text-3xl sm:text-4xl font-bold text-brand-500">{loading ? '—' : studentCount}</p>
+          <p className="text-gray-400 text-[10px] sm:text-xs mt-1 sm:mt-2">All records in database</p>
         </div>
 
-        <Link to="/add-passed-students" className="bg-white rounded-2xl border border-brand-200 p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Quick Action</p>
-          <p className="text-gray-800 font-bold text-lg leading-snug">Add Passed Students</p>
-          <p className="text-gray-400 text-xs mt-2">Upload Excel or manual entry</p>
-          <span className="inline-flex items-center gap-1 mt-4 px-4 py-2 rounded-lg bg-brand-500 text-white text-sm font-semibold group-hover:bg-brand-600 transition-colors">
+        <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-4 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all">
+          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
+          <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
+          <p className="text-gray-400 text-[10px] sm:text-xs mt-1 sm:mt-2">Upload Excel or manual entry</p>
+          <span className="inline-flex items-center gap-1 mt-2 sm:mt-4 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-brand-500 text-white text-xs sm:text-sm font-semibold group-hover:bg-brand-600 transition-colors">
             Add Students →
           </span>
         </Link>
 
-        <div className="bg-white rounded-2xl border border-gray-200 p-6">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Status</p>
+        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 sm:p-6">
+          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Status</p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-400 inline-block"></span>
-            <span className="text-gray-700 font-semibold text-sm">System Active</span>
+            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-400 inline-block"></span>
+            <span className="text-gray-700 font-semibold text-xs sm:text-sm">System Active</span>
           </div>
-          <div className="mt-4 flex items-center justify-between text-sm">
+          <div className="mt-2 sm:mt-4 flex items-center justify-between text-xs sm:text-sm">
             <span className="text-gray-400">Records</span>
             <span className="font-semibold text-gray-700">{loading ? '—' : studentCount}</span>
           </div>
@@ -88,27 +88,27 @@ export default function TeacherDashboard() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-gray-700">All Passed Students</h2>
-            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-600">
+          <div className="flex items-center justify-between mb-3 sm:mb-5">
+            <h2 className="text-sm sm:text-base font-semibold text-gray-700">All Passed Students</h2>
+            <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-brand-50 text-brand-600">
               {students.length} records
             </span>
           </div>
 
           {/* Mobile Cards */}
-          <div className="sm:hidden space-y-1.5">
-            {paginated.map((s, i) => (
-              <div key={s._id} className="bg-white rounded-lg border border-gray-200 px-3 py-2">
-                <div className="flex items-center justify-between mb-1.5">
+          <div className="sm:hidden space-y-1">
+            {paginated.map((s) => (
+              <div key={s._id} className="bg-white rounded-lg border border-gray-200 px-2.5 py-1.5">
+                <div className="flex items-center justify-between mb-1">
                   <div>
-                    <h4 className="font-semibold text-gray-800 text-xs">{s.studentName}</h4>
-                    <p className="text-[10px] text-gray-400">S/o {s.fatherName}</p>
+                    <h4 className="font-semibold text-gray-800 text-[11px] leading-tight">{s.studentName}</h4>
+                    <p className="text-[9px] text-gray-400">S/o {s.fatherName}</p>
                   </div>
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-50 text-brand-600">
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-brand-50 text-brand-600 shrink-0 ml-2">
                     {s.rollNumber}
                   </span>
                 </div>
-                <div className="grid grid-cols-3 gap-x-2 gap-y-1 text-[10px]">
+                <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 text-[9px]">
                   {[
                     ['Mobile', s.mobileNumber],
                     ['Subject', s.subjectIn12th || '—'],
@@ -118,8 +118,8 @@ export default function TeacherDashboard() {
                     ['Bus Track', s.busTrack || '—'],
                   ].map(([label, val]) => (
                     <div key={label}>
-                      <p className="text-gray-400">{label}</p>
-                      <p className="text-gray-700 font-medium truncate">{val}</p>
+                      <p className="text-gray-400 leading-tight">{label}</p>
+                      <p className="text-gray-700 font-medium truncate leading-tight">{val}</p>
                     </div>
                   ))}
                 </div>
