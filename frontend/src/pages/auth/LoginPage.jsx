@@ -29,7 +29,7 @@ const LoginPage = () => {
       if (!response.ok) throw new Error(data.error || 'Login failed. Please try again.');
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/dashboard');
+      navigate('/add-passed-students');
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {

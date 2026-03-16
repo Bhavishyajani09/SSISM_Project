@@ -11,6 +11,17 @@ function ProtectedRoute({ children }) {
   return isAuthenticated() ? children : <Navigate to="/" replace />;
 }
 
+function MainLayout({ children }) {
+  return (
+    <div className="min-h-screen bg-gray-50 lg:pl-64 flex flex-col">
+      <Navbar />
+      <main className="flex-1 relative">
+        {children}
+      </main>
+    </div>
+  );
+}
+
 function App() {
   return (
     <Router>
@@ -20,12 +31,9 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50 flex flex-col">
-                <Navbar />
-                <main className="flex-1 pb-20 sm:pb-0">
-                  <TeacherDashboard />
-                </main>
-              </div>
+              <MainLayout>
+                <TeacherDashboard />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
@@ -33,12 +41,9 @@ function App() {
           path="/add-passed-students"
           element={
             <ProtectedRoute>
-              <div className="min-h-screen bg-gray-50 flex flex-col">
-                <Navbar />
-                <main className="flex-1 pb-20 sm:pb-0">
-                  <AddPassedStudents />
-                </main>
-              </div>
+              <MainLayout>
+                <AddPassedStudents />
+              </MainLayout>
             </ProtectedRoute>
           }
         />
