@@ -1,0 +1,165 @@
+const express = require('express');
+const router = express.Router();
+const multer = require('multer');
+const XLSX = require('xlsx');
+const PassedStudent = require('../models/PassedStudent');
+
+// Multer config — store file in memory for processing
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Expected Excel column headers (case-insensitive matching)
+const EXPECTED_COLUMNS = [
+    'Serial Number',
+    'Student Name',
+    'Father Name',
+    'Bus Track',
+    'Mobile Number',
+    'Whatsapp Number',
+    'Subject in 12th',
+    'Village / Town',
+    'District',
+    'Roll Number',
+    'Scholarship Exam Marks (Out of 50)',
+];
+
+// Map Excel column names to DB field names
+const COLUMN_MAP = {
+    'serial number': 'serialNumber',
+    'student name': 'studentName',
+    'father name': 'fatherName',
+    'bus track': 'busTrack',
+    'mobile number': 'mobileNumber',
+    'whatsapp number': 'whatsappNumber',
+    'subject in 12th': 'subjectIn12th',
+    'village / town': 'villageTown',
+    'village/town': 'villageTown',
+    'district': 'district',
+    'roll number': 'rollNumber',
+    'scholarship exam marks (out of 50)': 'scholarshipExamMarks',
+    'scholarship exam marks': 'scholarshipExamMarks',
+};
+
+// ─── GET all passed students ────────────────────────────────────────────────
+router.get('/', async (req, res) => {
+    try {
+        const students = await PassedStudent.find().sort({ serialNumber: 1 });
+        res.json({ success: true, data: students, count: students.length });
+    } catch (error) {
+        console.error('Error fetching students:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching students.' });
+    }
+});
+
+// ─── POST manual entry (single or multiple) ────────────────────────────────
+router.post('/manual', async (req, res) => {
+    try {
+        const { students } = req.body; // expects { students: [ {...}, {...} ] }
+
+        if (!students || !Array.isArray(students) || students.length === 0) {
+            return res.status(400).json({ success: false, message: 'Please provide at least one student.' });
+        }
+
+        // Validate required fields
+        const errors = [];
+        students.forEach((s, i) => {
+            if (!s.studentName) errors.push(`Row ${i + 1}: Student Name is required.`);
+            if (!s.fatherName) errors.push(`Row ${i + 1}: Father Name is required.`);
+            if (!s.mobileNumber) errors.push(`Row ${i + 1}: Mobile Number is required.`);
+            if (!s.rollNumber) errors.push(`Row ${i + 1}: Roll Number is required.`);
+        });
+
+        if (errors.length > 0) {
+            return res.status(400).json({ success: false, message: 'Validation errors', errors });
+        }
+
+        const savedStudents = await PassedStudent.insertMany(students);
+        res.status(201).json({
+            success: true,
+            message: `${savedStudents.length} student(s) added successfully.`,
+            data: savedStudents,
+        });
+    } catch (error) {
+        console.error('Error adding students:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+        res.status(500).json({ success: false, message: 'Server error while adding students.' });
+    }
+});
+
+// ─── POST upload Excel ──────────────────────────────────────────────────────
+router.post('/upload-excel', upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'Please upload an Excel file.' });
+        }
+
+        // Parse the Excel file from buffer
+        const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rawData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+
+        if (rawData.length === 0) {
+            return res.status(400).json({ success: false, message: 'The Excel file is empty.' });
+        }
+
+        // Validate headers
+        const fileHeaders = Object.keys(rawData[0]).map(h => h.trim().toLowerCase());
+        const requiredHeaders = ['student name', 'father name', 'mobile number', 'roll number'];
+        const missingHeaders = requiredHeaders.filter(h => !fileHeaders.some(fh => fh === h));
+
+        if (missingHeaders.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `Wrong format. Expected columns: ${EXPECTED_COLUMNS.join(', ')}`,
+            });
+        }
+
+        // Map rows to student objects
+        const students = rawData.map((row) => {
+            const student = {};
+            Object.entries(row).forEach(([key, value]) => {
+                const normalizedKey = key.trim().toLowerCase();
+                const dbField = COLUMN_MAP[normalizedKey];
+                if (dbField) {
+                    student[dbField] = typeof value === 'string' ? value.trim() : value;
+                }
+            });
+            return student;
+        });
+
+        // Filter out empty rows
+        const validStudents = students.filter(s => s.studentName && s.rollNumber);
+
+        if (validStudents.length === 0) {
+            return res.status(400).json({ success: false, message: 'No valid student records found in the file.' });
+        }
+
+        const savedStudents = await PassedStudent.insertMany(validStudents);
+        res.status(201).json({
+            success: true,
+            message: `${savedStudents.length} student(s) uploaded successfully.`,
+            data: savedStudents,
+        });
+    } catch (error) {
+        console.error('Error uploading Excel:', error);
+        res.status(500).json({ success: false, message: 'Server error while processing the Excel file.' });
+    }
+});
+
+// ─── DELETE a student by ID ─────────────────────────────────────────────────
+router.delete('/:id', async (req, res) => {
+    try {
+        const student = await PassedStudent.findByIdAndDelete(req.params.id);
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found.' });
+        }
+        res.json({ success: true, message: 'Student deleted successfully.' });
+    } catch (error) {
+        console.error('Error deleting student:', error);
+        res.status(500).json({ success: false, message: 'Server error while deleting student.' });
+    }
+});
+
+module.exports = router;
