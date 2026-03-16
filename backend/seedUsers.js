@@ -5,7 +5,9 @@ const User = require('./models/User');
 
 const seedUsers = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      dbName: 'ssism',
+    });
     console.log('MongoDB connected for seeding...');
 
     const defaultPassword = 'password123';

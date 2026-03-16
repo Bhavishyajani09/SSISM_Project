@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const connectDB = require('./config/db');
 const passedStudentsRoutes = require('./routes/passedStudents');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/passed-students', passedStudentsRoutes);
+app.use('/api/auth', authRoutes);
 
 // Start Server
 app.listen(PORT, () => {

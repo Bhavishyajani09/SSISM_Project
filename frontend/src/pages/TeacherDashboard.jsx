@@ -176,9 +176,8 @@ export default function TeacherDashboard() {
                   <button
                     key={n}
                     onClick={() => setPage(n)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
-                      n === page ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
-                    }`}
+                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${n === page ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
+                      }`}
                   >{n}</button>
                 ))}
                 <button
