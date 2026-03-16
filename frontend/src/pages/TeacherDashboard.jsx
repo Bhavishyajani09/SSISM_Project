@@ -162,11 +162,11 @@ export default function TeacherDashboard() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-5 px-1">
-              <p className="text-xs text-gray-400">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 px-1">
+              <p className="text-xs text-gray-400 text-center sm:text-left">
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, students.length)} of {students.length} students
               </p>
-              <div className="flex items-center gap-1">
+              <div className="flex flex-wrap items-center justify-center gap-1">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}

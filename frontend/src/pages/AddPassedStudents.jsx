@@ -7,7 +7,6 @@ import * as XLSX from 'xlsx';
 const API_BASE = 'http://localhost:5000/api';
 
 const EMPTY_STUDENT = {
-  serialNumber: '',
   studentName: '',
   fatherName: '',
   busTrack: '',
@@ -21,17 +20,16 @@ const EMPTY_STUDENT = {
 };
 
 const FIELDS = [
-  { key: 'serialNumber', label: 'Serial Number', type: 'number', required: false, placeholder: 'Auto / Enter' },
   { key: 'studentName', label: 'Student Name', type: 'text', required: true, placeholder: 'Full name' },
   { key: 'fatherName', label: 'Father Name', type: 'text', required: true, placeholder: "Father's full name" },
   { key: 'rollNumber', label: 'Roll Number', type: 'text', required: true, placeholder: 'e.g. 2024001' },
   { key: 'mobileNumber', label: 'Mobile Number', type: 'tel', required: true, placeholder: '10-digit number' },
-  { key: 'whatsappNumber', label: 'WhatsApp Number', type: 'tel', required: false, placeholder: 'WhatsApp number' },
-  { key: 'subjectIn12th', label: 'Subject in 12th', type: 'text', required: false, placeholder: 'e.g. Science, Commerce' },
-  { key: 'busTrack', label: 'Bus Track', type: 'text', required: false, placeholder: 'e.g. Route A' },
-  { key: 'villageTown', label: 'Village / Town', type: 'text', required: false, placeholder: 'Village or town name' },
-  { key: 'district', label: 'District', type: 'text', required: false, placeholder: 'District name' },
-  { key: 'scholarshipExamMarks', label: 'Scholarship Marks (/50)', type: 'number', required: false, placeholder: '0 – 50' },
+  { key: 'whatsappNumber', label: 'WhatsApp Number', type: 'tel', required: true, placeholder: 'WhatsApp number' },
+  { key: 'subjectIn12th', label: 'Subject in 12th', type: 'text', required: true, placeholder: 'e.g. Science, Commerce' },
+  { key: 'busTrack', label: 'Bus Track', type: 'text', required: true, placeholder: 'e.g. Route A' },
+  { key: 'villageTown', label: 'Village / Town', type: 'text', required: true, placeholder: 'Village or town name' },
+  { key: 'district', label: 'District', type: 'text', required: true, placeholder: 'District name' },
+  { key: 'scholarshipExamMarks', label: 'Scholarship Marks', type: 'number', required: true, placeholder: '0 – 50' },
 ];
 
 const EXCEL_COL_MAP = {
@@ -150,7 +148,7 @@ export default function AddPassedStudents() {
       toast.success(res.data.message);
       setSelectedFile(null);
       setPreviewData([]);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Upload failed. Please try again.');
     } finally {
@@ -184,31 +182,40 @@ export default function AddPassedStudents() {
   };
 
   const handleManualSubmit = async () => {
-    const errors = [];
-    students.forEach((s, i) => {
-      if (!s.studentName.trim()) errors.push(`Student ${i + 1}: Name is required`);
-      if (!s.fatherName.trim()) errors.push(`Student ${i + 1}: Father Name is required`);
-      if (!s.mobileNumber.trim()) errors.push(`Student ${i + 1}: Mobile Number is required`);
-      if (!s.rollNumber.trim()) errors.push(`Student ${i + 1}: Roll Number is required`);
-    });
+    let firstError = null;
 
-    if (errors.length > 0) {
-      toast.error(errors[0]);
+    for (let i = 0; i < students.length; i++) {
+      const s = students[i];
+      if (!s.studentName?.trim()) { firstError = `Student ${i + 1}: Student Name is required`; break; }
+      if (!s.fatherName?.trim()) { firstError = `Student ${i + 1}: Father Name is required`; break; }
+      if (!s.rollNumber?.trim()) { firstError = `Student ${i + 1}: Roll Number is required`; break; }
+      if (!s.mobileNumber?.trim()) { firstError = `Student ${i + 1}: Mobile Number is required`; break; }
+      if (!s.whatsappNumber?.trim()) { firstError = `Student ${i + 1}: WhatsApp Number is required`; break; }
+      if (!s.subjectIn12th?.trim()) { firstError = `Student ${i + 1}: Subject in 12th is required`; break; }
+      if (!s.busTrack?.trim()) { firstError = `Student ${i + 1}: Bus Track is required`; break; }
+      if (!s.villageTown?.trim()) { firstError = `Student ${i + 1}: Village/Town is required`; break; }
+      if (!s.district?.trim()) { firstError = `Student ${i + 1}: District is required`; break; }
+      if (s.scholarshipExamMarks === '' || s.scholarshipExamMarks === null || s.scholarshipExamMarks === undefined) { 
+        firstError = `Student ${i + 1}: Scholarship Marks is required`; break; 
+      }
+    }
+
+    if (firstError) {
+      toast.error(firstError);
       return;
     }
 
     setLoading(true);
     try {
-      const payload = students.map((s, i) => ({
+      const payload = students.map((s) => ({
         ...s,
-        serialNumber: s.serialNumber || i + 1,
         scholarshipExamMarks: s.scholarshipExamMarks ? Number(s.scholarshipExamMarks) : 0,
       }));
 
       const res = await axios.post(`${API_BASE}/passed-students/manual`, { students: payload });
       toast.success(res.data.message);
       setStudents([{ ...EMPTY_STUDENT }]);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to add students.';
       toast.error(msg);
@@ -445,10 +452,13 @@ export default function AddPassedStudents() {
               </div>
 
               {/* Fields Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
                 {FIELDS.map((field) => (
-                  <div key={field.key} className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <div key={field.key} className="flex flex-col justify-end gap-1">
+                    <label 
+                      className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide truncate"
+                      title={field.label}
+                    >
                       {field.label}
                       {field.required && <span className="text-red-400 ml-0.5">*</span>}
                     </label>
@@ -459,7 +469,7 @@ export default function AddPassedStudents() {
                       onChange={(e) => updateStudent(idx, field.key, e.target.value)}
                       min={field.key === 'scholarshipExamMarks' ? 0 : undefined}
                       max={field.key === 'scholarshipExamMarks' ? 50 : undefined}
-                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
+                      className="w-full px-2.5 py-2 sm:px-3 sm:py-2.5 bg-gray-50 border border-gray-200 rounded-md sm:rounded-lg text-xs sm:text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
                     />
                   </div>
                 ))}

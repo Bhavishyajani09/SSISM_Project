@@ -72,7 +72,16 @@ router.post('/manual', async (req, res) => {
             return res.status(400).json({ success: false, message: 'Validation errors', errors });
         }
 
-        const savedStudents = await PassedStudent.insertMany(students);
+        // Auto-increment serialNumber
+        const lastStudent = await PassedStudent.findOne().sort({ serialNumber: -1 });
+        let nextSerial = lastStudent && lastStudent.serialNumber ? lastStudent.serialNumber + 1 : 1;
+        
+        const studentsWithSerial = students.map(s => ({
+            ...s,
+            serialNumber: nextSerial++
+        }));
+
+        const savedStudents = await PassedStudent.insertMany(studentsWithSerial);
         res.status(201).json({
             success: true,
             message: `${savedStudents.length} student(s) added successfully.`,
@@ -136,7 +145,24 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
             return res.status(400).json({ success: false, message: 'No valid student records found in the file.' });
         }
 
-        const savedStudents = await PassedStudent.insertMany(validStudents);
+        // Auto-increment missing serial numbers in Excel if they aren't provided
+        const lastStudent = await PassedStudent.findOne().sort({ serialNumber: -1 });
+        let nextSerial = lastStudent && lastStudent.serialNumber ? lastStudent.serialNumber + 1 : 1;
+
+        const studentsWithSerial = validStudents.map(s => {
+            if (!s.serialNumber) {
+                s.serialNumber = nextSerial++;
+            } else {
+                // If serialNumber is provided, ensure nextSerial stays above it to avoid collisions next time
+                const sn = parseInt(s.serialNumber, 10);
+                if (!isNaN(sn) && sn >= nextSerial) {
+                    nextSerial = sn + 1;
+                }
+            }
+            return s;
+        });
+
+        const savedStudents = await PassedStudent.insertMany(studentsWithSerial);
         res.status(201).json({
             success: true,
             message: `${savedStudents.length} student(s) uploaded successfully.`,
