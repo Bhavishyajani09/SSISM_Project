@@ -17,6 +17,7 @@ app.use(express.json());
 
 // Main Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/verifications', require('./routes/verificationRoutes'));
 
 app.get('/', (req, res) => {
     res.send('Backend Server is Running!');
