@@ -22,20 +22,31 @@ const LoginPage = () => {
     setError('');
     setIsLoading(true);
 
-    // Simulate API call for UI testing
-    setTimeout(() => {
-      setIsLoading(false);
-      
-      // Basic check for hardcoded emails requested earlier
-      const validEmails = ['sourabhk.bca2024@ssism.org', 'bhavishyaj.bca2024@ssism.org'];
-      
-      if (validEmails.includes(formData.id) && formData.password === 'password123') {
-        alert('Login Successful! Redirecting to Dashboard...');
-        // window.location.href = '/dashboard';
-      } else {
-        setError('Invalid email or password. Please use seeded credentials.');
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: formData.id, password: formData.password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Login failed. Please try again.');
       }
-    }, 1500);
+
+      // Save token and user info
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      alert('Login Successful! Welcome ' + data.user.email);
+      // window.location.href = '/dashboard';
+
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
