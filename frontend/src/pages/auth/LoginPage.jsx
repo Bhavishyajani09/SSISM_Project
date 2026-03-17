@@ -115,25 +115,25 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-12 bg-[#f8fafc] lg:bg-white relative">
+      <div className="w-full lg:w-1/2 flex-1 flex items-center justify-center p-4 sm:p-12 bg-[#f8fafc] lg:bg-white relative min-h-screen lg:min-h-0">
         {/* Animated Background Blobs for Mobile */}
         <div className="absolute inset-0 lg:hidden overflow-hidden pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-200/30 rounded-full blur-[80px]"></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-100/40 rounded-full blur-[80px]"></div>
         </div>
 
-        <div className="w-full max-w-md glass-card rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 sm:p-10 z-10 mt-12 lg:mt-0 relative pt-20 sm:pt-10 animate-fade-up">
+        <div className="w-full max-w-md glass-card rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 sm:p-10 z-10 lg:mt-0 relative pt-20 sm:pt-10 animate-fade-up">
           
           {/* Mobile Logo - Centered and Floating */}
-          <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 lg:hidden flex flex-col items-center w-full">
-            <div className="w-28 h-28 rounded-full flex items-center justify-center overflow-hidden shadow-2xl border-[6px] border-white bg-white">
+          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 lg:hidden flex flex-col items-center w-full">
+            <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden shadow-2xl border-[6px] border-white bg-white">
               <img src={ssismLogo} alt="Institute Logo" className="w-full h-full object-cover" />
             </div>
           </div>
 
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Teacher Login</h2>
-            <p className="text-slate-400 text-sm font-medium">Enter your credentials to access the portal</p>
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-1.5 sm:mb-2">Teacher Login</h2>
+            <p className="text-slate-400 text-xs sm:text-sm font-medium">Enter your credentials to access the portal</p>
           </div>
 
           {error && (
@@ -156,7 +156,7 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="teacher@ssism.org"
-                  className="w-full pl-11 pr-4 py-4 bg-white/50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium shadow-sm hover:border-slate-300"
+                  className="w-full pl-11 pr-4 py-3.5 sm:py-4 bg-white/50 border border-slate-200 rounded-2xl text-sm sm:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium shadow-sm hover:border-slate-300"
                   required
                 />
               </div>
@@ -179,7 +179,7 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-12 py-4 bg-white/50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium tracking-widest shadow-sm hover:border-slate-300"
+                  className="w-full pl-11 pr-12 py-3.5 sm:py-4 bg-white/50 border border-slate-200 rounded-2xl text-sm sm:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium tracking-widest shadow-sm hover:border-slate-300"
                   required
                 />
                 <button
@@ -196,7 +196,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-[60px] flex items-center justify-center gap-3 btn-premium text-white rounded-2xl font-bold text-lg disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/20"
+              className="w-full h-[54px] sm:h-[60px] flex items-center justify-center gap-3 btn-premium text-white rounded-2xl font-bold text-base sm:text-lg disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/20"
             >
               {isLoading ? (
                 <><Loader2 className="animate-spin" size={22} /><span>Authenticating...</span></>
