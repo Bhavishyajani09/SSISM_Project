@@ -21,7 +21,7 @@ const homeVerificationSchema = new mongoose.Schema({
   verificationDate: { type: Date, default: Date.now },
   status: {
     type: String,
-    enum: ['draft', 'submitted', 'approved', 'rejected'],
+    enum: ['draft', 'teacher_rejected', 'submitted', 'approved', 'rejected'],
     default: 'draft'
   },
   gpsLat: { type: Number },

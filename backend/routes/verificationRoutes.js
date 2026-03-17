@@ -13,7 +13,9 @@ router.post('/', vc.saveVerification);
 router.put('/:id', vc.submitVerification);
 router.patch('/:id/approve', vc.approveVerification);
 router.patch('/:id/reject', vc.rejectVerification);
+router.patch('/:id/submit-for-review', vc.submitForReview);
 router.get('/', vc.getAllVerifications);
+router.get('/student/:studentId', vc.getVerificationByStudentId);
 router.get('/:id', vc.getVerificationById);
 
 module.exports = router;

@@ -392,6 +392,10 @@ const HomeVerificationPage = () => {
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [apiMsg, setApiMsg] = useState('');
   const [gpsCoords, setGpsCoords] = useState(null);
+  const [successOverlay, setSuccessOverlay] = useState(null); // null | 'draft' | 'submitted' | 'rejected'
+
+  // Form is locked if submitted, teacher_rejected, rejected, or approved
+  const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'rejected' || status === 'approved';
 
   // Load data if ID exists
   useEffect(() => {
@@ -422,21 +426,48 @@ const HomeVerificationPage = () => {
 
   // Pre-fill student data from location state if available
   useEffect(() => {
-    if (location.state?.studentData) {
+    if (location.state?.studentData && !id) {
       const s = location.state.studentData;
-      setForm(prev => ({
-        ...prev,
-        studentId: s.rollNumber?.toString() || '',
-        studentName: s.studentName || '',
-        mobile: s.mobileNumber || '',
-        fatherName: s.fatherName || '',
-        village: s.villageTown || '',
-        district: s.district || '',
-        subject12: s.subjectIn12th || '',
-        track: s.busTrack || '',
-      }));
+      
+      // Check if a draft/submission already exists for this student
+      fetch(`${API_URL}/student/${s.rollNumber}`)
+        .then(res => {
+          if (res.ok) return res.json();
+          throw new Error('Not found');
+        })
+        .then(data => {
+          if (data.verification) {
+            setVerificationId(data.verification._id);
+            const { familyMembers: fm, ...formData } = data.verification;
+            delete formData._id;
+            delete formData.__v;
+            delete formData.createdAt;
+            delete formData.updatedAt;
+
+            setForm(prev => ({ ...prev, ...formData }));
+            if (fm) setFamilyMembers(fm);
+            setStatus(data.verification.status);
+            if (data.verification.gpsLat && data.verification.gpsLng) {
+              setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+            }
+          }
+        })
+        .catch(() => {
+          // No existing verification, just populate from passed student data
+          setForm(prev => ({
+            ...prev,
+            studentId: s.rollNumber?.toString() || '',
+            studentName: s.studentName || '',
+            mobile: s.mobileNumber || '',
+            fatherName: s.fatherName || '',
+            village: s.villageTown || '',
+            district: s.district || '',
+            subject12: s.subjectIn12th || '',
+            track: s.busTrack || '',
+          }));
+        });
     }
-  }, [location.state]);
+  }, [location.state, id]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -492,29 +523,40 @@ const HomeVerificationPage = () => {
     gpsLng: gpsCoords?.lng,
   });
 
+  // Show success overlay then redirect
+  const showSuccessAndRedirect = (actionStatus) => {
+    setSuccessOverlay(actionStatus);
+    setTimeout(() => navigate('/home-verification'), 1800);
+  };
+
   const handleSave = async () => {
     setIsApiLoading(true); setApiMsg('');
     try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload()),
-      });
+      let res;
+      if (verificationId) {
+        res = await fetch(`${API_URL}/${verificationId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...buildPayload(), status: 'draft' }),
+        });
+      } else {
+        res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...buildPayload(), status: 'draft' }),
+        });
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
       setVerificationId(data.verification._id);
-      setStatus('saved');
-      setApiMsg('Draft saved successfully!');
-      // Update URL without refreshing if it's a new record
-      if (!id) {
-        navigate(`/verification/home/${data.verification._id}`, { replace: true });
-      }
+      setStatus('draft');
+      showSuccessAndRedirect('draft');
     } catch (err) {
       setApiMsg('Error: ' + err.message);
     } finally { setIsApiLoading(false); }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (targetStatus = 'submitted') => {
     setIsApiLoading(true); setApiMsg('');
     try {
       let res, data;
@@ -522,63 +564,28 @@ const HomeVerificationPage = () => {
         res = await fetch(`${API_URL}/${verificationId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: 'submitted' }),
+          body: JSON.stringify({ ...buildPayload(), status: targetStatus }),
         });
       } else {
         res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: 'submitted' }),
+          body: JSON.stringify({ ...buildPayload(), status: targetStatus }),
         });
       }
       data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Submit failed');
+      if (!res.ok) throw new Error(data.error || `${targetStatus} failed`);
       setVerificationId(data.verification._id);
-      setStatus('submitted');
-      setApiMsg('Verification submitted successfully!');
-      if (!id) {
-        navigate(`/verification/home/${data.verification._id}`, { replace: true });
-      }
+      setStatus(targetStatus);
+      showSuccessAndRedirect(targetStatus);
     } catch (err) {
       setApiMsg('Error: ' + err.message);
     } finally { setIsApiLoading(false); }
   };
 
-  const handleApprove = async () => {
-    if (!verificationId) return setApiMsg('Please save or submit first.');
-    setIsApiLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/${verificationId}/approve`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ remarks: form.supervisorRemarks }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setStatus('approved');
-      setApiMsg('Verification approved!');
-    } catch (err) {
-      setApiMsg('Error: ' + err.message);
-    } finally { setIsApiLoading(false); }
-  };
-
-  const handleReject = async () => {
-    if (!verificationId) return setApiMsg('Please save or submit first.');
-    setIsApiLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/${verificationId}/reject`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ remarks: form.supervisorRemarks }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setStatus('rejected');
-      setApiMsg('Verification rejected.');
-    } catch (err) {
-      setApiMsg('Error: ' + err.message);
-    } finally { setIsApiLoading(false); }
-  };
+  const handleReject = () => handleSubmit('rejected');
+  // NOTE: handleReject kept for potential future use but NOT exposed in teacher form UI.
+  // Only admins can reject via the Admin Verification Portal.
 
   const totalMarks = [form.marks10, form.marks11, form.marks12, form.collegeExamMarks, form.homeVisitMarks]
     .reduce((sum, v) => sum + (parseFloat(v) || 0), 0).toFixed(2);
@@ -603,8 +610,35 @@ const HomeVerificationPage = () => {
     </label>
   );
 
+  // Config for overlay
+  const overlayConfig = {
+    draft:            { icon: '💾', color: 'from-orange-400 to-amber-500',  ring: 'ring-orange-300', label: 'Draft Saved!',   sub: 'Your progress has been saved.' },
+    submitted:        { icon: '🚀', color: 'from-slate-700 to-slate-900',   ring: 'ring-slate-400',  label: 'Submitted!',     sub: 'Sent for admin review.' },
+    teacher_rejected: { icon: '🚫', color: 'from-red-500 to-rose-600',      ring: 'ring-red-300',    label: 'Marked as Rejected', sub: 'Teacher rejection recorded.' },
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-slate-50 font-sans">
+
+      {/* ── Full-screen Success Overlay ── */}
+      {successOverlay && (() => {
+        const cfg = overlayConfig[successOverlay] || overlayConfig.draft;
+        return (
+          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md">
+            <div className={`bg-gradient-to-br ${cfg.color} rounded-3xl px-10 py-10 flex flex-col items-center gap-4 shadow-2xl ring-4 ${cfg.ring} animate-bounce-in`}>
+              <div className="text-6xl">{cfg.icon}</div>
+              <div className="text-center">
+                <p className="text-white text-2xl font-black tracking-tight">{cfg.label}</p>
+                <p className="text-white/80 text-sm mt-1 font-medium">{cfg.sub}</p>
+              </div>
+              <div className="flex items-center gap-2 text-white/70 text-xs font-semibold mt-2">
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Redirecting to verification list...
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Slim Sticky Navbar */}
       <div className="sticky top-0 z-30 bg-white border-b border-orange-100 shadow-sm">
@@ -640,8 +674,8 @@ const HomeVerificationPage = () => {
 
         {/* GPS + Timestamp info bar */}
         <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          <button onClick={captureGPS}
-            className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 hover:text-orange-600 transition-all font-medium">
+          <button onClick={captureGPS} disabled={isReadOnly}
+            className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 hover:text-orange-600 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed">
             <MapPin size={12} className="text-orange-400" />
             {gpsCoords ? `${gpsCoords.lat}, ${gpsCoords.lng}` : 'Capture GPS Location'}
           </button>
@@ -650,6 +684,38 @@ const HomeVerificationPage = () => {
             {new Date().toLocaleString('en-IN')}
           </div>
         </div>
+
+        {/* ── Read-Only Banner ── */}
+        {isReadOnly && (
+          <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-sm font-semibold ${
+            status === 'submitted'
+              ? 'bg-blue-50 border-blue-200 text-blue-800'
+              : status === 'rejected'
+              ? 'bg-red-50 border-red-200 text-red-800'
+              : 'bg-green-50 border-green-200 text-green-800'
+          }`}>
+            <span className="text-xl mt-0.5">
+              {status === 'submitted' ? '🔒' : status === 'rejected' ? '🚫' : '✅'}
+            </span>
+            <div>
+              <p className="font-bold">
+                {status === 'submitted' && 'Form Submitted — Awaiting Admin Review'}
+                {status === 'teacher_rejected' && 'Rejected by Teacher'}
+                {status === 'rejected' && 'Rejected by Admin'}
+                {status === 'approved' && 'Approved by Admin — Read Only'}
+              </p>
+              <p className="text-xs font-normal mt-0.5 opacity-80">
+                {status === 'submitted' && 'This form has been submitted. You cannot edit it until admin takes action.'}
+                {status === 'teacher_rejected' && 'You have rejected this student. Admin can now review it and take final action.'}
+                {status === 'rejected' && 'An admin has reviewed and rejected this verification. Contact the admin for further information.'}
+                {status === 'approved' && 'This verification has been approved by an admin and is now finalized.'}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Form fields — wrapped in pointer-events-none when locked */}
+        <div className={isReadOnly ? 'pointer-events-none select-none opacity-75' : ''}>
 
         {/* 1. STUDENT INFORMATION */}
         <SectionCard icon={User} title="Student Information" color="orange">
@@ -996,64 +1062,94 @@ const HomeVerificationPage = () => {
           </Field>
         </SectionCard>
 
+        </div>{/* end form fields wrapper */}
+
         {/* Action Buttons — at end of form */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
           <h3 className="text-sm font-bold text-slate-700">Form Actions</h3>
+
+          {/* Status banner */}
+          {status && (
+            <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border ${
+              status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+              status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+              status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+              'bg-orange-50 text-orange-700 border-orange-200'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${
+                status === 'approved' ? 'bg-green-400' :
+                status === 'submitted' ? 'bg-blue-400' :
+                status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-400' : 'bg-orange-400'
+              }`} />
+              {status === 'draft' ? 'Saved as Draft — Editable' :
+               status === 'submitted' ? 'Submitted — Awaiting Admin Review' :
+               status === 'teacher_rejected' ? 'Rejected by Teacher — Waiting for Admin' :
+               status === 'approved' ? 'Approved by Admin ✓' :
+               status === 'rejected' ? 'Rejected by Admin — Admin Can Approve' : ''}
+            </div>
+          )}
+
           {apiMsg && (
             <p className={`text-xs font-semibold text-center py-2 px-3 rounded-xl ${apiMsg.startsWith('Error') ? 'text-red-600 bg-red-50 border border-red-100' : 'text-green-700 bg-green-50 border border-green-100'
               }`}>{apiMsg}</p>
           )}
-          <div className="grid grid-cols-2 gap-3">
 
-            {/* Save Draft */}
-            <button onClick={handleSave} disabled={isApiLoading}
-              className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 transition-all active:scale-95 disabled:opacity-50 shadow-sm">
-              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 shrink-0 border border-slate-100 group-hover:bg-slate-800 group-hover:text-white transition-all">
-                <Save size={16} />
-              </div>
-              <div className="text-left leading-tight">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{isApiLoading ? '...' : 'Save Draft'}</div>
-                <div className="text-xs font-bold text-slate-800">Draft</div>
-              </div>
-            </button>
+          {/* Action buttons — only when form is editable (new or draft) */}
+          {!isReadOnly ? (
+            <div className="grid grid-cols-1 gap-3">
 
-            {/* Submit */}
-            <button onClick={handleSubmit} disabled={isApiLoading}
-              className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 border border-slate-800 text-white transition-all active:scale-95 disabled:opacity-50 shadow-md">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Send size={16} />
-              </div>
-              <div className="text-left leading-tight">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{isApiLoading ? '...' : 'Final Send'}</div>
-                <div className="text-xs font-bold">Submit</div>
-              </div>
-            </button>
+              {/* Save Draft */}
+              <button onClick={handleSave} disabled={isApiLoading}
+                className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 transition-all active:scale-95 disabled:opacity-50 shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 shrink-0 border border-slate-100 group-hover:bg-slate-800 group-hover:text-white transition-all">
+                  <Save size={16} />
+                </div>
+                <div className="text-left leading-tight">
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{isApiLoading ? '...' : 'Save Draft'}</div>
+                  <div className="text-xs font-bold text-slate-800">Draft</div>
+                </div>
+              </button>
 
-            {/* Approve */}
-            <button onClick={handleApprove} disabled={isApiLoading}
-              className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-800 text-slate-800 transition-all active:scale-95 disabled:opacity-50 shadow-sm">
-              <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600 shrink-0 border border-slate-200 group-hover:bg-slate-800 group-hover:text-white transition-all">
-                <CheckCircle size={16} />
-              </div>
-              <div className="text-left leading-tight">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Review</div>
-                <div className="text-xs font-bold">Approve</div>
-              </div>
-            </button>
+              {/* Submit */}
+              <button onClick={() => handleSubmit('submitted')} disabled={isApiLoading}
+                className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 border border-slate-800 text-white transition-all active:scale-95 disabled:opacity-50 shadow-md">
+                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <Send size={16} />
+                </div>
+                <div className="text-left leading-tight">
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{isApiLoading ? '...' : 'Final Submit'}</div>
+                  <div className="text-xs font-bold">Submit for Review</div>
+                </div>
+              </button>
 
-            {/* Reject */}
-            <button onClick={handleReject} disabled={isApiLoading}
-              className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 transition-all active:scale-95 disabled:opacity-50">
-              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 shrink-0 border border-slate-100 group-hover:bg-slate-200 transition-all">
-                <XCircle size={16} />
-              </div>
-              <div className="text-left leading-tight">
-                <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Review</div>
-                <div className="text-xs font-bold">Reject</div>
-              </div>
-            </button>
+              {/* Reject */}
+              <button onClick={() => handleSubmit('teacher_rejected')} disabled={isApiLoading}
+                className="group flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 transition-all active:scale-95 disabled:opacity-50">
+                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-500 shrink-0 border border-red-200 group-hover:bg-red-200 transition-all">
+                  <XCircle size={16} />
+                </div>
+                <div className="text-left leading-tight">
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-red-400">{isApiLoading ? '...' : 'Mark as Rejected'}</div>
+                  <div className="text-xs font-bold">Teacher Reject</div>
+                </div>
+              </button>
 
-          </div>
+            </div>
+          ) : (
+            // Locked state notice
+            <div className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold border ${
+              status === 'submitted' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+              status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-50 border-red-200 text-red-700' :
+              'bg-green-50 border-green-200 text-green-700'
+            }`}>
+              🔒{
+                status === 'submitted' ? ' Submitted — Awaiting admin review.' :
+                status === 'teacher_rejected' ? ' Rejected by Teacher — Waiting for Admin.' :
+                status === 'rejected' ? ' Rejected by Admin — Contact admin for further action.' :
+                ' Approved by Admin — Record is finalized.'
+              }
+            </div>
+          )}
         </div>
 
       </div>

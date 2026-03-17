@@ -11,6 +11,7 @@ export default function Navbar() {
     if (location.pathname === '/dashboard') return 'Dashboard';
     if (location.pathname === '/add-passed-students') return 'Add Students';
     if (location.pathname === '/home-verification') return 'Home Verification';
+    if (location.pathname === '/admin-verification') return 'Admin Portal';
     return 'SSISM Portal';
   };
 
@@ -45,6 +46,16 @@ export default function Navbar() {
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      )
+    },
+    {
+      to: '/admin-verification',
+      label: 'Admin Verifications',
+      icon: (
+        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12a4 4 0 100-8 4 4 0 000 8z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l5 5m0 0l-5 5m5-5H9m0 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h4a2 2 0 012 2v5" />
         </svg>
       )
     }

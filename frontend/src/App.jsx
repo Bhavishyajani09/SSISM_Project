@@ -6,6 +6,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import AddPassedStudents from './pages/AddPassedStudents';
 import VerificationListPage from './pages/verification/VerificationListPage';
 import HomeVerificationPage from './pages/verification/HomeVerificationPage';
+import AdminVerificationPage from './pages/verification/AdminVerificationPage';
 
 const isAuthenticated = () => !!localStorage.getItem('token');
 
@@ -55,6 +56,16 @@ function App() {
             <ProtectedRoute>
               <MainLayout>
                 <VerificationListPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin-verification"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <AdminVerificationPage />
               </MainLayout>
             </ProtectedRoute>
           }

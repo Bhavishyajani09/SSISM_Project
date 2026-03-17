@@ -3,7 +3,7 @@ const HomeVerification = require('../models/HomeVerification');
 // Create / Save a new verification (draft)
 exports.saveVerification = async (req, res) => {
   try {
-    const data = { ...req.body, status: 'draft' };
+    const data = { ...req.body, status: req.body.status || 'draft' };
 
     // Sanitize empty strings for enum fields
     ['scholarshipType', 'houseType', 'houseBuilder', 'landType'].forEach(k => {
@@ -23,13 +23,14 @@ exports.saveVerification = async (req, res) => {
   }
 };
 
-// Submit verification (draft → submitted)
+// Submit or update verification
 exports.submitVerification = async (req, res) => {
   try {
     const { id } = req.params;
+    const targetStatus = req.body.status || 'submitted';
     const verification = await HomeVerification.findByIdAndUpdate(
       id,
-      { ...req.body, status: 'submitted' },
+      { ...req.body, status: targetStatus },
       { new: true, runValidators: true }
     );
     if (!verification) return res.status(404).json({ error: 'Verification not found' });
@@ -55,7 +56,7 @@ exports.approveVerification = async (req, res) => {
   }
 };
 
-// Reject verification
+// Reject verification (by Admin — sets status to 'rejected')
 exports.rejectVerification = async (req, res) => {
   try {
     const verification = await HomeVerification.findByIdAndUpdate(
@@ -70,6 +71,21 @@ exports.rejectVerification = async (req, res) => {
   }
 };
 
+// Admin moves a teacher_rejected record to submitted (for final review)
+exports.submitForReview = async (req, res) => {
+  try {
+    const verification = await HomeVerification.findByIdAndUpdate(
+      req.params.id,
+      { status: 'submitted', supervisorRemarks: req.body.remarks },
+      { new: true }
+    );
+    if (!verification) return res.status(404).json({ error: 'Not found' });
+    res.json({ message: 'Moved to submitted for admin review', verification });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to submit for review' });
+  }
+};
+
 // Get all verifications (with optional status filter)
 exports.getAllVerifications = async (req, res) => {
   try {
@@ -77,7 +93,7 @@ exports.getAllVerifications = async (req, res) => {
     const filter = status ? { status } : {};
     const verifications = await HomeVerification.find(filter)
       .sort({ createdAt: -1 })
-      .select('studentName scholarshipType status verificationDate verifierName');
+      .select('studentName studentId scholarshipType status verificationDate verifierName village district mobile');
     res.json({ count: verifications.length, verifications });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch verifications' });
@@ -88,6 +104,17 @@ exports.getAllVerifications = async (req, res) => {
 exports.getVerificationById = async (req, res) => {
   try {
     const verification = await HomeVerification.findById(req.params.id);
+    if (!verification) return res.status(404).json({ error: 'Not found' });
+    res.json({ verification });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch verification' });
+  }
+};
+
+// Get single verification by studentId
+exports.getVerificationByStudentId = async (req, res) => {
+  try {
+    const verification = await HomeVerification.findOne({ studentId: req.params.studentId }).sort({ createdAt: -1 });
     if (!verification) return res.status(404).json({ error: 'Not found' });
     res.json({ verification });
   } catch (err) {
