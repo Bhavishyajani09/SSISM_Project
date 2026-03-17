@@ -29,7 +29,7 @@ const FIELDS = [
   { key: 'busTrack', label: 'Bus Track', type: 'text', required: true, placeholder: 'e.g. Route A' },
   { key: 'villageTown', label: 'Village / Town', type: 'text', required: true, placeholder: 'Village or town name' },
   { key: 'district', label: 'District', type: 'text', required: true, placeholder: 'District name' },
-  { key: 'scholarshipExamMarks', label: 'Scholarship Marks', type: 'number', required: true, placeholder: '0 – 50' },
+  { key: 'scholarshipExamMarks', label: 'Scholarship Marks', type: 'number', required: true, placeholder: '0 - 50' },
 ];
 
 const EXCEL_COL_MAP = {
@@ -104,7 +104,7 @@ export default function AddPassedStudents() {
         const missing = requiredHeaders.filter(h => !headers.includes(h));
 
         if (missing.length > 0) {
-          toast.error('Wrong format. Expected columns: Serial Number, Student Name, Father Name, Bus Track, Mobile Number, Whatsapp Number, Subject in 12th, Village / Town, District, Roll Number, Scholarship Exam Marks (Out of 50)');
+          toast.error('Wrong format. Expected columns: Serial Number, Student Name, Father Name, Bus Track, Mobile Number, Whatsapp Number, Subject in 12th, Village / Town, District, Roll Number, Scholarship Exam Marks');
           setSelectedFile(null);
           return;
         }
@@ -190,13 +190,18 @@ export default function AddPassedStudents() {
       if (!s.fatherName?.trim()) { firstError = `Student ${i + 1}: Father Name is required`; break; }
       if (!s.rollNumber?.trim()) { firstError = `Student ${i + 1}: Roll Number is required`; break; }
       if (!s.mobileNumber?.trim()) { firstError = `Student ${i + 1}: Mobile Number is required`; break; }
+      if (s.mobileNumber?.trim() && !/^\d{10}$/.test(s.mobileNumber.trim())) { firstError = `Student ${i + 1}: Mobile Number must be exactly 10 digits`; break; }
       if (!s.whatsappNumber?.trim()) { firstError = `Student ${i + 1}: WhatsApp Number is required`; break; }
+      if (s.whatsappNumber?.trim() && !/^\d{10}$/.test(s.whatsappNumber.trim())) { firstError = `Student ${i + 1}: WhatsApp Number must be exactly 10 digits`; break; }
       if (!s.subjectIn12th?.trim()) { firstError = `Student ${i + 1}: Subject in 12th is required`; break; }
       if (!s.busTrack?.trim()) { firstError = `Student ${i + 1}: Bus Track is required`; break; }
       if (!s.villageTown?.trim()) { firstError = `Student ${i + 1}: Village/Town is required`; break; }
       if (!s.district?.trim()) { firstError = `Student ${i + 1}: District is required`; break; }
       if (s.scholarshipExamMarks === '' || s.scholarshipExamMarks === null || s.scholarshipExamMarks === undefined) { 
         firstError = `Student ${i + 1}: Scholarship Marks is required`; break; 
+      }
+      if (s.scholarshipExamMarks !== '' && (Number(s.scholarshipExamMarks) < 0 || Number(s.scholarshipExamMarks) > 50)) {
+        firstError = `Student ${i + 1}: Scholarship Marks must be between 0 and 50`; break;
       }
     }
 

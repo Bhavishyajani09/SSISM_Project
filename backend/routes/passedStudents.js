@@ -19,7 +19,7 @@ const EXPECTED_COLUMNS = [
     'Village / Town',
     'District',
     'Roll Number',
-    'Scholarship Exam Marks (Out of 50)',
+    'Scholarship Exam Marks',
 ];
 
 // Map Excel column names to DB field names

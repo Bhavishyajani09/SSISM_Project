@@ -24,11 +24,13 @@ const passedStudentSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+        match: [/^\d{10}$/, 'Mobile number must be exactly 10 digits'],
     },
     whatsappNumber: {
         type: String,
         trim: true,
         default: '',
+        match: [/^\d{10}$/, 'WhatsApp number must be exactly 10 digits'],
     },
     subjectIn12th: {
         type: String,
