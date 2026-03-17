@@ -7,12 +7,12 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '', rememberMe: false });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -38,7 +38,58 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col lg:flex-row text-slate-800 font-sans overflow-x-hidden">
+    <div className="min-h-screen w-full flex flex-col lg:flex-row text-slate-800 font-sans overflow-x-hidden selection:bg-orange-100 selection:text-orange-900">
+      <style>{`
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-up {
+          animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .glass-card {
+          background: rgba(255, 255, 255, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        @keyframes shine {
+          0% { left: -100%; }
+          20% { left: 100%; }
+          100% { left: 100%; }
+        }
+        .btn-premium {
+          position: relative;
+          overflow: hidden;
+          background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-premium::after {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -100%;
+          width: 60%;
+          height: 200%;
+          background: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          transform: rotate(25deg);
+          animation: shine 4s infinite ease-in-out;
+        }
+        .btn-premium:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 15px 30px rgba(234, 88, 12, 0.4);
+          filter: brightness(1.1);
+        }
+        .btn-premium:active {
+          transform: translateY(0);
+          scale: 0.98;
+        }
+      `}</style>
 
       {/* Left Side */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-orange-500 to-orange-400 p-12 pr-20 flex-col justify-between text-white relative overflow-hidden">
@@ -64,18 +115,25 @@ const LoginPage = () => {
       </div>
 
       {/* Right Side */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-white relative">
-        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 lg:hidden flex flex-col items-center w-full px-6 text-center">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden shadow-lg mb-3 border-4 border-white bg-white">
-            <img src={ssismLogo} alt="Institute Logo" className="w-full h-full object-cover" />
-          </div>
-          <h2 className="text-xl font-bold text-slate-800">Sant Singaji Institute</h2>
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-12 bg-[#f8fafc] lg:bg-white relative">
+        {/* Animated Background Blobs for Mobile */}
+        <div className="absolute inset-0 lg:hidden overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-orange-200/30 rounded-full blur-[80px]"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-orange-100/40 rounded-full blur-[80px]"></div>
         </div>
 
-        <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10 z-10 mt-16 lg:mt-0 border border-slate-100">
+        <div className="w-full max-w-md glass-card rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 sm:p-10 z-10 mt-12 lg:mt-0 relative pt-20 sm:pt-10 animate-fade-up">
+          
+          {/* Mobile Logo - Centered and Floating */}
+          <div className="absolute -top-14 left-1/2 transform -translate-x-1/2 lg:hidden flex flex-col items-center w-full">
+            <div className="w-28 h-28 rounded-full flex items-center justify-center overflow-hidden shadow-2xl border-[6px] border-white bg-white">
+              <img src={ssismLogo} alt="Institute Logo" className="w-full h-full object-cover" />
+            </div>
+          </div>
+
           <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2">Teacher Login</h2>
-            <p className="text-slate-500 text-sm sm:text-base">Enter your credentials to access the portal</p>
+            <h2 className="text-3xl font-extrabold text-slate-800 mb-2">Teacher Login</h2>
+            <p className="text-slate-400 text-sm font-medium">Enter your credentials to access the portal</p>
           </div>
 
           {error && (
@@ -98,7 +156,7 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="teacher@ssism.org"
-                  className="w-full pl-11 pr-4 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium"
+                  className="w-full pl-11 pr-4 py-4 bg-white/50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium shadow-sm hover:border-slate-300"
                   required
                 />
               </div>
@@ -121,7 +179,7 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-12 py-3.5 bg-slate-50/50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium tracking-widest"
+                  className="w-full pl-11 pr-12 py-4 bg-white/50 border border-slate-200 rounded-2xl text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium tracking-widest shadow-sm hover:border-slate-300"
                   required
                 />
                 <button
@@ -134,24 +192,11 @@ const LoginPage = () => {
               </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="rememberMe"
-                name="rememberMe"
-                checked={formData.rememberMe}
-                onChange={handleInputChange}
-                className="w-4 h-4 text-orange-500 border-slate-300 rounded focus:ring-orange-500 focus:ring-offset-0 cursor-pointer"
-              />
-              <label htmlFor="rememberMe" className="ml-2 text-sm text-slate-600 cursor-pointer select-none">
-                Remember me for 30 days
-              </label>
-            </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-semibold text-lg transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/30"
+              className="w-full h-[60px] flex items-center justify-center gap-3 btn-premium text-white rounded-2xl font-bold text-lg disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/20"
             >
               {isLoading ? (
                 <><Loader2 className="animate-spin" size={22} /><span>Authenticating...</span></>
