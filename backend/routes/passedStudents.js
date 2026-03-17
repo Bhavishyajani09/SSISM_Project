@@ -188,4 +188,25 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
+// ─── UPDATE a student by ID ──────────────────────────────────────────────────
+router.put('/:id', async (req, res) => {
+    try {
+        const student = await PassedStudent.findByIdAndUpdate(
+            req.params.id,
+            { $set: req.body },
+            { new: true, runValidators: true }
+        );
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found.' });
+        }
+        res.json({ success: true, message: 'Student updated successfully.', data: student });
+    } catch (error) {
+        console.error('Error updating student:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ success: false, message: error.message });
+        }
+        res.status(500).json({ success: false, message: 'Server error while updating student.' });
+    }
+});
+
 module.exports = router;

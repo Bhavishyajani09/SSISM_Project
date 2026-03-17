@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 const API_BASE = 'http://localhost:5000/api';
 const PAGE_SIZE = 10;
@@ -10,6 +11,8 @@ export default function TeacherDashboard() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState(null);
 
   useEffect(() => { fetchStudents(); }, []);
 
@@ -26,11 +29,41 @@ export default function TeacherDashboard() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this student?")) return;
+    try {
+      await axios.delete(`${API_BASE}/passed-students/${id}`);
+      toast.success("Student deleted successfully.");
+      fetchStudents();
+    } catch (err) {
+      toast.error("Failed to delete student.");
+    }
+  };
+
+  const handleEdit = (student) => {
+    setEditingStudent({ ...student });
+    setEditModalOpen(true);
+  };
+
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${API_BASE}/passed-students/${editingStudent._id}`, editingStudent);
+      toast.success("Student updated successfully.");
+      setEditModalOpen(false);
+      setEditingStudent(null);
+      fetchStudents();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update student.");
+    }
+  };
+
   const totalPages = Math.ceil(students.length / PAGE_SIZE);
   const paginated = students.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-8 lg:px-10 py-4 sm:py-8 animate-fade-in-up">
+    <>
+      <div className="max-w-7xl mx-auto px-3 sm:px-8 lg:px-10 py-4 sm:py-8 animate-fade-in-up">
 
       {/* Page Header */}
       <div className="mb-4 sm:mb-8">
@@ -123,6 +156,14 @@ export default function TeacherDashboard() {
                     </div>
                   ))}
                 </div>
+                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-100">
+                   <button onClick={() => handleEdit(s)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit">
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                   </button>
+                   <button onClick={() => handleDelete(s._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete">
+                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                   </button>
+                </div>
               </div>
             ))}
           </div>
@@ -132,7 +173,7 @@ export default function TeacherDashboard() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Subject', 'Village/Town', 'District', 'Marks', 'Bus Track'].map(h => (
+                  {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Actions'].map(h => (
                     <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -147,13 +188,19 @@ export default function TeacherDashboard() {
                       <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-600">{s.rollNumber}</span>
                     </td>
                     <td className="px-5 py-4 text-gray-500">{s.mobileNumber}</td>
-                    <td className="px-5 py-4 text-gray-500">{s.subjectIn12th || '—'}</td>
-                    <td className="px-5 py-4 text-gray-500">{s.villageTown || '—'}</td>
-                    <td className="px-5 py-4 text-gray-500">{s.district || '—'}</td>
                     <td className="px-5 py-4">
                       <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-50 text-green-600">{s.scholarshipExamMarks ?? 0}</span>
                     </td>
-                    <td className="px-5 py-4 text-gray-500">{s.busTrack || '—'}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleEdit(s)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        </button>
+                        <button onClick={() => handleDelete(s._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -190,6 +237,69 @@ export default function TeacherDashboard() {
           )}
         </>
       )}
-    </div>
+      </div>
+
+      {/* Edit Modal */}
+      {editModalOpen && editingStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-2xl w-full max-w-xl shadow-2xl animate-zoom-in max-h-[90vh] flex flex-col overflow-hidden m-auto">
+            <div className="px-5 py-4 sm:px-6 sm:py-4 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
+              <h3 className="font-bold text-gray-800 text-sm sm:text-base">Edit Student</h3>
+              <button type="button" onClick={() => setEditModalOpen(false)} className="text-gray-400 hover:text-gray-600 focus:outline-none">✕</button>
+            </div>
+            <div className="p-5 sm:p-6 overflow-y-auto flex-1">
+              <form onSubmit={handleUpdate} id="edit-form">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Student Name <span className="text-red-400">*</span></label>
+                  <input required value={editingStudent.studentName} onChange={(e) => setEditingStudent({...editingStudent, studentName: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Father Name <span className="text-red-400">*</span></label>
+                  <input required value={editingStudent.fatherName} onChange={(e) => setEditingStudent({...editingStudent, fatherName: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Roll Number <span className="text-red-400">*</span></label>
+                  <input required value={editingStudent.rollNumber} onChange={(e) => setEditingStudent({...editingStudent, rollNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Mobile Number <span className="text-red-400">*</span></label>
+                  <input required value={editingStudent.mobileNumber} onChange={(e) => setEditingStudent({...editingStudent, mobileNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">WhatsApp Number</label>
+                  <input value={editingStudent.whatsappNumber} onChange={(e) => setEditingStudent({...editingStudent, whatsappNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Subject in 12th</label>
+                  <input value={editingStudent.subjectIn12th} onChange={(e) => setEditingStudent({...editingStudent, subjectIn12th: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Bus Track</label>
+                  <input value={editingStudent.busTrack} onChange={(e) => setEditingStudent({...editingStudent, busTrack: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Village / Town</label>
+                  <input value={editingStudent.villageTown} onChange={(e) => setEditingStudent({...editingStudent, villageTown: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">District</label>
+                  <input value={editingStudent.district} onChange={(e) => setEditingStudent({...editingStudent, district: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+                <div>
+                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Scholarship Marks</label>
+                  <input type="number" min="0" max="50" required value={editingStudent.scholarshipExamMarks} onChange={(e) => setEditingStudent({...editingStudent, scholarshipExamMarks: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                </div>
+              </div>
+            </form>
+          </div>
+            <div className="px-5 py-4 sm:px-6 border-t border-gray-100 flex justify-end gap-2.5 sm:gap-3 shrink-0 bg-gray-50">
+              <button type="button" onClick={() => setEditModalOpen(false)} className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg border border-gray-200 text-gray-600 text-xs sm:text-sm font-semibold hover:bg-gray-50 transition-colors flex-1 sm:flex-none">Cancel</button>
+              <button type="submit" form="edit-form" className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-lg bg-brand-500 text-white text-xs sm:text-sm font-semibold hover:bg-brand-600 transition-colors flex-1 sm:flex-none">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
