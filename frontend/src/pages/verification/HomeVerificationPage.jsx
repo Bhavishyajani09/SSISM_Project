@@ -119,20 +119,20 @@ const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
           <>
             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-10">
-              <button 
+              <button
                 onClick={() => setFacingMode(prev => prev === 'user' ? 'environment' : 'user')}
                 className="p-4 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
               >
                 <RotateCw size={24} />
               </button>
-              <button 
+              <button
                 onClick={capturePhoto}
                 className="w-20 h-20 bg-white rounded-full border-[6px] border-white/30 active:scale-90 transition-all p-1"
               >
                 <div className="w-full h-full rounded-full border-2 border-slate-900" />
               </button>
-              <button 
-                onClick={onClose} 
+              <button
+                onClick={onClose}
                 className="p-4 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
               >
                 <X size={24} />
@@ -143,13 +143,13 @@ const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
           <>
             <img src={capturedImg} className="w-full h-full object-cover" />
             <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-12">
-              <button 
+              <button
                 onClick={() => setCapturedImg(null)}
                 className="p-5 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
               >
                 <RotateCw size={28} />
               </button>
-              <button 
+              <button
                 onClick={handleConfirm}
                 className="p-5 bg-emerald-500 rounded-full text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition-all"
               >
@@ -392,6 +392,8 @@ const HomeVerificationPage = () => {
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [apiMsg, setApiMsg] = useState('');
   const [gpsCoords, setGpsCoords] = useState(null);
+  const [locationAddress, setLocationAddress] = useState('');
+  const [isLocating, setIsLocating] = useState(false);
 
   // Load data if ID exists
   useEffect(() => {
@@ -417,6 +419,7 @@ const HomeVerificationPage = () => {
             setStatus(data.verification.status);
             if (data.verification.gpsLat && data.verification.gpsLng) {
               setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+              handleReverseGeocode(data.verification.gpsLat, data.verification.gpsLng);
             }
           }
         })
@@ -459,6 +462,13 @@ const HomeVerificationPage = () => {
     }
   };
 
+  // Auto-capture GPS on mount if not already set
+  useEffect(() => {
+    if (!gpsCoords && !id) {
+      captureGPS();
+    }
+  }, []);
+
   // Pre-fill student data from location state if available
   useEffect(() => {
     if (location.state?.studentData) {
@@ -495,11 +505,39 @@ const HomeVerificationPage = () => {
   const removeFamilyMember = (i) => setFamilyMembers(prev => prev.filter((_, idx) => idx !== i));
   const updateMember = (i, field, value) => setFamilyMembers(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
 
+  const handleReverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const data = await res.json();
+      if (data.address) {
+        const a = data.address;
+        const village = a.village || a.suburb || a.city_district || a.town || a.city || '';
+        const district = a.district || a.county || '';
+        const state = a.state || '';
+        const parts = [village, district, state].filter(Boolean);
+        setLocationAddress(parts.join(', '));
+      }
+    } catch (err) {
+      console.error("Reverse geocoding error:", err);
+    }
+  };
+
   const captureGPS = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        setGpsCoords({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) });
-      });
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const coords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
+          setGpsCoords(coords);
+          handleReverseGeocode(coords.lat, coords.lng);
+          setIsLocating(false);
+        },
+        err => {
+          console.error("GPS Error:", err);
+          setIsLocating(false);
+          setApiMsg("Location permission denied. Please enable GPS.");
+        }
+      );
     }
   };
 
@@ -548,11 +586,11 @@ const HomeVerificationPage = () => {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
-      
+
       setVerificationId(data.verification._id);
       setStatus('saved');
       setApiMsg('Draft saved successfully!');
-      
+
       // Update URL if it's a new or switched record
       if (id !== data.verification._id) {
         navigate(`/verification/home/${data.verification._id}`, { replace: true });
@@ -569,7 +607,7 @@ const HomeVerificationPage = () => {
       // For submission, we can use PUT if we have an ID, or POST (which will upsert)
       const payload = { ...buildPayload(), status: 'submitted' };
       let res;
-      
+
       if (verificationId) {
         res = await fetch(`${API_URL}/${verificationId}`, {
           method: 'PUT',
@@ -586,11 +624,11 @@ const HomeVerificationPage = () => {
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Submit failed');
-      
+
       setVerificationId(data.verification._id);
       setStatus('submitted');
       setApiMsg('Verification submitted successfully!');
-      
+
       if (id !== data.verification._id) {
         navigate(`/verification/home/${data.verification._id}`, { replace: true });
       }
@@ -693,16 +731,52 @@ const HomeVerificationPage = () => {
       {/* Form Sections */}
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-5 pb-32">
 
-        {/* GPS + Timestamp info bar */}
-        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          <button onClick={captureGPS}
-            className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 hover:text-orange-600 transition-all font-medium">
-            <MapPin size={12} className="text-orange-400" />
-            {gpsCoords ? `${gpsCoords.lat}, ${gpsCoords.lng}` : 'Capture GPS Location'}
-          </button>
-          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 font-medium">
-            <Clock size={12} className="text-slate-400" />
-            {new Date().toLocaleString('en-IN')}
+        {/* Responsive Premium Location Bar */}
+        <div className="bg-white/80 backdrop-blur-md border border-orange-100 rounded-2xl p-4 sm:p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-3 shadow-sm hover:shadow-md transition-all border-l-4 sm:border-l-4 border-l-[#FF6B00]">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <div className="w-10 h-10 sm:w-10 sm:h-10 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 shadow-inner">
+              <MapPin size={20} className="text-[#FF6B00] fill-orange-500/10" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <h3 className="text-sm sm:text-sm font-extrabold text-slate-800 truncate tracking-tight leading-tight">
+                {locationAddress || 'Village, District, State'}
+              </h3>
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-1 sm:mt-0.5">
+                <p className="text-[10px] font-medium text-slate-400 font-mono flex items-center gap-1">
+                  {gpsCoords ? `${gpsCoords.lat}, ${gpsCoords.lng}` : (isLocating ? 'Locating...' : 'Awaiting coordinates')}
+                </p>
+                <div className="hidden sm:block w-1 h-1 rounded-full bg-slate-200" />
+                <div className="flex items-center gap-1 text-[9px] font-bold text-slate-300 uppercase tracking-widest leading-none">
+                  <Clock size={10} />
+                  {new Date().toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full sm:w-auto shrink-0">
+            <button
+              onClick={captureGPS}
+              disabled={isLocating}
+              className={`
+                w-full sm:w-auto flex items-center justify-center gap-2 px-6 sm:px-4 py-3 sm:py-1.5 rounded-xl sm:rounded-lg font-bold text-[11px] sm:text-[10px] uppercase tracking-widest transition-all shadow-lg sm:shadow-md active:scale-95 disabled:opacity-70
+                ${gpsCoords 
+                  ? 'bg-emerald-500 text-white shadow-emerald-100' 
+                  : 'bg-[#FF6B00] text-white shadow-orange-100 hover:bg-[#e66000]'
+                }
+              `}
+            >
+              {isLocating ? (
+                <span>Fetching location... ⏳</span>
+              ) : gpsCoords ? (
+                <span>Location Captured ✅</span>
+              ) : (
+                <>
+                  <span className="text-sm">📡</span>
+                  <span>Get Location</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -717,13 +791,13 @@ const HomeVerificationPage = () => {
               </select>
             </Field>
             <Field label="Student ID (Roll Number)" required>
-              <input 
-                name="studentId" 
-                value={form.studentId} 
-                onChange={handleChange} 
+              <input
+                name="studentId"
+                value={form.studentId}
+                onChange={handleChange}
                 onBlur={(e) => fetchExistingVerification(e.target.value)}
-                placeholder="e.g. 21001" 
-                className={inputCls} 
+                placeholder="e.g. 21001"
+                className={inputCls}
               />
             </Field>
             <Field label="Student Name" required>
