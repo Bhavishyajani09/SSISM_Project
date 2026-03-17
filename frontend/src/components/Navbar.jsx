@@ -1,9 +1,18 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import ssismLogo from '../assets/SSISM_Logo.png';
 
 export default function Navbar() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+
+  const getPageTitle = () => {
+    if (location.pathname === '/dashboard') return 'Dashboard';
+    if (location.pathname === '/add-passed-students') return 'Add Students';
+    if (location.pathname === '/home-verification') return 'Home Verification';
+    return 'SSISM Portal';
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -29,20 +38,38 @@ export default function Navbar() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       )
+    },
+    {
+      to: '/home-verification',
+      label: 'Home Verification',
+      icon: (
+        <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+        </svg>
+      )
     }
   ];
 
   return (
     <>
-      {/* ─── Mobile Top Header ─── */}
-      <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-30">
+      {/* ─── Global Slim Header (Mobile) ─── */}
+      <div className="lg:hidden flex items-center justify-between bg-white border-b border-orange-100 px-4 py-2.5 sticky top-0 z-30 shadow-sm">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="SSISM" className="h-9 w-9 rounded-lg object-cover bg-gray-100" />
-          <p className="font-bold text-gray-800 text-lg tracking-tight">SSISM Portal</p>
+          <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center overflow-hidden border-2 border-orange-400 shrink-0 shadow-sm">
+            <img src={ssismLogo} alt="SSISM" className="w-full h-full object-cover" />
+          </div>
+          <div>
+            <p className="font-bold text-gray-900 text-[13px] leading-tight tracking-tight uppercase">
+              {getPageTitle()}
+            </p>
+            <p className="text-[10px] text-orange-400 font-medium uppercase tracking-widest leading-tight mt-0.5">
+              SSISM SCHOLARSHIP portal
+            </p>
+          </div>
         </div>
         <button 
           onClick={() => setIsMobileOpen(true)} 
-          className="p-2 text-gray-500 hover:text-brand-600 focus:outline-none rounded-lg hover:bg-gray-50 transition-colors"
+          className="p-1.5 text-gray-400 hover:text-brand-600 focus:outline-none rounded-lg hover:bg-orange-50 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -65,18 +92,20 @@ export default function Navbar() {
         }`}
       >
         {/* Sidebar Header */}
-        <div className="h-[60px] shrink-0 flex items-center px-5 border-b border-gray-100 lg:h-[72px] lg:px-6 relative">
+        <div className="h-[72px] shrink-0 flex items-center px-6 border-b border-gray-50 relative bg-orange-50/20">
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="SSISM" className="h-[38px] w-[38px] rounded-xl object-cover bg-gray-100 shadow-sm border border-gray-200" />
+            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center overflow-hidden border-2 border-orange-400 shadow-sm">
+              <img src={ssismLogo} alt="SSISM" className="w-full h-full object-cover" />
+            </div>
             <div>
-              <p className="text-gray-900 font-bold text-[15px] leading-tight tracking-tight">SSISM Portal</p>
-              <p className="text-gray-400 font-semibold text-[10px] uppercase tracking-widest mt-0.5">Teacher Panel</p>
+              <p className="text-gray-900 font-bold text-[14px] leading-tight tracking-tight">SSISM PORTAL</p>
+              <p className="text-orange-400 font-medium text-[9px] uppercase tracking-widest mt-1">Scholarship System</p>
             </div>
           </div>
           {/* Mobile Close Button */}
           <button 
             onClick={() => setIsMobileOpen(false)} 
-            className="absolute right-4 top-1/2 -translate-y-1/2 lg:hidden p-1.5 text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            className="absolute right-4 top-1/2 -translate-y-1/2 lg:hidden p-1.5 text-gray-400 hover:text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-colors border shadow-sm"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -85,9 +114,10 @@ export default function Navbar() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
-          <div className="px-2 mb-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2">
-            Main Menu
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
+          <div className="px-2 mb-4">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Main Menu</p>
+            <div className="h-0.5 w-8 bg-orange-400 rounded-full" />
           </div>
           {navLinks.map((link) => (
             <NavLink
@@ -96,14 +126,14 @@ export default function Navbar() {
               end={link.to === '/dashboard'}
               onClick={() => setIsMobileOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-semibold transition-all duration-200 ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border ${
                   isActive 
-                    ? 'bg-gradient-to-r from-brand-50 to-orange-50/50 text-brand-600 shadow-sm border border-brand-100/50' 
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 border border-transparent'
+                    ? 'bg-orange-50 border-orange-100 text-orange-600 shadow-[0_2px_10px_-3px_rgba(249,115,22,0.1)]' 
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 border-transparent'
                 }`
               }
             >
-              {link.icon}
+              <span className="shrink-0">{link.icon}</span>
               {link.label}
             </NavLink>
           ))}

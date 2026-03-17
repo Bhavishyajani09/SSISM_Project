@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
-  User, BookOpen, Heart, Users, Home, Tractor, Camera,
-  FileText, ChevronDown, ChevronUp, Plus, Trash2, MapPin,
-  Clock, CheckCircle, XCircle, Save, Send, AlertCircle, Trophy
+  Camera, Plus, Save, ChevronDown, ChevronUp, CheckCircle2,
+  User, Home, MapPin, LandPlot, ClipboardCheck, Trash2,
+  X, RotateCw, Check, ArrowLeft, BookOpen, Heart, Users,
+  Tractor, FileText, Clock, CheckCircle, XCircle, Send,
+  AlertCircle, Trophy, Image
 } from 'lucide-react';
 import ssismLogo from '../../assets/SSISM_Logo.png';
 
@@ -53,23 +55,132 @@ const inputCls = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate
 const selectCls = inputCls;
 const textareaCls = inputCls + " resize-none";
 
+const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
+  const videoRef = useRef(null);
+  const [stream, setStream] = useState(null);
+  const [facingMode, setFacingMode] = useState('environment');
+  const [capturedImg, setCapturedImg] = useState(null);
+
+  const startCamera = async () => {
+    try {
+      const newStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: facingMode } }
+      });
+      setStream(newStream);
+      if (videoRef.current) videoRef.current.srcObject = newStream;
+    } catch (err) {
+      console.error("Camera error:", err);
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+    return () => stopCamera();
+  }, [isOpen, facingMode]);
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+  };
+
+  const capturePhoto = () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0);
+    setCapturedImg(canvas.toDataURL('image/jpeg', 0.8));
+  };
+
+  const handleConfirm = () => {
+    fetch(capturedImg)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], `capture_${Date.now()}.jpg`, { type: "image/jpeg" });
+        onCapture(file);
+        setCapturedImg(null);
+        onClose();
+      });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-md flex flex-col items-center justify-center p-4">
+      <div className="relative w-full max-w-sm aspect-[3/4] bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border-4 border-slate-800">
+        {!capturedImg ? (
+          <>
+            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
+            <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-10">
+              <button 
+                onClick={() => setFacingMode(prev => prev === 'user' ? 'environment' : 'user')}
+                className="p-4 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
+              >
+                <RotateCw size={24} />
+              </button>
+              <button 
+                onClick={capturePhoto}
+                className="w-20 h-20 bg-white rounded-full border-[6px] border-white/30 active:scale-90 transition-all p-1"
+              >
+                <div className="w-full h-full rounded-full border-2 border-slate-900" />
+              </button>
+              <button 
+                onClick={onClose} 
+                className="p-4 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <img src={capturedImg} className="w-full h-full object-cover" />
+            <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-12">
+              <button 
+                onClick={() => setCapturedImg(null)}
+                className="p-5 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
+              >
+                <RotateCw size={28} />
+              </button>
+              <button 
+                onClick={handleConfirm}
+                className="p-5 bg-emerald-500 rounded-full text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition-all"
+              >
+                <Check size={28} />
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+      <p className="mt-6 text-slate-400 text-sm font-medium uppercase tracking-widest leading-tight">Click photo for verification</p>
+    </div>
+  );
+};
+
 // Photo Preview Item
 const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
   const [localPreview, setLocalPreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const ref = useRef();
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const galleryRef = useRef();
 
   const displayUrl = localPreview || previewUrl;
 
-  const handleChange = async (e) => {
-    const file = e.target.files[0];
+  const handleFile = async (file) => {
     if (file) {
       setLocalPreview(URL.createObjectURL(file));
       setLoading(true);
       const formData = new FormData();
       formData.append('image', file);
       if (studentId) formData.append('studentId', studentId);
-      
+
       try {
         const res = await fetch('http://localhost:5000/api/upload', {
           method: 'POST',
@@ -88,45 +199,87 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm font-medium text-slate-600">{label}</span>
+    <div className="flex flex-col gap-1 w-full mx-auto">
+      <span className="text-[10px] font-bold text-slate-500 truncate px-1 uppercase tracking-wider">{label}</span>
       <div
-        onClick={() => ref.current.click()}
-        className="relative cursor-pointer border-2 border-dashed border-orange-300 rounded-xl overflow-hidden bg-orange-50 hover:bg-orange-100 transition-all flex items-center justify-center h-36"
+        className="relative border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 hover:bg-slate-50 hover:border-orange-300 transition-all flex items-center justify-center h-32 group"
       >
         {loading ? (
-          <span className="text-xs text-orange-500 font-medium">Uploading...</span>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-[10px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
+          </div>
         ) : displayUrl ? (
-          <img src={displayUrl} alt="preview" className="w-full h-full object-cover" />
+          <div className="relative w-full h-full">
+            <img src={displayUrl} alt="preview" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-3">
+              <button
+                onClick={() => setIsCameraOpen(true)}
+                className="w-full py-2 bg-white rounded-lg text-slate-800 hover:bg-slate-50 flex items-center justify-center transition-all shadow-sm"
+                title="Retake Photo"
+              >
+                <Camera size={18} />
+              </button>
+              <button
+                onClick={() => galleryRef.current.click()}
+                className="w-full py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white hover:bg-white/30 flex items-center justify-center transition-all shadow-sm"
+                title="Replace from Gallery"
+              >
+                <Image size={18} />
+              </button>
+            </div>
+          </div>
         ) : (
-          <div className="flex flex-col items-center gap-2 text-orange-400">
-            <Camera size={28} />
-            <span className="text-xs font-medium">Tap to upload</span>
+          <div className="flex flex-col items-center gap-4 w-full px-4">
+            <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-300 group-hover:text-orange-400 group-hover:scale-110 transition-all duration-300 border border-slate-100">
+              <Camera size={18} />
+            </div>
+            <div className="flex gap-2 w-full">
+              <button
+                type="button"
+                onClick={() => setIsCameraOpen(true)}
+                className="flex-1 flex items-center justify-center py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 active:scale-95 transition-all shadow-md shadow-slate-200"
+                title="Capture Photo"
+              >
+                <Camera size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryRef.current.click()}
+                className="flex-1 flex items-center justify-center py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
+                title="Add from Gallery"
+              >
+                <Image size={14} />
+              </button>
+            </div>
           </div>
         )}
       </div>
-      <input ref={ref} id={id} type="file" accept="image/*" className="hidden" onChange={handleChange} />
+      <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+      <CameraCaptureModal isOpen={isCameraOpen} onClose={() => setIsCameraOpen(false)} onCapture={handleFile} />
     </div>
   );
 };
+
+
 
 // Signature Upload
 const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
   const [localPreview, setLocalPreview] = useState(null);
   const [loading, setLoading] = useState(false);
-  const ref = useRef();
+  const [isCameraOpen, setIsCameraOpen] = useState(false);
+  const galleryRef = useRef();
 
   const displayUrl = localPreview || previewUrl;
 
-  const handleChange = async (e) => {
-    const file = e.target.files[0];
+  const handleFile = async (file) => {
     if (file) {
       setLocalPreview(URL.createObjectURL(file));
       setLoading(true);
       const formData = new FormData();
       formData.append('image', file);
       if (studentId) formData.append('studentId', studentId);
-      
+
       try {
         const res = await fetch('http://localhost:5000/api/upload', {
           method: 'POST',
@@ -145,29 +298,71 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
   };
 
   return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm font-semibold text-slate-700">{label}</span>
+    <div className="flex flex-col gap-1 w-full mx-auto">
+      <span className="text-[10px] font-bold text-slate-500 truncate px-1 uppercase tracking-wider">{label}</span>
       <div
-        onClick={() => ref.current.click()}
-        className="cursor-pointer border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 h-24 flex items-center justify-center"
+        className="relative border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 hover:bg-slate-50 hover:border-orange-300 transition-all flex items-center justify-center h-28 group"
       >
         {loading ? (
-          <span className="text-xs text-slate-500 font-medium">Uploading...</span>
-        ) : displayUrl
-          ? <img src={displayUrl} alt="signature" className="h-20 object-contain" />
-          : <span className="text-xs text-slate-400 font-medium">Tap to upload signature</span>
-        }
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-[9px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
+          </div>
+        ) : displayUrl ? (
+          <div className="relative w-full h-full">
+            <img src={displayUrl} alt="signature" className="w-full h-full object-contain p-2" />
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+              <button
+                onClick={() => setIsCameraOpen(true)}
+                className="w-full py-1.5 bg-white rounded-lg text-slate-800 flex items-center justify-center shadow-sm transition-all"
+                title="Retake Signature"
+              >
+                <Camera size={16} />
+              </button>
+              <button
+                onClick={() => galleryRef.current.click()}
+                className="w-full py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white flex items-center justify-center shadow-sm transition-all"
+                title="Replace from Gallery"
+              >
+                <Image size={16} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex gap-2 w-full px-3">
+            <button
+              type="button"
+              onClick={() => setIsCameraOpen(true)}
+              className="flex-1 flex items-center justify-center py-2 bg-slate-800 text-white rounded-xl active:scale-95 transition-all shadow-md shadow-slate-200"
+              title="Capture Signature"
+            >
+              <Camera size={14} />
+            </button>
+            <button
+              type="button"
+              onClick={() => galleryRef.current.click()}
+              className="flex-1 flex items-center justify-center py-2 bg-white border border-slate-200 text-slate-600 rounded-xl active:scale-95 transition-all shadow-sm"
+              title="Add from Gallery"
+            >
+              <Image size={14} />
+            </button>
+          </div>
+        )}
       </div>
-      <input ref={ref} type="file" accept="image/*" className="hidden" onChange={handleChange} />
+      <input ref={galleryRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFile(e.target.files[0])} />
+      <CameraCaptureModal isOpen={isCameraOpen} onClose={() => setIsCameraOpen(false)} onCapture={handleFile} />
     </div>
   );
 };
+
+
 
 const API_URL = 'http://localhost:5000/api/verifications';
 
 const HomeVerificationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [form, setForm] = useState({
     scholarshipType: '', studentId: '', studentName: '', mobile: '',
@@ -224,6 +419,24 @@ const HomeVerificationPage = () => {
         .catch(err => setApiMsg('Error loading draft: ' + err.message));
     }
   }, [id]);
+
+  // Pre-fill student data from location state if available
+  useEffect(() => {
+    if (location.state?.studentData) {
+      const s = location.state.studentData;
+      setForm(prev => ({
+        ...prev,
+        studentId: s.rollNumber?.toString() || '',
+        studentName: s.studentName || '',
+        mobile: s.mobileNumber || '',
+        fatherName: s.fatherName || '',
+        village: s.villageTown || '',
+        district: s.district || '',
+        subject12: s.subjectIn12th || '',
+        track: s.busTrack || '',
+      }));
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -396,18 +609,25 @@ const HomeVerificationPage = () => {
       {/* Slim Sticky Navbar */}
       <div className="sticky top-0 z-30 bg-white border-b border-orange-100 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 mr-1"
+            title="Go Back"
+          >
+            <ArrowLeft size={20} />
+          </button>
           <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center overflow-hidden border-2 border-orange-400 shrink-0">
             <img src={ssismLogo} alt="SSISM" className="w-full h-full object-cover" />
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-sm font-bold text-slate-800 leading-tight truncate">Home Visit Verification</h1>
-            <p className="text-xs text-slate-400 leading-tight">SSISM • Scholarship Portal</p>
+            <h1 className="text-[13px] font-bold text-gray-900 leading-tight uppercase tracking-tight">Home Visit Verification</h1>
+            <p className="text-[10px] text-orange-400 font-medium uppercase tracking-widest leading-tight mt-0.5">SSISM SCHOLARSHIP PORTAL</p>
           </div>
           {status && (
             <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${status === 'approved' ? 'bg-green-100 text-green-700' :
-                status === 'rejected' ? 'bg-red-100 text-red-700' :
-                  status === 'submitted' ? 'bg-blue-100 text-blue-700' :
-                    'bg-orange-100 text-orange-700'
+              status === 'rejected' ? 'bg-red-100 text-red-700' :
+                status === 'submitted' ? 'bg-blue-100 text-blue-700' :
+                  'bg-orange-100 text-orange-700'
               }`}>
               {status === 'saved' || status === 'draft' ? '✓ Draft' : status === 'submitted' ? '✓ Submitted' : status === 'approved' ? '✓ Approved' : '✗ Rejected'}
             </span>
@@ -653,12 +873,12 @@ const HomeVerificationPage = () => {
               {form.houseBuilder === 'Government Scheme' && (
                 <div className="mt-3">
                   <Field label="Scheme Name">
-                    <input 
-                      name="houseSchemeName" 
-                      value={form.houseSchemeName} 
-                      onChange={handleChange} 
-                      placeholder="e.g. PM Awas Yojana" 
-                      className={inputCls} 
+                    <input
+                      name="houseSchemeName"
+                      value={form.houseSchemeName}
+                      onChange={handleChange}
+                      placeholder="e.g. PM Awas Yojana"
+                      className={inputCls}
                     />
                   </Field>
                 </div>
@@ -741,9 +961,8 @@ const HomeVerificationPage = () => {
           </div>
         </SectionCard>
 
-        {/* 10. PHOTO DOCUMENTATION */}
         <SectionCard icon={Camera} title="Photo Documentation" color="purple">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <PhotoUpload studentId={form.studentId} id="photo1" label="1. Passport size photo" onUpload={(url) => handlePhotoUpload("1. Passport size photo", url)} previewUrl={getPhotoPreview("1. Passport size photo")} />
             <PhotoUpload studentId={form.studentId} id="photo2" label="2. Student with interviewer" onUpload={(url) => handlePhotoUpload("2. Student with interviewer", url)} previewUrl={getPhotoPreview("2. Student with interviewer")} />
             <PhotoUpload studentId={form.studentId} id="photo3" label="3. With parents & supervisor" onUpload={(url) => handlePhotoUpload("3. With parents & supervisor", url)} previewUrl={getPhotoPreview("3. With parents & supervisor")} />
@@ -762,10 +981,10 @@ const HomeVerificationPage = () => {
             "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <SignatureField studentId={form.studentId} label="Student Signature" onUpload={url => handleChange({ target: { name: 'studentSignatureUrl', value: url }})} previewUrl={form.studentSignatureUrl} />
-            <SignatureField studentId={form.studentId} label="Father Signature" onUpload={url => handleChange({ target: { name: 'fatherSignatureUrl', value: url }})} previewUrl={form.fatherSignatureUrl} />
-            <SignatureField studentId={form.studentId} label="Mother Signature" onUpload={url => handleChange({ target: { name: 'motherSignatureUrl', value: url }})} previewUrl={form.motherSignatureUrl} />
-            <SignatureField studentId={form.studentId} label="Supervisor Signature" onUpload={url => handleChange({ target: { name: 'supervisorSignatureUrl', value: url }})} previewUrl={form.supervisorSignatureUrl} />
+            <SignatureField studentId={form.studentId} label="Student Signature" onUpload={url => handleChange({ target: { name: 'studentSignatureUrl', value: url } })} previewUrl={form.studentSignatureUrl} />
+            <SignatureField studentId={form.studentId} label="Father Signature" onUpload={url => handleChange({ target: { name: 'fatherSignatureUrl', value: url } })} previewUrl={form.fatherSignatureUrl} />
+            <SignatureField studentId={form.studentId} label="Mother Signature" onUpload={url => handleChange({ target: { name: 'motherSignatureUrl', value: url } })} previewUrl={form.motherSignatureUrl} />
+            <SignatureField studentId={form.studentId} label="Supervisor Signature" onUpload={url => handleChange({ target: { name: 'supervisorSignatureUrl', value: url } })} previewUrl={form.supervisorSignatureUrl} />
           </div>
         </SectionCard>
 

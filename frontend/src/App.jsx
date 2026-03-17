@@ -4,6 +4,8 @@ import Navbar from './components/Navbar';
 import LoginPage from './pages/auth/LoginPage';
 import TeacherDashboard from './pages/TeacherDashboard';
 import AddPassedStudents from './pages/AddPassedStudents';
+import VerificationListPage from './pages/verification/VerificationListPage';
+import HomeVerificationPage from './pages/verification/HomeVerificationPage';
 
 const isAuthenticated = () => !!localStorage.getItem('token');
 
@@ -44,6 +46,24 @@ function App() {
               <MainLayout>
                 <AddPassedStudents />
               </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/home-verification"
+          element={
+            <ProtectedRoute>
+              <MainLayout>
+                <VerificationListPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/verification/home/:id?"
+          element={
+            <ProtectedRoute>
+              <HomeVerificationPage />
             </ProtectedRoute>
           }
         />
