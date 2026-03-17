@@ -123,20 +123,20 @@ export default function VerificationListPage() {
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Home Verification</h1>
-        <p className="text-gray-500 mt-1">Select a student to start or continue their home verification.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">Home Verification</h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">Select a student to start or continue their home verification.</p>
       </div>
 
       {/* Status Tabs */}
-      <div className="flex gap-1.5 mb-5 bg-gray-100 p-1 rounded-xl w-fit flex-wrap">
+      <div className="flex overflow-x-auto gap-2 mb-6 no-scrollbar pb-1 px-1">
         {STATUS_TABS.map(tab => (
           <button
             key={tab.key}
             onClick={() => setStatusFilter(tab.key)}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all ${
-              statusFilter === tab.key
-                ? 'bg-white text-brand-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+            className={`px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-300 border flex items-center gap-1.5 ${
+              statusFilter === tab.key 
+                ? 'bg-brand-500 border-brand-500 text-white shadow-md shadow-brand-200' 
+                : 'bg-white border-gray-100 text-gray-500 hover:border-brand-200 hover:text-brand-600'
             }`}
           >
             {tab.label}
@@ -144,23 +144,22 @@ export default function VerificationListPage() {
         ))}
       </div>
 
-      {/* Search + District */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
-        <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
           <input
             type="text"
-            placeholder="Search by name or roll number..."
+            placeholder="Search by name or roll..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-700 text-sm"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-700 text-xs sm:text-sm"
           />
         </div>
-        <div className="w-full sm:w-56">
+        <div className="w-full sm:w-52">
           <select
             value={districtFilter}
             onChange={e => setDistrictFilter(e.target.value)}
-            className="w-full px-4 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-700 text-sm"
+            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-700 text-xs sm:text-sm"
           >
             <option value="">All Districts</option>
             {uniqueDistricts.map(d => (
@@ -196,38 +195,37 @@ export default function VerificationListPage() {
                 <div
                   key={student._id}
                   onClick={() => handleOpen(student)}
-                  className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:shadow-md hover:border-brand-200 cursor-pointer transition-all group relative overflow-hidden"
+                  className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-brand-200 cursor-pointer transition-all group relative overflow-hidden"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                        <User size={24} />
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
+                        <User size={20} />
                       </div>
                       <div>
-                        <h3 className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors">
+                        <h3 className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors text-xs">
                           {student.studentName}
                         </h3>
-                        <p className="text-xs font-semibold text-brand-500 uppercase tracking-wider">
-                          Roll: {student.rollNumber}
+                        <p className="text-[10px] font-bold text-brand-500 uppercase tracking-tighter">
+                          ROLL: {student.rollNumber}
                         </p>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
+                    <div className="flex flex-col items-end gap-1.5">
                       <StatusBadge status={st} />
-                      <ChevronRight className="text-gray-300 group-hover:text-brand-500 transition-colors" size={18} />
+                      <ChevronRight className="text-gray-300 group-hover:text-brand-500 transition-colors" size={16} />
                     </div>
                   </div>
-                  <div className="mt-4 space-y-1.5">
-                    <div className="flex items-center gap-2 text-gray-500 text-sm">
-                      <MapPin size={13} />
+                  <div className="mt-2.5 space-y-1">
+                    <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
+                      <MapPin size={11} />
                       <span className="truncate">{student.villageTown || '—'}, {student.district || '—'}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-500 text-sm">
-                      <span className="font-semibold text-gray-700">Mobile:</span>
+                    <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
+                      <span className="font-semibold text-gray-600">Mobile:</span>
                       <span>{student.mobileNumber || '—'}</span>
                     </div>
                   </div>
-                  <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-brand-50 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500" />
                 </div>
               );
             })}
@@ -235,11 +233,11 @@ export default function VerificationListPage() {
 
           {/* ── Desktop Table ── */}
           <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Location', 'Mobile', 'Status', 'Action'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                    <th key={h} className="px-4 py-3 text-left font-bold text-gray-400 border-none uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>

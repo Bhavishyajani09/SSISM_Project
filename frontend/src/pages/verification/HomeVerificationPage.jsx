@@ -9,9 +9,8 @@ import {
 } from 'lucide-react';
 import ssismLogo from '../../assets/SSISM_Logo.png';
 
-// Helper: Collapsible Card
-const SectionCard = ({ icon: Icon, title, color = 'orange', children, defaultOpen = true }) => {
-  const [open, setOpen] = useState(defaultOpen);
+// Helper: Collapsible Card (Accordion)
+const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onToggle }) => {
   const colorMap = {
     orange: 'bg-orange-50 border-orange-200 text-orange-700',
     blue: 'bg-blue-50 border-blue-200 text-blue-700',
@@ -25,18 +24,22 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, defaultOpe
   const headerColor = colorMap[color] || colorMap.orange;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div className={`bg-white rounded-2xl shadow-sm border ${open ? 'border-slate-200' : 'border-slate-100'} overflow-hidden transition-all duration-300`}>
       <button
-        onClick={() => setOpen(!open)}
-        className={`w-full flex items-center justify-between px-5 py-4 ${headerColor} border-b transition-all`}
+        type="button"
+        onClick={onToggle}
+        className={`w-full flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 ${headerColor} ${open ? 'border-b shadow-sm' : ''} transition-all active:brightness-95`}
       >
-        <div className="flex items-center gap-3">
-          <Icon size={20} />
-          <h2 className="font-bold text-base sm:text-lg">{title}</h2>
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <Icon size={18} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
+          <h2 className="font-bold text-sm sm:text-base leading-tight uppercase tracking-tight">{title}</h2>
         </div>
-        {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        <div className="flex items-center gap-2">
+          {!open && <span className="text-[9px] uppercase font-black opacity-40 hidden sm:inline">Tap to View</span>}
+          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        </div>
       </button>
-      {open && <div className="p-5 sm:p-6 space-y-4">{children}</div>}
+      {open && <div className="p-4 sm:p-5 space-y-4 md:space-y-6 animate-fade-in-up">{children}</div>}
     </div>
   );
 };
@@ -44,14 +47,14 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, defaultOpe
 // Helper: Form Field
 const Field = ({ label, children, required }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-sm font-semibold text-slate-700">
+    <label className="text-xs sm:text-sm font-semibold text-slate-700">
       {label}{required && <span className="text-red-500 ml-1">*</span>}
     </label>
     {children}
   </div>
 );
 
-const inputCls = "w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition-all";
+const inputCls = "w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition-all";
 const selectCls = inputCls;
 const textareaCls = inputCls + " resize-none";
 
@@ -395,6 +398,11 @@ const HomeVerificationPage = () => {
   const [successOverlay, setSuccessOverlay] = useState(null); // null | 'draft' | 'submitted' | 'rejected'
   const [isLocating, setIsLocating] = useState(false);
   const [locationAddress, setLocationAddress] = useState('');
+  const [activeSection, setActiveSection] = useState('studentInfo');
+
+  const toggleSection = (sectionName) => {
+    setActiveSection(prev => prev === sectionName ? null : sectionName);
+  };
 
   // Form is locked if submitted, teacher_rejected, rejected, or approved
   const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'rejected' || status === 'approved';
@@ -826,7 +834,13 @@ const HomeVerificationPage = () => {
         <div className={isReadOnly ? 'pointer-events-none select-none opacity-75' : ''}>
 
         {/* 1. STUDENT INFORMATION */}
-        <SectionCard icon={User} title="Student Information" color="orange">
+        <SectionCard 
+          icon={User} 
+          title="Student Information" 
+          color="orange" 
+          open={activeSection === 'studentInfo'} 
+          onToggle={() => toggleSection('studentInfo')}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Scholarship Type" required>
               <select name="scholarshipType" value={form.scholarshipType} onChange={handleChange} className={selectCls}>
@@ -861,7 +875,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 2. ACADEMIC DETAILS */}
-        <SectionCard icon={BookOpen} title="Academic Details" color="blue">
+        <SectionCard 
+          icon={BookOpen} 
+          title="Academic Details" 
+          color="blue"
+          open={activeSection === 'academic'} 
+          onToggle={() => toggleSection('academic')}
+        >
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {[
               { label: '10th Percentage (Max 100)', name: 'marks10', max: 100 },
@@ -874,31 +894,39 @@ const HomeVerificationPage = () => {
                 <input name={f.name} value={form[f.name]} onChange={handleChange} type="number" min="0" max={f.max} placeholder="0" className={inputCls} />
               </Field>
             ))}
-            <Field label="Cumulative Score / Total Marks">
-              <div className="relative">
-                <input 
-                  readOnly 
-                  value={`${totalMarks} / 400`}
-                  className={`${inputCls} bg-orange-50/50 border-orange-200 font-bold text-orange-700`}
-                />
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-orange-500 transition-all duration-500" 
-                      style={{ width: `${Math.min(100, (parseFloat(totalMarks) / 400) * 100)}%` }}
-                    />
+            <div className="col-span-2 sm:col-span-1">
+              <Field label="Cumulative Score / Total Marks">
+                <div className="relative group/score">
+                  <input 
+                    readOnly 
+                    value={`${totalMarks} / 400`}
+                    className={`${inputCls} bg-orange-50/50 border-orange-200 font-bold text-orange-700 pr-24 sm:pr-28`}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-lg border border-orange-100 shadow-sm">
+                    <div className="w-12 sm:w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-orange-500 transition-all duration-700" 
+                        style={{ width: `${Math.min(100, (parseFloat(totalMarks) / 400) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] sm:text-xs font-black text-orange-600 whitespace-nowrap">
+                      {Math.round((parseFloat(totalMarks) / 400) * 100)}%
+                    </span>
                   </div>
-                  <span className="text-[10px] font-black text-orange-500 whitespace-nowrap">
-                    {Math.round((parseFloat(totalMarks) / 400) * 100)}%
-                  </span>
                 </div>
-              </div>
-            </Field>
+              </Field>
+            </div>
           </div>
         </SectionCard>
 
         {/* 3. PERSONAL INFORMATION */}
-        <SectionCard icon={User} title="Personal Information" color="purple">
+        <SectionCard 
+          icon={User} 
+          title="Personal Information" 
+          color="purple"
+          open={activeSection === 'personal'} 
+          onToggle={() => toggleSection('personal')}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Father Name" required>
               <input name="fatherName" value={form.fatherName} onChange={handleChange} placeholder="Father's full name" className={inputCls} />
@@ -960,7 +988,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 4. HEALTH INFORMATION */}
-        <SectionCard icon={Heart} title="Health Information" color="rose">
+        <SectionCard 
+          icon={Heart} 
+          title="Health Information" 
+          color="rose"
+          open={activeSection === 'health'} 
+          onToggle={() => toggleSection('health')}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Attendance in 12th (%)">
               <input name="attendance12" value={form.attendance12} onChange={handleChange} type="number" min="0" max="100" placeholder="e.g. 85" className={inputCls} />
@@ -985,7 +1019,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 5. FAMILY INFORMATION */}
-        <SectionCard icon={Users} title="Family Information" color="teal">
+        <SectionCard 
+          icon={Users} 
+          title="Family Information" 
+          color="teal"
+          open={activeSection === 'family'} 
+          onToggle={() => toggleSection('family')}
+        >
           <div className="overflow-x-auto rounded-xl border border-slate-200">
             <table className="w-full text-sm min-w-[600px]">
               <thead>
@@ -1022,7 +1062,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 6. FAMILY INCOME */}
-        <SectionCard icon={FileText} title="Family Income" color="amber">
+        <SectionCard 
+          icon={FileText} 
+          title="Family Income" 
+          color="amber"
+          open={activeSection === 'income'} 
+          onToggle={() => toggleSection('income')}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Total Annual Family Income (₹)" required>
               <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
@@ -1049,7 +1095,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 7. HOUSING CONDITION */}
-        <SectionCard icon={Home} title="Housing Condition" color="orange">
+        <SectionCard 
+          icon={Home} 
+          title="Housing Condition" 
+          color="orange"
+          open={activeSection === 'housing'} 
+          onToggle={() => toggleSection('housing')}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-semibold text-slate-700 block mb-2">Type of House</label>
@@ -1084,7 +1136,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 8. HOUSEHOLD RESOURCES & VEHICLES */}
-        <SectionCard icon={Home} title="Household Resources & Vehicles" color="indigo">
+        <SectionCard 
+          icon={Home} 
+          title="Household Resources & Vehicles" 
+          color="indigo"
+          open={activeSection === 'resources'} 
+          onToggle={() => toggleSection('resources')}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label className="text-sm font-semibold text-slate-700 block mb-2">Appliances</label>
@@ -1109,7 +1167,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 9. LAND & FARMING DETAILS */}
-        <SectionCard icon={Tractor} title="Land & Farming Details" color="green">
+        <SectionCard 
+          icon={Tractor} 
+          title="Land & Farming Details" 
+          color="green"
+          open={activeSection === 'land'} 
+          onToggle={() => toggleSection('land')}
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex gap-2">
               <div className="flex-1">
@@ -1157,7 +1221,13 @@ const HomeVerificationPage = () => {
           </div>
         </SectionCard>
 
-        <SectionCard icon={Camera} title="Photo Documentation" color="purple">
+        <SectionCard 
+          icon={Camera} 
+          title="Photo Documentation" 
+          color="purple"
+          open={activeSection === 'photos'} 
+          onToggle={() => toggleSection('photos')}
+        >
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             <PhotoUpload studentId={form.studentId} id="photo1" label="1. Passport size photo" onUpload={(url) => handlePhotoUpload("1. Passport size photo", url)} previewUrl={getPhotoPreview("1. Passport size photo")} />
             <PhotoUpload studentId={form.studentId} id="photo2" label="2. Student with interviewer" onUpload={(url) => handlePhotoUpload("2. Student with interviewer", url)} previewUrl={getPhotoPreview("2. Student with interviewer")} />
@@ -1172,7 +1242,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 11. DECLARATION */}
-        <SectionCard icon={FileText} title="Declaration" color="orange">
+        <SectionCard 
+          icon={FileText} 
+          title="Declaration" 
+          color="orange"
+          open={activeSection === 'declaration'} 
+          onToggle={() => toggleSection('declaration')}
+        >
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-slate-700 leading-relaxed italic mb-4">
             "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
           </div>
@@ -1185,7 +1261,13 @@ const HomeVerificationPage = () => {
         </SectionCard>
 
         {/* 12. SUPERVISOR REMARKS */}
-        <SectionCard icon={AlertCircle} title="Supervisor Remarks" color="blue">
+        <SectionCard 
+          icon={AlertCircle} 
+          title="Supervisor Remarks" 
+          color="blue"
+          open={activeSection === 'remarks'} 
+          onToggle={() => toggleSection('remarks')}
+        >
           <Field label="Remarks">
             <textarea name="supervisorRemarks" value={form.supervisorRemarks} onChange={handleChange}
               rows={4} placeholder="e.g. Home verification accepted. Family conditions verified..." className={textareaCls} />

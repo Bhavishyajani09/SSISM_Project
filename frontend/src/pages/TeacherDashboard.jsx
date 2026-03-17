@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { ChevronRight } from 'lucide-react';
 
 
 const API_BASE = 'http://localhost:5000/api';
@@ -78,32 +79,28 @@ export default function TeacherDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-5 sm:mb-10">
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 sm:p-6">
-          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Total Students</p>
-          <p className="text-3xl sm:text-4xl font-bold text-brand-500">{loading ? '—' : studentCount}</p>
-          <p className="text-gray-400 text-[10px] sm:text-xs mt-1 sm:mt-2">All records in database</p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-10">
+        <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Total Students</p>
+          <p className="text-2xl sm:text-4xl font-black text-brand-500">{loading ? '—' : studentCount}</p>
+          <p className="text-gray-400 text-[9px] sm:text-xs mt-1">All records in database</p>
         </div>
 
-        <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-4 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all">
-          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
+        <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
+          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
           <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
-          <p className="text-gray-400 text-[10px] sm:text-xs mt-1 sm:mt-2">Upload Excel or manual entry</p>
-          <span className="inline-flex items-center gap-1 mt-2 sm:mt-4 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg bg-brand-500 text-white text-xs sm:text-sm font-semibold group-hover:bg-brand-600 transition-colors">
+          <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
             Add Students →
           </span>
         </Link>
 
-        <div className="bg-white rounded-xl border border-gray-200 px-4 py-3 sm:p-6">
-          <p className="text-[10px] sm:text-xs font-semibold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Status</p>
+        <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Status</p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-400 inline-block"></span>
-            <span className="text-gray-700 font-semibold text-xs sm:text-sm">System Active</span>
+            <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+            <span className="text-gray-700 font-bold text-sm sm:text-lg">System Live</span>
           </div>
-          <div className="mt-2 sm:mt-4 flex items-center justify-between text-xs sm:text-sm">
-            <span className="text-gray-400">Records</span>
-            <span className="font-semibold text-gray-700">{loading ? '—' : studentCount}</span>
-          </div>
+          <p className="text-gray-400 text-[9px] sm:text-xs mt-1">Ready for verification</p>
         </div>
       </div>
 
@@ -135,25 +132,29 @@ export default function TeacherDashboard() {
           </div>
 
           {/* Mobile Cards */}
-          <div className="sm:hidden space-y-1">
-            {paginated.map((s) => (
-              <div key={s._id} className="bg-white rounded-lg border border-gray-200 px-2.5 py-1.5">
-                <div className="flex items-center justify-between mb-1">
-                  <div>
-                    <h4 className="font-semibold text-gray-800 text-[11px] leading-tight">{s.studentName}</h4>
-                    <p className="text-[9px] text-gray-400">S/o {s.fatherName}</p>
+          <div className="grid grid-cols-1 gap-3 sm:hidden mb-10">
+            {paginated.map((s, i) => (
+              <div key={s._id} onClick={() => handleVerify(s)} className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group cursor-pointer">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 font-bold group-hover:bg-brand-500 group-hover:text-white transition-colors text-xs">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-gray-900 leading-tight">{s.studentName}</p>
+                      <p className="text-[10px] font-bold text-brand-500 tracking-tighter uppercase mt-0.5">ROLL: {s.rollNumber}</p>
+                    </div>
                   </div>
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-brand-50 text-brand-600 shrink-0 ml-2">
-                    {s.rollNumber}
-                  </span>
+                  <ChevronRight size={14} className="text-gray-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5" />
                 </div>
-                <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 text-[9px]">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
                   {[
+                    ['Father', s.fatherName],
                     ['Mobile', s.mobileNumber],
+                    ['Marks', s.scholarshipExamMarks ?? 0],
                     ['Subject', s.subjectIn12th || '—'],
                     ['Village', s.villageTown || '—'],
                     ['District', s.district || '—'],
-                    ['Marks', s.scholarshipExamMarks ?? 0],
                     ['Bus Track', s.busTrack || '—'],
                   ].map(([label, val]) => (
                     <div key={label}>
@@ -162,8 +163,7 @@ export default function TeacherDashboard() {
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-100">
-
+                <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
                    <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit">
                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                    </button>

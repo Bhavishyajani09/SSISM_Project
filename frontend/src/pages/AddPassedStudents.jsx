@@ -240,28 +240,18 @@ export default function AddPassedStudents() {
       </div>
 
       {/* Tab Switcher */}
-      <div className="flex bg-gray-100 rounded-xl p-1 mb-8 w-full sm:w-auto sm:inline-flex">
+      <div className="flex gap-2 p-1 bg-gray-100 rounded-xl mb-6 sm:mb-8 w-fit mx-auto border border-gray-200">
         <button
-          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
-            activeTab === 'excel'
-              ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-200'
-              : 'text-gray-500 hover:text-gray-900'
-          }`}
           onClick={() => setActiveTab('excel')}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'excel' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
-          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          <span>Upload Excel</span>
+          Excel Upload
         </button>
         <button
-          className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 ${
-            activeTab === 'manual'
-              ? 'bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-md shadow-brand-200'
-              : 'text-gray-500 hover:text-gray-900'
-          }`}
           onClick={() => setActiveTab('manual')}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'manual' ? 'bg-white text-brand-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
         >
-          <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-          <span>Manual Entry</span>
+          Manual Entry
         </button>
       </div>
 
@@ -454,28 +444,21 @@ export default function AddPassedStudents() {
               </div>
 
               {/* Fields Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 sm:gap-4">
-                {FIELDS.map((field) => (
-                  <div key={field.key} className="flex flex-col justify-end gap-1">
-                    <label 
-                      className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wide truncate"
-                      title={field.label}
-                    >
-                      {field.label}
-                      {field.required && <span className="text-red-400 ml-0.5">*</span>}
-                    </label>
-                    <input
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      value={student[field.key]}
-                      onChange={(e) => updateStudent(idx, field.key, e.target.value)}
-                      min={field.key === 'scholarshipExamMarks' ? 0 : undefined}
-                      max={field.key === 'scholarshipExamMarks' ? 50 : undefined}
-                      className="w-full px-2.5 py-2 sm:px-3 sm:py-2.5 bg-gray-50 border border-gray-200 rounded-md sm:rounded-lg text-xs sm:text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-100 transition-all"
-                    />
-                  </div>
-                ))}
-              </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {FIELDS.map(f => (
+                    <div key={f.key}>
+                      <label className="block text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-widest mb-1 ml-1">{f.label}</label>
+                      <input
+                        type={f.type}
+                        value={student[f.key]}
+                        onChange={e => updateStudent(idx, f.key, e.target.value)}
+                        placeholder={f.placeholder}
+                        required={f.required}
+                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 text-xs sm:text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
             </div>
           ))}
 

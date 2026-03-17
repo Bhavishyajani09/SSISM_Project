@@ -29,7 +29,7 @@ const LoginPage = () => {
       if (!response.ok) throw new Error(data.error || 'Login failed. Please try again.');
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/add-passed-students');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -131,9 +131,9 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-1.5 sm:mb-2">Teacher Login</h2>
-            <p className="text-slate-400 text-xs sm:text-sm font-medium">Enter your credentials to access the portal</p>
+          <div className="text-center mb-5 sm:mb-8">
+            <h2 className="text-xl sm:text-3xl font-extrabold text-slate-800 mb-1 sm:mb-2">Teacher Login</h2>
+            <p className="text-slate-400 text-[10px] sm:text-sm font-medium uppercase tracking-widest">Secure Access Portal</p>
           </div>
 
           {error && (
@@ -156,7 +156,7 @@ const LoginPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="teacher@ssism.org"
-                  className="w-full pl-11 pr-4 py-3.5 sm:py-4 bg-white/50 border border-slate-200 rounded-2xl text-sm sm:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium shadow-sm hover:border-slate-300"
+                  className="w-full pl-10 pr-4 py-3 sm:py-4 bg-white/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium shadow-sm hover:border-slate-300"
                   required
                 />
               </div>
@@ -179,7 +179,7 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-12 py-3.5 sm:py-4 bg-white/50 border border-slate-200 rounded-2xl text-sm sm:text-base text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium tracking-widest shadow-sm hover:border-slate-300"
+                  className="w-full pl-10 pr-12 py-3 sm:py-4 bg-white/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium tracking-widest shadow-sm hover:border-slate-300"
                   required
                 />
                 <button
@@ -196,7 +196,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full h-[54px] sm:h-[60px] flex items-center justify-center gap-3 btn-premium text-white rounded-2xl font-bold text-base sm:text-lg disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/20"
+              className="w-full h-[48px] sm:h-[60px] flex items-center justify-center gap-2.5 btn-premium text-white rounded-xl font-bold text-sm sm:text-lg disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/20"
             >
               {isLoading ? (
                 <><Loader2 className="animate-spin" size={22} /><span>Authenticating...</span></>
