@@ -371,7 +371,7 @@ const HomeVerificationPage = () => {
     fatherName: '', schoolName: '', classFees12: '', subject12: '', address: '',
     village: '', tehsil: '', district: '', pincode: '', track: '', futureGoal: '',
     attendance12: '', hasIllness: 'no', illnessName: '', symptoms: '',
-    totalIncome: '', incomeSources: [], incomeOther: '', challenges: '',
+    totalAnnualIncome: '', incomeSources: [], incomeOther: '', familyChallenges: '',
     houseType: '', numRooms: '', houseBuilder: '', houseSchemeName: '',
     appliances: [], numVehicles: '', vehicleTypes: [],
     totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '',
@@ -408,6 +408,10 @@ const HomeVerificationPage = () => {
             delete formData.createdAt;
             delete formData.updatedAt;
 
+            // Handle conversions for UI radios
+            formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+            formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+
             setForm(prev => ({ ...prev, ...formData }));
             if (fm) setFamilyMembers(fm);
             setStatus(data.verification.status);
@@ -419,6 +423,41 @@ const HomeVerificationPage = () => {
         .catch(err => setApiMsg('Error loading draft: ' + err.message));
     }
   }, [id]);
+
+  const fetchExistingVerification = async (sid) => {
+    if (!sid || id) return; // Don't auto-fetch if we're already on a specific record (ID in URL)
+    try {
+      const res = await fetch(`${API_URL}/check/${sid}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.verification) {
+          const { familyMembers: fm, ...formData } = data.verification;
+          // Clean up Mongo metadata
+          delete formData._id;
+          delete formData.__v;
+          delete formData.createdAt;
+          delete formData.updatedAt;
+
+          // Handle conversions for UI radios
+          formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+          formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+
+          setForm(prev => ({ ...prev, ...formData }));
+          if (fm) setFamilyMembers(fm);
+          setVerificationId(data.verification._id);
+          setStatus(data.verification.status);
+          if (data.verification.gpsLat && data.verification.gpsLng) {
+            setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+          }
+          setApiMsg('Found existing draft for this student. Loaded latest data.');
+          // Update URL without refresh
+          navigate(`/verification/home/${data.verification._id}`, { replace: true });
+        }
+      }
+    } catch (err) {
+      console.error('Error checking existing:', err);
+    }
+  };
 
   // Pre-fill student data from location state if available
   useEffect(() => {
@@ -435,6 +474,8 @@ const HomeVerificationPage = () => {
         subject12: s.subjectIn12th || '',
         track: s.busTrack || '',
       }));
+      // Check if a verification already exists for this roll number
+      if (s.rollNumber) fetchExistingVerification(s.rollNumber.toString());
     }
   }, [location.state]);
 
@@ -481,35 +522,43 @@ const HomeVerificationPage = () => {
   };
 
   // Build the payload to send to backend
-  const buildPayload = () => ({
-    ...form,
-    familyMembers,
-    totalAnnualIncome: form.totalIncome,
-    familyChallenges: form.challenges,
-    hasIllness: form.hasIllness === 'yes',
-    achievements: form.hasAchievements === 'yes' ? form.achievements : '',
-    gpsLat: gpsCoords?.lat,
-    gpsLng: gpsCoords?.lng,
-  });
+  const buildPayload = () => {
+    const payload = {
+      ...form,
+      familyMembers,
+      hasIllness: form.hasIllness === 'yes',
+      achievements: form.hasAchievements === 'yes' ? form.achievements : '',
+      gpsLat: gpsCoords?.lat,
+      gpsLng: gpsCoords?.lng,
+    };
+    return payload;
+  };
 
   const handleSave = async () => {
     setIsApiLoading(true); setApiMsg('');
     try {
+      const payload = buildPayload();
+      console.log('Saving draft with payload:', payload);
+
       const res = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(buildPayload()),
+        body: JSON.stringify(payload),
       });
+
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
+      
       setVerificationId(data.verification._id);
       setStatus('saved');
       setApiMsg('Draft saved successfully!');
-      // Update URL without refreshing if it's a new record
-      if (!id) {
+      
+      // Update URL if it's a new or switched record
+      if (id !== data.verification._id) {
         navigate(`/verification/home/${data.verification._id}`, { replace: true });
       }
     } catch (err) {
+      console.error('Save error:', err);
       setApiMsg('Error: ' + err.message);
     } finally { setIsApiLoading(false); }
   };
@@ -517,26 +566,32 @@ const HomeVerificationPage = () => {
   const handleSubmit = async () => {
     setIsApiLoading(true); setApiMsg('');
     try {
-      let res, data;
+      // For submission, we can use PUT if we have an ID, or POST (which will upsert)
+      const payload = { ...buildPayload(), status: 'submitted' };
+      let res;
+      
       if (verificationId) {
         res = await fetch(`${API_URL}/${verificationId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: 'submitted' }),
+          body: JSON.stringify(payload),
         });
       } else {
         res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: 'submitted' }),
+          body: JSON.stringify(payload),
         });
       }
-      data = await res.json();
+
+      const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Submit failed');
+      
       setVerificationId(data.verification._id);
       setStatus('submitted');
       setApiMsg('Verification submitted successfully!');
-      if (!id) {
+      
+      if (id !== data.verification._id) {
         navigate(`/verification/home/${data.verification._id}`, { replace: true });
       }
     } catch (err) {
@@ -661,8 +716,15 @@ const HomeVerificationPage = () => {
                 <option value="SVS">SVS – Singaji Vivekananda Scholarship</option>
               </select>
             </Field>
-            <Field label="Student ID" required>
-              <input name="studentId" value={form.studentId} onChange={handleChange} placeholder="e.g. SSISM-2024-001" className={inputCls} />
+            <Field label="Student ID (Roll Number)" required>
+              <input 
+                name="studentId" 
+                value={form.studentId} 
+                onChange={handleChange} 
+                onBlur={(e) => fetchExistingVerification(e.target.value)}
+                placeholder="e.g. 21001" 
+                className={inputCls} 
+              />
             </Field>
             <Field label="Student Name" required>
               <input name="studentName" value={form.studentName} onChange={handleChange} placeholder="Full name" className={inputCls} />
@@ -829,7 +891,7 @@ const HomeVerificationPage = () => {
         <SectionCard icon={FileText} title="Family Income" color="amber">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Total Annual Family Income (₹)" required>
-              <input name="totalIncome" value={form.totalIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
+              <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
             </Field>
             <div>
               <label className="text-sm font-semibold text-slate-700 block mb-2">Income Sources</label>
@@ -846,7 +908,7 @@ const HomeVerificationPage = () => {
             )}
             <div className="sm:col-span-2">
               <Field label="Challenges Faced by Family">
-                <textarea name="challenges" value={form.challenges} onChange={handleChange} rows={3} placeholder="Describe any major challenges..." className={textareaCls} />
+                <textarea name="familyChallenges" value={form.familyChallenges} onChange={handleChange} rows={3} placeholder="Describe any major challenges..." className={textareaCls} />
               </Field>
             </div>
           </div>

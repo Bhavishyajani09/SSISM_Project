@@ -10,6 +10,7 @@ const vc = require('../controllers/verificationController');
 // @route   GET    /api/verifications/:id      - Get single
 
 router.post('/', vc.saveVerification);
+router.get('/check/:studentId', vc.checkByStudentId);
 router.put('/:id', vc.submitVerification);
 router.patch('/:id/approve', vc.approveVerification);
 router.patch('/:id/reject', vc.rejectVerification);
