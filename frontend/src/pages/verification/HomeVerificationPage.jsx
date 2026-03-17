@@ -119,20 +119,20 @@ const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
           <>
             <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover" />
             <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-10">
-              <button 
+              <button
                 onClick={() => setFacingMode(prev => prev === 'user' ? 'environment' : 'user')}
                 className="p-4 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
               >
                 <RotateCw size={24} />
               </button>
-              <button 
+              <button
                 onClick={capturePhoto}
                 className="w-20 h-20 bg-white rounded-full border-[6px] border-white/30 active:scale-90 transition-all p-1"
               >
                 <div className="w-full h-full rounded-full border-2 border-slate-900" />
               </button>
-              <button 
-                onClick={onClose} 
+              <button
+                onClick={onClose}
                 className="p-4 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
               >
                 <X size={24} />
@@ -143,13 +143,13 @@ const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
           <>
             <img src={capturedImg} className="w-full h-full object-cover" />
             <div className="absolute inset-x-0 bottom-10 flex items-center justify-center gap-12">
-              <button 
+              <button
                 onClick={() => setCapturedImg(null)}
                 className="p-5 bg-white/10 backdrop-blur-xl rounded-full text-white active:scale-95 transition-all"
               >
                 <RotateCw size={28} />
               </button>
-              <button 
+              <button
                 onClick={handleConfirm}
                 className="p-5 bg-emerald-500 rounded-full text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition-all"
               >
@@ -371,7 +371,7 @@ const HomeVerificationPage = () => {
     fatherName: '', schoolName: '', classFees12: '', subject12: '', address: '',
     village: '', tehsil: '', district: '', pincode: '', track: '', futureGoal: '',
     attendance12: '', hasIllness: 'no', illnessName: '', symptoms: '',
-    totalIncome: '', incomeSources: [], incomeOther: '', challenges: '',
+    totalAnnualIncome: '', incomeSources: [], incomeOther: '', familyChallenges: '',
     houseType: '', numRooms: '', houseBuilder: '', houseSchemeName: '',
     appliances: [], numVehicles: '', vehicleTypes: [],
     totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '',
@@ -412,17 +412,64 @@ const HomeVerificationPage = () => {
             delete formData.createdAt;
             delete formData.updatedAt;
 
+            // Handle conversions for UI radios
+            formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+            formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+
             setForm(prev => ({ ...prev, ...formData }));
             if (fm) setFamilyMembers(fm);
             setStatus(data.verification.status);
             if (data.verification.gpsLat && data.verification.gpsLng) {
               setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+              handleReverseGeocode(data.verification.gpsLat, data.verification.gpsLng);
             }
           }
         })
         .catch(err => setApiMsg('Error loading draft: ' + err.message));
     }
   }, [id]);
+
+  const fetchExistingVerification = async (sid) => {
+    if (!sid || id) return; // Don't auto-fetch if we're already on a specific record (ID in URL)
+    try {
+      const res = await fetch(`${API_URL}/check/${sid}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.verification) {
+          const { familyMembers: fm, ...formData } = data.verification;
+          // Clean up Mongo metadata
+          delete formData._id;
+          delete formData.__v;
+          delete formData.createdAt;
+          delete formData.updatedAt;
+
+          // Handle conversions for UI radios
+          formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+          formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+
+          setForm(prev => ({ ...prev, ...formData }));
+          if (fm) setFamilyMembers(fm);
+          setVerificationId(data.verification._id);
+          setStatus(data.verification.status);
+          if (data.verification.gpsLat && data.verification.gpsLng) {
+            setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+          }
+          setApiMsg('Found existing draft for this student. Loaded latest data.');
+          // Update URL without refresh
+          navigate(`/verification/home/${data.verification._id}`, { replace: true });
+        }
+      }
+    } catch (err) {
+      console.error('Error checking existing:', err);
+    }
+  };
+
+  // Auto-capture GPS on mount if not already set
+  useEffect(() => {
+    if (!gpsCoords && !id) {
+      captureGPS();
+    }
+  }, []);
 
   // Pre-fill student data from location state if available
   useEffect(() => {
@@ -485,11 +532,39 @@ const HomeVerificationPage = () => {
   const removeFamilyMember = (i) => setFamilyMembers(prev => prev.filter((_, idx) => idx !== i));
   const updateMember = (i, field, value) => setFamilyMembers(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
 
+  const handleReverseGeocode = async (lat, lng) => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+      const data = await res.json();
+      if (data.address) {
+        const a = data.address;
+        const village = a.village || a.suburb || a.city_district || a.town || a.city || '';
+        const district = a.district || a.county || '';
+        const state = a.state || '';
+        const parts = [village, district, state].filter(Boolean);
+        setLocationAddress(parts.join(', '));
+      }
+    } catch (err) {
+      console.error("Reverse geocoding error:", err);
+    }
+  };
+
   const captureGPS = () => {
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        setGpsCoords({ lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) });
-      });
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const coords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
+          setGpsCoords(coords);
+          handleReverseGeocode(coords.lat, coords.lng);
+          setIsLocating(false);
+        },
+        err => {
+          console.error("GPS Error:", err);
+          setIsLocating(false);
+          setApiMsg("Location permission denied. Please enable GPS.");
+        }
+      );
     }
   };
 
@@ -548,10 +623,12 @@ const HomeVerificationPage = () => {
       }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Save failed');
+
       setVerificationId(data.verification._id);
       setStatus('draft');
       showSuccessAndRedirect('draft');
     } catch (err) {
+      console.error('Save error:', err);
       setApiMsg('Error: ' + err.message);
     } finally { setIsApiLoading(false); }
   };
@@ -559,7 +636,10 @@ const HomeVerificationPage = () => {
   const handleSubmit = async (targetStatus = 'submitted') => {
     setIsApiLoading(true); setApiMsg('');
     try {
-      let res, data;
+      // For submission, we can use PUT if we have an ID, or POST (which will upsert)
+      const payload = { ...buildPayload(), status: 'submitted' };
+      let res;
+
       if (verificationId) {
         res = await fetch(`${API_URL}/${verificationId}`, {
           method: 'PUT',
@@ -727,8 +807,15 @@ const HomeVerificationPage = () => {
                 <option value="SVS">SVS – Singaji Vivekananda Scholarship</option>
               </select>
             </Field>
-            <Field label="Student ID" required>
-              <input name="studentId" value={form.studentId} onChange={handleChange} placeholder="e.g. SSISM-2024-001" className={inputCls} />
+            <Field label="Student ID (Roll Number)" required>
+              <input
+                name="studentId"
+                value={form.studentId}
+                onChange={handleChange}
+                onBlur={(e) => fetchExistingVerification(e.target.value)}
+                placeholder="e.g. 21001"
+                className={inputCls}
+              />
             </Field>
             <Field label="Student Name" required>
               <input name="studentName" value={form.studentName} onChange={handleChange} placeholder="Full name" className={inputCls} />
@@ -895,7 +982,7 @@ const HomeVerificationPage = () => {
         <SectionCard icon={FileText} title="Family Income" color="amber">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Total Annual Family Income (₹)" required>
-              <input name="totalIncome" value={form.totalIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
+              <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
             </Field>
             <div>
               <label className="text-sm font-semibold text-slate-700 block mb-2">Income Sources</label>
@@ -912,7 +999,7 @@ const HomeVerificationPage = () => {
             )}
             <div className="sm:col-span-2">
               <Field label="Challenges Faced by Family">
-                <textarea name="challenges" value={form.challenges} onChange={handleChange} rows={3} placeholder="Describe any major challenges..." className={textareaCls} />
+                <textarea name="familyChallenges" value={form.familyChallenges} onChange={handleChange} rows={3} placeholder="Describe any major challenges..." className={textareaCls} />
               </Field>
             </div>
           </div>

@@ -32,7 +32,7 @@ const homeVerificationSchema = new mongoose.Schema({
     type: String,
     enum: ['SNS', 'SVS', null, ''],
   },
-  studentId: { type: String, trim: true },
+  studentId: { type: String, trim: true, unique: true, required: true },
 
   // --- Academic Details ---
   marks10: { type: Number },
@@ -116,8 +116,10 @@ const homeVerificationSchema = new mongoose.Schema({
 
 // Auto-calculate totalMarks and sanitize enums before saving
 homeVerificationSchema.pre('save', function () {
+  console.log('Pre-save hook for studentId:', this.studentId);
   const vals = [this.marks10, this.marks11, this.marks12, this.collegeExamMarks, this.homeVisitMarks];
   this.totalMarks = vals.reduce((sum, v) => sum + (parseFloat(v) || 0), 0);
+  console.log('Calculated totalMarks:', this.totalMarks);
 
   // Clean up empty string enum fields
   if (this.scholarshipType === '') this.scholarshipType = undefined;
@@ -130,13 +132,18 @@ homeVerificationSchema.pre('save', function () {
 // Also handle updates
 homeVerificationSchema.pre(['update', 'findOneAndUpdate', 'findByIdAndUpdate'], function() {
   const update = this.getUpdate();
-  if (update.marks10 !== undefined || update.marks11 !== undefined || update.marks12 !== undefined || update.collegeExamMarks !== undefined || update.homeVisitMarks !== undefined) {
-    const m10 = update.marks10 || 0;
-    const m11 = update.marks11 || 0;
-    const m12 = update.marks12 || 0;
-    const cem = update.collegeExamMarks || 0;
-    const hvm = update.homeVisitMarks || 0;
-    update.totalMarks = parseFloat(m10) + parseFloat(m11) + parseFloat(m12) + parseFloat(cem) + parseFloat(hvm);
+  if (!update) return;
+
+  const m10 = update.marks10;
+  const m11 = update.marks11;
+  const m12 = update.marks12;
+  const cem = update.collegeExamMarks;
+  const hvm = update.homeVisitMarks;
+
+  if (m10 !== undefined || m11 !== undefined || m12 !== undefined || cem !== undefined || hvm !== undefined) {
+    const val = (v) => parseFloat(v) || 0;
+    update.totalMarks = val(m10) + val(m11) + val(m12) + val(cem) + val(hvm);
+    console.log('Update: Calculated totalMarks:', update.totalMarks);
   }
 });
 
