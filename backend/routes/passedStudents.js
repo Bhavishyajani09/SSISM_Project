@@ -65,21 +65,25 @@ router.post('/manual', async (req, res) => {
             if (!s.studentName) errors.push(`Row ${i + 1}: Student Name is required.`);
             if (!s.fatherName) errors.push(`Row ${i + 1}: Father Name is required.`);
             if (!s.mobileNumber) errors.push(`Row ${i + 1}: Mobile Number is required.`);
-            if (!s.rollNumber) errors.push(`Row ${i + 1}: Roll Number is required.`);
         });
 
         if (errors.length > 0) {
             return res.status(400).json({ success: false, message: 'Validation errors', errors });
         }
 
-        // Auto-increment serialNumber
+        // Auto-increment serialNumber and generate rollNumber
         const lastStudent = await PassedStudent.findOne().sort({ serialNumber: -1 });
         let nextSerial = lastStudent && lastStudent.serialNumber ? lastStudent.serialNumber + 1 : 1;
+        const currentYear = new Date().getFullYear();
         
-        const studentsWithSerial = students.map(s => ({
-            ...s,
-            serialNumber: nextSerial++
-        }));
+        const studentsWithSerial = students.map(s => {
+            const serial = nextSerial++;
+            return {
+                ...s,
+                serialNumber: serial,
+                rollNumber: s.rollNumber || `SCH${currentYear}${String(serial).padStart(3, '0')}`
+            };
+        });
 
         const savedStudents = await PassedStudent.insertMany(studentsWithSerial);
         res.status(201).json({
@@ -113,15 +117,15 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
             return res.status(400).json({ success: false, message: 'The Excel file is empty.' });
         }
 
-        // Validate headers
+        // Validate headers (Roll Number is optional)
         const fileHeaders = Object.keys(rawData[0]).map(h => h.trim().toLowerCase());
-        const requiredHeaders = ['student name', 'father name', 'mobile number', 'roll number'];
+        const requiredHeaders = ['student name', 'father name', 'mobile number'];
         const missingHeaders = requiredHeaders.filter(h => !fileHeaders.some(fh => fh === h));
 
         if (missingHeaders.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: `Wrong format. Expected columns: ${EXPECTED_COLUMNS.join(', ')}`,
+                message: `Wrong format. Missing required columns: ${missingHeaders.join(', ')}`,
             });
         }
 
@@ -138,8 +142,8 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
             return student;
         });
 
-        // Filter out empty rows
-        const validStudents = students.filter(s => s.studentName && s.rollNumber);
+        // Filter out empty rows (Roll Number is now auto-generated if missing)
+        const validStudents = students.filter(s => s.studentName);
 
         if (validStudents.length === 0) {
             return res.status(400).json({ success: false, message: 'No valid student records found in the file.' });
@@ -148,6 +152,7 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
         // Auto-increment missing serial numbers in Excel if they aren't provided
         const lastStudent = await PassedStudent.findOne().sort({ serialNumber: -1 });
         let nextSerial = lastStudent && lastStudent.serialNumber ? lastStudent.serialNumber + 1 : 1;
+        const currentYear = new Date().getFullYear();
 
         const studentsWithSerial = validStudents.map(s => {
             if (!s.serialNumber) {
@@ -158,6 +163,10 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
                 if (!isNaN(sn) && sn >= nextSerial) {
                     nextSerial = sn + 1;
                 }
+            }
+            // Generate Roll Number if not in Excel
+            if (!s.rollNumber) {
+                s.rollNumber = `SCH${currentYear}${String(s.serialNumber).padStart(3, '0')}`;
             }
             return s;
         });
@@ -206,6 +215,20 @@ router.put('/:id', async (req, res) => {
             return res.status(400).json({ success: false, message: error.message });
         }
         res.status(500).json({ success: false, message: 'Server error while updating student.' });
+    }
+});
+
+// ─── GET a student by Roll Number ──────────────────────────────────────────
+router.get('/roll/:rollNumber', async (req, res) => {
+    try {
+        const student = await PassedStudent.findOne({ rollNumber: req.params.rollNumber });
+        if (!student) {
+            return res.status(404).json({ success: false, message: 'Student not found.' });
+        }
+        res.json({ success: true, data: student });
+    } catch (error) {
+        console.error('Error fetching student by roll number:', error);
+        res.status(500).json({ success: false, message: 'Server error while fetching student.' });
     }
 });
 

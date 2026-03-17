@@ -15,18 +15,16 @@ const EMPTY_STUDENT = {
   subjectIn12th: '',
   villageTown: '',
   district: '',
-  rollNumber: '',
   scholarshipExamMarks: '',
 };
 
 const FIELDS = [
   { key: 'studentName', label: 'Student Name', type: 'text', required: true, placeholder: 'Full name' },
   { key: 'fatherName', label: 'Father Name', type: 'text', required: true, placeholder: "Father's full name" },
-  { key: 'rollNumber', label: 'Roll Number', type: 'text', required: true, placeholder: 'e.g. 2024001' },
+  { key: 'busTrack', label: 'Bus Track', type: 'text', required: true, placeholder: 'e.g. Route A' },
   { key: 'mobileNumber', label: 'Mobile Number', type: 'tel', required: true, placeholder: '10-digit number' },
   { key: 'whatsappNumber', label: 'WhatsApp Number', type: 'tel', required: true, placeholder: 'WhatsApp number' },
   { key: 'subjectIn12th', label: 'Subject in 12th', type: 'text', required: true, placeholder: 'e.g. Science, Commerce' },
-  { key: 'busTrack', label: 'Bus Track', type: 'text', required: true, placeholder: 'e.g. Route A' },
   { key: 'villageTown', label: 'Village / Town', type: 'text', required: true, placeholder: 'Village or town name' },
   { key: 'district', label: 'District', type: 'text', required: true, placeholder: 'District name' },
   { key: 'scholarshipExamMarks', label: 'Scholarship Marks', type: 'number', required: true, placeholder: '0 - 50' },
@@ -188,7 +186,6 @@ export default function AddPassedStudents() {
       const s = students[i];
       if (!s.studentName?.trim()) { firstError = `Student ${i + 1}: Student Name is required`; break; }
       if (!s.fatherName?.trim()) { firstError = `Student ${i + 1}: Father Name is required`; break; }
-      if (!s.rollNumber?.trim()) { firstError = `Student ${i + 1}: Roll Number is required`; break; }
       if (!s.mobileNumber?.trim()) { firstError = `Student ${i + 1}: Mobile Number is required`; break; }
       if (s.mobileNumber?.trim() && !/^\d{10}$/.test(s.mobileNumber.trim())) { firstError = `Student ${i + 1}: Mobile Number must be exactly 10 digits`; break; }
       if (!s.whatsappNumber?.trim()) { firstError = `Student ${i + 1}: WhatsApp Number is required`; break; }

@@ -8,10 +8,11 @@ export default function Navbar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const getPageTitle = () => {
-    if (location.pathname === '/dashboard') return 'Dashboard';
-    if (location.pathname === '/add-passed-students') return 'Add Students';
-    if (location.pathname === '/home-verification') return 'Home Verification';
-    if (location.pathname === '/admin-verification') return 'Admin Portal';
+    const p = location.pathname;
+    if (p.startsWith('/dashboard')) return 'Dashboard';
+    if (p.startsWith('/add-passed-students')) return 'Add Students';
+    if (p.startsWith('/home-verification') || p.startsWith('/verification/home')) return 'Home Verification';
+    if (p.startsWith('/admin-verification')) return 'Admin Portal';
     return 'SSISM Portal';
   };
 

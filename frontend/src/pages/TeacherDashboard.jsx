@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+
 
 const API_BASE = 'http://localhost:5000/api';
 const PAGE_SIZE = 10;
@@ -13,8 +14,13 @@ export default function TeacherDashboard() {
   const [page, setPage] = useState(1);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => { fetchStudents(); }, []);
+
+  const handleVerify = (student) => {
+    navigate('/verification/home', { state: { studentData: student } });
+  };
 
   const fetchStudents = async () => {
     try {
@@ -157,10 +163,11 @@ export default function TeacherDashboard() {
                   ))}
                 </div>
                 <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-100">
-                   <button onClick={() => handleEdit(s)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit">
+
+                   <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit">
                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                    </button>
-                   <button onClick={() => handleDelete(s._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete">
+                   <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete">
                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                    </button>
                 </div>
@@ -180,7 +187,7 @@ export default function TeacherDashboard() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {paginated.map((s, i) => (
-                  <tr key={s._id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={s._id} onClick={() => handleVerify(s)} className="hover:bg-gray-50 transition-colors cursor-pointer group">
                     <td className="px-5 py-4 text-gray-400 text-xs">{(page - 1) * PAGE_SIZE + i + 1}</td>
                     <td className="px-5 py-4 font-semibold text-gray-800">{s.studentName}</td>
                     <td className="px-5 py-4 text-gray-500">{s.fatherName}</td>
@@ -193,10 +200,11 @@ export default function TeacherDashboard() {
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleEdit(s)} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+
+                        <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         </button>
-                        <button onClick={() => handleDelete(s._id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
                       </div>

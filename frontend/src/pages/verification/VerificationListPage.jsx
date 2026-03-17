@@ -42,7 +42,7 @@ export default function VerificationListPage() {
   const [loading, setLoading]             = useState(true);
   const [searchTerm, setSearchTerm]       = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
-  const [statusFilter, setStatusFilter]   = useState('all'); // all | pending | draft | submitted | rejected
+  const [statusFilter, setStatusFilter]   = useState('pending'); // all | pending | draft | submitted | rejected
   const [currentPage, setCurrentPage]     = useState(1);
   const itemsPerPage = 10;
   const navigate = useNavigate();
@@ -268,10 +268,12 @@ export default function VerificationListPage() {
                       <td className="px-5 py-4">
                         <StatusBadge status={st} />
                       </td>
-                      <td className="px-5 py-4">
-                        <span className="text-xs font-semibold flex items-center gap-1 text-brand-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {st === 'pending' ? 'Start' : 'Open'} <ChevronRight size={14} />
-                        </span>
+                      <td className="px-5 py-4 text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-xs font-semibold text-brand-500 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 flex items-center gap-0.5">
+                            {st === 'pending' ? 'Verify' : 'Open'} <ChevronRight size={14} />
+                          </span>
+                        </div>
                       </td>
                     </tr>
                   );

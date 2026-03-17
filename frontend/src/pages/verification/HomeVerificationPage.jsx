@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import {
-  Camera, Plus, Save, ChevronDown, ChevronUp, CheckCircle2,
+  Camera, Plus, Save, ChevronDown, ChevronUp, ChevronRight, CheckCircle2,
   User, Home, MapPin, LandPlot, ClipboardCheck, Trash2,
   X, RotateCw, Check, ArrowLeft, BookOpen, Heart, Users,
   Tractor, FileText, Clock, CheckCircle, XCircle, Send,
@@ -178,8 +178,8 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
       setLocalPreview(URL.createObjectURL(file));
       setLoading(true);
       const formData = new FormData();
-      formData.append('image', file);
       if (studentId) formData.append('studentId', studentId);
+      formData.append('image', file);
 
       try {
         const res = await fetch('http://localhost:5000/api/upload', {
@@ -277,8 +277,8 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
       setLocalPreview(URL.createObjectURL(file));
       setLoading(true);
       const formData = new FormData();
-      formData.append('image', file);
       if (studentId) formData.append('studentId', studentId);
+      formData.append('image', file);
 
       try {
         const res = await fetch('http://localhost:5000/api/upload', {
@@ -393,144 +393,11 @@ const HomeVerificationPage = () => {
   const [apiMsg, setApiMsg] = useState('');
   const [gpsCoords, setGpsCoords] = useState(null);
   const [successOverlay, setSuccessOverlay] = useState(null); // null | 'draft' | 'submitted' | 'rejected'
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationAddress, setLocationAddress] = useState('');
 
   // Form is locked if submitted, teacher_rejected, rejected, or approved
   const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'rejected' || status === 'approved';
-
-  // Load data if ID exists
-  useEffect(() => {
-    if (id) {
-      setVerificationId(id);
-      fetch(`${API_URL}/${id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.verification) {
-            const { familyMembers: fm, ...formData } = data.verification;
-            // Clean up Mongo metadata
-            delete formData._id;
-            delete formData.__v;
-            delete formData.createdAt;
-            delete formData.updatedAt;
-
-            // Handle conversions for UI radios
-            formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
-            formData.hasAchievements = formData.achievements ? 'yes' : 'no';
-
-            setForm(prev => ({ ...prev, ...formData }));
-            if (fm) setFamilyMembers(fm);
-            setStatus(data.verification.status);
-            if (data.verification.gpsLat && data.verification.gpsLng) {
-              setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
-              handleReverseGeocode(data.verification.gpsLat, data.verification.gpsLng);
-            }
-          }
-        })
-        .catch(err => setApiMsg('Error loading draft: ' + err.message));
-    }
-  }, [id]);
-
-  const fetchExistingVerification = async (sid) => {
-    if (!sid || id) return; // Don't auto-fetch if we're already on a specific record (ID in URL)
-    try {
-      const res = await fetch(`${API_URL}/check/${sid}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.verification) {
-          const { familyMembers: fm, ...formData } = data.verification;
-          // Clean up Mongo metadata
-          delete formData._id;
-          delete formData.__v;
-          delete formData.createdAt;
-          delete formData.updatedAt;
-
-          // Handle conversions for UI radios
-          formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
-          formData.hasAchievements = formData.achievements ? 'yes' : 'no';
-
-          setForm(prev => ({ ...prev, ...formData }));
-          if (fm) setFamilyMembers(fm);
-          setVerificationId(data.verification._id);
-          setStatus(data.verification.status);
-          if (data.verification.gpsLat && data.verification.gpsLng) {
-            setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
-          }
-          setApiMsg('Found existing draft for this student. Loaded latest data.');
-          // Update URL without refresh
-          navigate(`/verification/home/${data.verification._id}`, { replace: true });
-        }
-      }
-    } catch (err) {
-      console.error('Error checking existing:', err);
-    }
-  };
-
-  // Auto-capture GPS on mount if not already set
-  useEffect(() => {
-    if (!gpsCoords && !id) {
-      captureGPS();
-    }
-  }, []);
-
-  // Pre-fill student data from location state if available
-  useEffect(() => {
-    if (location.state?.studentData && !id) {
-      const s = location.state.studentData;
-      
-      // Check if a draft/submission already exists for this student
-      fetch(`${API_URL}/student/${s.rollNumber}`)
-        .then(res => {
-          if (res.ok) return res.json();
-          throw new Error('Not found');
-        })
-        .then(data => {
-          if (data.verification) {
-            setVerificationId(data.verification._id);
-            const { familyMembers: fm, ...formData } = data.verification;
-            delete formData._id;
-            delete formData.__v;
-            delete formData.createdAt;
-            delete formData.updatedAt;
-
-            setForm(prev => ({ ...prev, ...formData }));
-            if (fm) setFamilyMembers(fm);
-            setStatus(data.verification.status);
-            if (data.verification.gpsLat && data.verification.gpsLng) {
-              setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
-            }
-          }
-        })
-        .catch(() => {
-          // No existing verification, just populate from passed student data
-          setForm(prev => ({
-            ...prev,
-            studentId: s.rollNumber?.toString() || '',
-            studentName: s.studentName || '',
-            mobile: s.mobileNumber || '',
-            fatherName: s.fatherName || '',
-            village: s.villageTown || '',
-            district: s.district || '',
-            subject12: s.subjectIn12th || '',
-            track: s.busTrack || '',
-          }));
-        });
-    }
-  }, [location.state, id]);
-
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (type === 'checkbox') {
-      setForm(prev => {
-        const arr = prev[name] ? [...prev[name]] : [];
-        return { ...prev, [name]: checked ? [...arr, value] : arr.filter(v => v !== value) };
-      });
-    } else {
-      setForm(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const addFamilyMember = () => setFamilyMembers(prev => [...prev, { name: '', relation: '', occupation: '', income: '', mobile: '' }]);
-  const removeFamilyMember = (i) => setFamilyMembers(prev => prev.filter((_, idx) => idx !== i));
-  const updateMember = (i, field, value) => setFamilyMembers(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
 
   const handleReverseGeocode = async (lat, lng) => {
     try {
@@ -568,6 +435,120 @@ const HomeVerificationPage = () => {
     }
   };
 
+  const fetchExistingVerification = async (sid) => {
+    if (!sid || id) return; // Don't auto-fetch if we're already on a specific record (ID in URL)
+    try {
+      // 1. First check if a verification record already exists
+      const res = await fetch(`${API_URL}/check/${sid}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.verification) {
+          const { familyMembers: fm, ...formData } = data.verification;
+          // Clean up Mongo metadata
+          delete formData._id; delete formData.__v; delete formData.createdAt; delete formData.updatedAt;
+
+          formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+          formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+
+          setForm(prev => ({ ...prev, ...formData }));
+          if (fm) setFamilyMembers(fm);
+          setVerificationId(data.verification._id);
+          setStatus(data.verification.status);
+          if (data.verification.gpsLat && data.verification.gpsLng) {
+            setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+          }
+          setApiMsg('Found existing draft for this student. Loaded latest data.');
+          navigate(`/verification/home/${data.verification._id}`, { replace: true });
+          return; // Exit if found
+        }
+      }
+
+      // 2. If no verification found, fetch basic student info from passed-students
+      const studentRes = await fetch(`http://localhost:5000/api/passed-students/roll/${sid}`);
+      if (studentRes.ok) {
+        const sData = await studentRes.json();
+        if (sData.data) {
+          const s = sData.data;
+          setForm(prev => ({
+            ...prev,
+            studentId: s.rollNumber || '',
+            studentName: s.studentName || '',
+            fatherName: s.fatherName || '',
+            mobile: s.mobileNumber || '',
+            village: s.villageTown || '',
+            district: s.district || '',
+            collegeExamMarks: s.scholarshipExamMarks || '',
+            track: s.busTrack || '',
+            subject12: s.subjectIn12th || '',
+          }));
+          setApiMsg('Loaded student details from registration database.');
+        }
+      }
+    } catch (err) {
+      console.error('Error checking existing:', err);
+    }
+  };
+
+  // Load student data from location state or ID param
+  useEffect(() => {
+    if (id) {
+      setVerificationId(id);
+      fetch(`${API_URL}/${id}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.verification) {
+            console.log('Loaded Verification Data:', data.verification);
+            const { familyMembers: fm, ...formData } = data.verification;
+            // Clean up Mongo metadata
+            delete formData._id; delete formData.__v; delete formData.createdAt; delete formData.updatedAt;
+
+            // Handle conversions for UI radios
+            formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+            formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+
+            setForm(prev => ({ ...prev, ...formData }));
+            if (fm) setFamilyMembers(fm);
+            setStatus(data.verification.status);
+            if (data.verification.gpsLat && data.verification.gpsLng) {
+              setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+              handleReverseGeocode(data.verification.gpsLat, data.verification.gpsLng);
+            }
+          }
+        })
+        .catch(err => setApiMsg('Error loading record: ' + err.message));
+    } else if (location.state?.studentData) {
+      // Coming from List or Dashboard
+      const s = location.state.studentData;
+      // Triggers lookup of existing draft OR pre-fills from registration
+      fetchExistingVerification(s.rollNumber);
+    }
+  }, [id, location.state]);
+
+  // Auto-capture GPS on mount if not already set
+  useEffect(() => {
+    if (!gpsCoords && !id) {
+      captureGPS();
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setForm(prev => {
+        const arr = prev[name] ? [...prev[name]] : [];
+        return { ...prev, [name]: checked ? [...arr, value] : arr.filter(v => v !== value) };
+      });
+    } else {
+      setForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const addFamilyMember = () => setFamilyMembers(prev => [...prev, { name: '', relation: '', occupation: '', income: '', mobile: '' }]);
+  const removeFamilyMember = (i) => setFamilyMembers(prev => prev.filter((_, idx) => idx !== i));
+  const updateMember = (i, field, value) => setFamilyMembers(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
+
+
+
   const handlePhotoUpload = (label, url) => {
     setForm(prev => {
       const photos = prev.photos || [];
@@ -587,16 +568,18 @@ const HomeVerificationPage = () => {
   };
 
   // Build the payload to send to backend
-  const buildPayload = () => ({
-    ...form,
-    familyMembers,
-    totalAnnualIncome: form.totalIncome,
-    familyChallenges: form.challenges,
-    hasIllness: form.hasIllness === 'yes',
-    achievements: form.hasAchievements === 'yes' ? form.achievements : '',
-    gpsLat: gpsCoords?.lat,
-    gpsLng: gpsCoords?.lng,
-  });
+  const buildPayload = () => {
+    const payload = {
+      ...form,
+      familyMembers,
+      hasIllness: form.hasIllness === 'yes',
+      achievements: form.hasAchievements === 'yes' ? form.achievements : '',
+      gpsLat: gpsCoords?.lat,
+      gpsLng: gpsCoords?.lng,
+    };
+    console.log('Building payload for backend:', payload);
+    return payload;
+  };
 
   // Show success overlay then redirect
   const showSuccessAndRedirect = (actionStatus) => {
@@ -622,43 +605,68 @@ const HomeVerificationPage = () => {
         });
       }
       const data = await res.json();
+      console.log('Save Draft Success Response:', data);
       if (!res.ok) throw new Error(data.error || 'Save failed');
 
-      setVerificationId(data.verification._id);
-      setStatus('draft');
+      if (data.verification) {
+        setVerificationId(data.verification._id);
+        setStatus('draft');
+        // Sync form with backend data to ensure photo URLs etc are persisted
+        const { familyMembers: fm, ...formData } = data.verification;
+        formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+        formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+        if (formData.verificationDate) formData.verificationDate = new Date(formData.verificationDate).toISOString().split('T')[0];
+        
+        setForm(prev => ({ ...prev, ...formData }));
+        if (fm) setFamilyMembers(fm);
+      }
+      
       showSuccessAndRedirect('draft');
     } catch (err) {
-      console.error('Save error:', err);
+      console.error('Save Draft Error:', err);
       setApiMsg('Error: ' + err.message);
     } finally { setIsApiLoading(false); }
   };
 
   const handleSubmit = async (targetStatus = 'submitted') => {
     setIsApiLoading(true); setApiMsg('');
-    try {
-      // For submission, we can use PUT if we have an ID, or POST (which will upsert)
-      const payload = { ...buildPayload(), status: 'submitted' };
-      let res;
+    const payload = { ...buildPayload(), status: targetStatus };
+    console.log(`Submitting form with status ${targetStatus}:`, payload);
 
+    try {
+      let res;
       if (verificationId) {
         res = await fetch(`${API_URL}/${verificationId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: targetStatus }),
+          body: JSON.stringify(payload),
         });
       } else {
         res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: targetStatus }),
+          body: JSON.stringify(payload),
         });
       }
-      data = await res.json();
+      const data = await res.json();
+      console.log('Final Submit Success Response:', data);
       if (!res.ok) throw new Error(data.error || `${targetStatus} failed`);
-      setVerificationId(data.verification._id);
-      setStatus(targetStatus);
+      
+      if (data.verification) {
+        setVerificationId(data.verification._id);
+        setStatus(targetStatus);
+        const { familyMembers: fm, ...formData } = data.verification;
+        formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+        formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+        if (formData.verificationDate) formData.verificationDate = new Date(formData.verificationDate).toISOString().split('T')[0];
+        
+        setForm(prev => ({ ...prev, ...formData }));
+        if (fm) setFamilyMembers(fm);
+      }
+      
       showSuccessAndRedirect(targetStatus);
     } catch (err) {
+      console.error('Submit Error:', err);
       setApiMsg('Error: ' + err.message);
     } finally { setIsApiLoading(false); }
   };
@@ -720,32 +728,37 @@ const HomeVerificationPage = () => {
         );
       })()}
 
-      {/* Slim Sticky Navbar */}
-      <div className="sticky top-0 z-30 bg-white border-b border-orange-100 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-500 mr-1"
-            title="Go Back"
-          >
-            <ArrowLeft size={20} />
-          </button>
-          <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center overflow-hidden border-2 border-orange-400 shrink-0">
-            <img src={ssismLogo} alt="SSISM" className="w-full h-full object-cover" />
+      {/* Slim Sticky Header (Sub-navbar) */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-orange-100 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/home-verification')}
+              className="p-2 hover:bg-orange-50 rounded-xl transition-all text-slate-500 hover:text-orange-600 border border-transparent hover:border-orange-100 group"
+              title="Return to List"
+            >
+              <ArrowLeft size={20} className="group-active:-translate-x-1 transition-transform" />
+            </button>
+            <div className="h-8 w-px bg-slate-200 mx-1" />
+            <div>
+              <h1 className="text-sm font-bold text-slate-800 leading-tight">Verification Form</h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-0.5">Edit mode</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-[13px] font-bold text-gray-900 leading-tight uppercase tracking-tight">Home Visit Verification</h1>
-            <p className="text-[10px] text-orange-400 font-medium uppercase tracking-widest leading-tight mt-0.5">SSISM SCHOLARSHIP PORTAL</p>
-          </div>
-          {status && (
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full shrink-0 ${status === 'approved' ? 'bg-green-100 text-green-700' :
-              status === 'rejected' ? 'bg-red-100 text-red-700' :
-                status === 'submitted' ? 'bg-blue-100 text-blue-700' :
-                  'bg-orange-100 text-orange-700'
+          
+          <div className="flex items-center gap-2">
+            {status && (
+              <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm ${
+                status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
+                status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                status === 'teacher_rejected' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
+                'bg-slate-50 text-slate-600 border-slate-200'
               }`}>
-              {status === 'saved' || status === 'draft' ? '✓ Draft' : status === 'submitted' ? '✓ Submitted' : status === 'approved' ? '✓ Approved' : '✗ Rejected'}
-            </span>
-          )}
+                {status === 'teacher_rejected' ? 'Teacher Rejected' : status.replace('_', ' ')}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -753,15 +766,30 @@ const HomeVerificationPage = () => {
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-5 pb-32">
 
         {/* GPS + Timestamp info bar */}
-        <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          <button onClick={captureGPS} disabled={isReadOnly}
-            className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 hover:bg-orange-50 hover:text-orange-600 transition-all font-medium disabled:opacity-60 disabled:cursor-not-allowed">
-            <MapPin size={12} className="text-orange-400" />
-            {gpsCoords ? `${gpsCoords.lat}, ${gpsCoords.lng}` : 'Capture GPS Location'}
+        <div className="flex flex-wrap gap-3 text-xs">
+          <button onClick={captureGPS} disabled={isReadOnly || isLocating}
+            className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all font-semibold text-slate-600 disabled:opacity-60 shadow-sm group">
+            <div className={`p-1 rounded-lg ${isLocating ? 'bg-orange-100' : 'bg-orange-50'}`}>
+              <MapPin size={12} className={`text-orange-500 ${isLocating ? 'animate-bounce' : 'group-hover:scale-110'}`} />
+            </div>
+            <div className="flex flex-col items-start leading-tight">
+              <span className="text-[9px] uppercase tracking-widest text-slate-400">Location Details</span>
+              <span>{isLocating ? 'Determining location...' : (gpsCoords ? `${gpsCoords.lat}, ${gpsCoords.lng}` : 'Capture Location')}</span>
+            </div>
           </button>
-          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 font-medium">
+          
+          {locationAddress && !isLocating && (
+             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2 text-emerald-700 font-medium shadow-sm animate-fade-in">
+               <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+                 <Home size={12} />
+               </div>
+               <span className="truncate max-w-[200px]">{locationAddress}</span>
+             </div>
+          )}
+
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-semibold text-slate-500 shadow-sm ml-auto">
             <Clock size={12} className="text-slate-400" />
-            {new Date().toLocaleString('en-IN')}
+            {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
 
@@ -836,19 +864,34 @@ const HomeVerificationPage = () => {
         <SectionCard icon={BookOpen} title="Academic Details" color="blue">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
             {[
-              { label: '10th Percentage', name: 'marks10' },
-              { label: '11th Percentage', name: 'marks11' },
-              { label: '12th Percentage', name: 'marks12' },
-              { label: 'College Exam Marks', name: 'collegeExamMarks' },
-              { label: 'Home Visit Marks', name: 'homeVisitMarks' },
+              { label: '10th Percentage (Max 100)', name: 'marks10', max: 100 },
+              { label: '11th Percentage (Max 100)', name: 'marks11', max: 100 },
+              { label: '12th Percentage (Max 100)', name: 'marks12', max: 100 },
+              { label: 'College Exam Marks (Max 50)', name: 'collegeExamMarks', max: 50 },
+              { label: 'Home Visit Marks (Max 50)', name: 'homeVisitMarks', max: 50 },
             ].map(f => (
               <Field key={f.name} label={f.label}>
-                <input name={f.name} value={form[f.name]} onChange={handleChange} type="number" min="0" max="100" placeholder="0" className={inputCls} />
+                <input name={f.name} value={form[f.name]} onChange={handleChange} type="number" min="0" max={f.max} placeholder="0" className={inputCls} />
               </Field>
             ))}
-            <Field label="Total Marks">
-              <div className="px-4 py-2.5 rounded-xl border-2 border-orange-300 bg-orange-50 text-orange-700 font-bold text-sm">
-                {totalMarks}
+            <Field label="Cumulative Score / Total Marks">
+              <div className="relative">
+                <input 
+                  readOnly 
+                  value={`${totalMarks} / 400`}
+                  className={`${inputCls} bg-orange-50/50 border-orange-200 font-bold text-orange-700`}
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-orange-500 transition-all duration-500" 
+                      style={{ width: `${Math.min(100, (parseFloat(totalMarks) / 400) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-black text-orange-500 whitespace-nowrap">
+                    {Math.round((parseFloat(totalMarks) / 400) * 100)}%
+                  </span>
+                </div>
               </div>
             </Field>
           </div>
@@ -1183,58 +1226,70 @@ const HomeVerificationPage = () => {
 
           {/* Action buttons — only when form is editable (new or draft) */}
           {!isReadOnly ? (
-            <div className="grid grid-cols-1 gap-3">
-
-              {/* Save Draft */}
-              <button onClick={handleSave} disabled={isApiLoading}
-                className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 transition-all active:scale-95 disabled:opacity-50 shadow-sm">
-                <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500 shrink-0 border border-slate-100 group-hover:bg-slate-800 group-hover:text-white transition-all">
-                  <Save size={16} />
-                </div>
-                <div className="text-left leading-tight">
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{isApiLoading ? '...' : 'Save Draft'}</div>
-                  <div className="text-xs font-bold text-slate-800">Draft</div>
-                </div>
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button 
+                onClick={handleSave} 
+                disabled={isApiLoading}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
+              >
+                <Save size={18} />
+                Save as Draft
               </button>
 
-              {/* Submit */}
-              <button onClick={() => handleSubmit('submitted')} disabled={isApiLoading}
-                className="group flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 border border-slate-800 text-white transition-all active:scale-95 disabled:opacity-50 shadow-md">
-                <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Send size={16} />
-                </div>
-                <div className="text-left leading-tight">
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-slate-400">{isApiLoading ? '...' : 'Final Submit'}</div>
-                  <div className="text-xs font-bold">Submit for Review</div>
-                </div>
+              <button 
+                onClick={() => {
+                  if (window.confirm("ARE YOU SURE? \n\nOnce you submit, this form will be LOCKED for final admin review. You will not be able to edit it again.")) {
+                    handleSubmit('submitted');
+                  }
+                }} 
+                disabled={isApiLoading}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-md shadow-brand-100 active:scale-95 disabled:opacity-50"
+              >
+                <Send size={18} />
+                Submit Verification
               </button>
 
-              {/* Reject */}
-              <button onClick={() => handleSubmit('teacher_rejected')} disabled={isApiLoading}
-                className="group flex items-center justify-center gap-2.5 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 transition-all active:scale-95 disabled:opacity-50">
-                <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center text-red-500 shrink-0 border border-red-200 group-hover:bg-red-200 transition-all">
-                  <XCircle size={16} />
-                </div>
-                <div className="text-left leading-tight">
-                  <div className="text-[9px] font-bold uppercase tracking-widest text-red-400">{isApiLoading ? '...' : 'Mark as Rejected'}</div>
-                  <div className="text-xs font-bold">Teacher Reject</div>
-                </div>
+              <button 
+                onClick={() => {
+                   if (window.confirm("Reject this verification?")) {
+                      handleSubmit('teacher_rejected');
+                   }
+                }}
+                disabled={isApiLoading}
+                className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
+              >
+                <XCircle size={18} />
+                Reject
               </button>
-
             </div>
           ) : (
             // Locked state notice
-            <div className={`flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-semibold border ${
-              status === 'submitted' ? 'bg-blue-50 border-blue-200 text-blue-700' :
-              status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-50 border-red-200 text-red-700' :
-              'bg-green-50 border-green-200 text-green-700'
+            <div className={`flex flex-col items-center justify-center gap-3 py-6 px-4 rounded-3xl text-sm font-bold border-2 animate-fade-in ${
+              status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-800' :
+              status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-50 border-red-100 text-red-800' :
+              'bg-green-50 border-green-100 text-green-800'
             }`}>
-              🔒{
-                status === 'submitted' ? ' Submitted — Awaiting admin review.' :
-                status === 'teacher_rejected' ? ' Rejected by Teacher — Waiting for Admin.' :
-                status === 'rejected' ? ' Rejected by Admin — Contact admin for further action.' :
-                ' Approved by Admin — Record is finalized.'
-              }
+              <div className={`p-3 rounded-2xl ${
+                status === 'submitted' ? 'bg-blue-100 text-blue-600' :
+                status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-100 text-red-600' :
+                'bg-green-100 text-green-600'
+              }`}>
+                {status === 'submitted' ? <Clock size={24} className="animate-pulse" /> : status === 'approved' ? <CheckCircle size={24} /> : <XCircle size={24} />}
+              </div>
+              <div className="text-center">
+                <p className="uppercase tracking-widest text-[10px] opacity-60 mb-1">Current Record Status</p>
+                <p className="text-lg tracking-tight">{
+                  status === 'submitted' ? 'Awaiting Admin Review' :
+                  status === 'teacher_rejected' ? 'Rejected by Teacher' :
+                  status === 'rejected' ? 'Rejected by Administrator' :
+                  'Approved & Finalized'
+                }</p>
+                <p className="text-xs font-medium opacity-60 mt-1">{
+                  status === 'submitted' ? 'Form is locked for editing during review.' :
+                  status === 'approved' ? 'Record is authorized and completed.' :
+                  'This student has been rejected for scholarship.'
+                }</p>
+              </div>
             </div>
           )}
         </div>

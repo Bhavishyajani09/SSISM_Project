@@ -74,7 +74,9 @@ function App() {
           path="/verification/home/:id?"
           element={
             <ProtectedRoute>
-              <HomeVerificationPage />
+              <MainLayout>
+                <HomeVerificationPage />
+              </MainLayout>
             </ProtectedRoute>
           }
         />

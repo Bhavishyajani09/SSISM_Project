@@ -10,7 +10,7 @@ exports.saveVerification = async (req, res) => {
       return res.status(400).json({ error: 'Student ID is required.' });
     }
 
-    const data = { ...req.body, status: 'draft' };
+    const data = { ...req.body, status: req.body.status || 'draft' };
 
     // Sanitize empty strings for enum fields
     ['scholarshipType', 'houseType', 'houseBuilder', 'landType'].forEach(k => {
@@ -60,9 +60,12 @@ exports.submitVerification = async (req, res) => {
   try {
     const { id } = req.params;
     const targetStatus = req.body.status || 'submitted';
+    console.log(`Updating verification ${id} to status: ${targetStatus}`);
+    console.log('Update payload studentId:', req.body.studentId);
+    
     const verification = await HomeVerification.findByIdAndUpdate(
       id,
-      { ...req.body, status: 'submitted' },
+      { ...req.body, status: targetStatus },
       { returnDocument: 'after', runValidators: true }
     );
     if (!verification) {
