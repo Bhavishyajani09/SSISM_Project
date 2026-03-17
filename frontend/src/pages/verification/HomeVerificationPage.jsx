@@ -54,13 +54,39 @@ const selectCls = inputCls;
 const textareaCls = inputCls + " resize-none";
 
 // Photo Preview Item
-const PhotoUpload = ({ label, id }) => {
-  const [preview, setPreview] = useState(null);
+const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
+  const [localPreview, setLocalPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
   const ref = useRef();
-  const handleChange = (e) => {
+
+  const displayUrl = localPreview || previewUrl;
+
+  const handleChange = async (e) => {
     const file = e.target.files[0];
-    if (file) setPreview(URL.createObjectURL(file));
+    if (file) {
+      setLocalPreview(URL.createObjectURL(file));
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('image', file);
+      if (studentId) formData.append('studentId', studentId);
+      
+      try {
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.url && onUpload) {
+          onUpload(data.url);
+        }
+      } catch (err) {
+        console.error('Upload error', err);
+      } finally {
+        setLoading(false);
+      }
+    }
   };
+
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm font-medium text-slate-600">{label}</span>
@@ -68,8 +94,10 @@ const PhotoUpload = ({ label, id }) => {
         onClick={() => ref.current.click()}
         className="relative cursor-pointer border-2 border-dashed border-orange-300 rounded-xl overflow-hidden bg-orange-50 hover:bg-orange-100 transition-all flex items-center justify-center h-36"
       >
-        {preview ? (
-          <img src={preview} alt="preview" className="w-full h-full object-cover" />
+        {loading ? (
+          <span className="text-xs text-orange-500 font-medium">Uploading...</span>
+        ) : displayUrl ? (
+          <img src={displayUrl} alt="preview" className="w-full h-full object-cover" />
         ) : (
           <div className="flex flex-col items-center gap-2 text-orange-400">
             <Camera size={28} />
@@ -83,9 +111,39 @@ const PhotoUpload = ({ label, id }) => {
 };
 
 // Signature Upload
-const SignatureField = ({ label }) => {
-  const [preview, setPreview] = useState(null);
+const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
+  const [localPreview, setLocalPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
   const ref = useRef();
+
+  const displayUrl = localPreview || previewUrl;
+
+  const handleChange = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLocalPreview(URL.createObjectURL(file));
+      setLoading(true);
+      const formData = new FormData();
+      formData.append('image', file);
+      if (studentId) formData.append('studentId', studentId);
+      
+      try {
+        const res = await fetch('http://localhost:5000/api/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.url && onUpload) {
+          onUpload(data.url);
+        }
+      } catch (err) {
+        console.error('Upload error', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm font-semibold text-slate-700">{label}</span>
@@ -93,13 +151,14 @@ const SignatureField = ({ label }) => {
         onClick={() => ref.current.click()}
         className="cursor-pointer border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 hover:bg-slate-100 h-24 flex items-center justify-center"
       >
-        {preview
-          ? <img src={preview} alt="signature" className="h-20 object-contain" />
+        {loading ? (
+          <span className="text-xs text-slate-500 font-medium">Uploading...</span>
+        ) : displayUrl
+          ? <img src={displayUrl} alt="signature" className="h-20 object-contain" />
           : <span className="text-xs text-slate-400 font-medium">Tap to upload signature</span>
         }
       </div>
-      <input ref={ref} type="file" accept="image/*" className="hidden"
-        onChange={e => { const f = e.target.files[0]; if (f) setPreview(URL.createObjectURL(f)); }} />
+      <input ref={ref} type="file" accept="image/*" className="hidden" onChange={handleChange} />
     </div>
   );
 };
@@ -122,7 +181,12 @@ const HomeVerificationPage = () => {
     appliances: [], numVehicles: '', vehicleTypes: [],
     totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '',
     livestock: [], supervisorRemarks: '',
-    achievements: '',
+    hasAchievements: 'no', achievements: '',
+    photos: [],
+    studentSignatureUrl: '',
+    fatherSignatureUrl: '',
+    motherSignatureUrl: '',
+    supervisorSignatureUrl: '',
   });
 
   const [familyMembers, setFamilyMembers] = useState([
@@ -185,6 +249,24 @@ const HomeVerificationPage = () => {
     }
   };
 
+  const handlePhotoUpload = (label, url) => {
+    setForm(prev => {
+      const photos = prev.photos || [];
+      const existingIdx = photos.findIndex(p => p.label === label);
+      if (existingIdx >= 0) {
+        const updated = [...photos];
+        updated[existingIdx] = { label, url };
+        return { ...prev, photos: updated };
+      }
+      return { ...prev, photos: [...photos, { label, url }] };
+    });
+  };
+
+  const getPhotoPreview = (label) => {
+    const photo = form.photos?.find(p => p.label === label);
+    return photo ? photo.url : null;
+  };
+
   // Build the payload to send to backend
   const buildPayload = () => ({
     ...form,
@@ -192,6 +274,7 @@ const HomeVerificationPage = () => {
     totalAnnualIncome: form.totalIncome,
     familyChallenges: form.challenges,
     hasIllness: form.hasIllness === 'yes',
+    achievements: form.hasAchievements === 'yes' ? form.achievements : '',
     gpsLat: gpsCoords?.lat,
     gpsLng: gpsCoords?.lng,
   });
@@ -437,16 +520,25 @@ const HomeVerificationPage = () => {
               <input name="futureGoal" value={form.futureGoal} onChange={handleChange} placeholder="Career goal" className={inputCls} />
             </Field>
             <div className="sm:col-span-2">
-              <Field label={<div className="flex items-center gap-1.5"><Trophy size={14} className="text-amber-500" /> Special Achievements / Awards</div>}>
-                <textarea
-                  name="achievements"
-                  value={form.achievements}
-                  onChange={handleChange}
-                  rows={2}
-                  placeholder="E.g. Sports, Academic awards..."
-                  className={textareaCls}
-                />
-              </Field>
+              <label className="text-sm font-semibold text-slate-700 block mb-2">
+                <div className="flex items-center gap-1.5"><Trophy size={14} className="text-amber-500" /> Any Special Achievements / Awards?</div>
+              </label>
+              <div className="flex gap-6 mb-3">
+                <RadioItem name="hasAchievements" value="yes" label="Yes" />
+                <RadioItem name="hasAchievements" value="no" label="No" />
+              </div>
+              {form.hasAchievements === 'yes' && (
+                <Field label="Describe Achievements">
+                  <textarea
+                    name="achievements"
+                    value={form.achievements}
+                    onChange={handleChange}
+                    rows={2}
+                    placeholder="E.g. Sports, Academic awards..."
+                    className={textareaCls}
+                  />
+                </Field>
+              )}
             </div>
           </div>
         </SectionCard>
@@ -652,14 +744,14 @@ const HomeVerificationPage = () => {
         {/* 10. PHOTO DOCUMENTATION */}
         <SectionCard icon={Camera} title="Photo Documentation" color="purple">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <PhotoUpload id="photo1" label="1. Passport size photo" />
-            <PhotoUpload id="photo2" label="2. Student with interviewer" />
-            <PhotoUpload id="photo3" label="3. With parents & supervisor" />
-            <PhotoUpload id="photo4" label="4. With parents at house" />
-            <PhotoUpload id="photo5" label="5. In front of house" />
-            <PhotoUpload id="photo6" label="6. Full house photo" />
+            <PhotoUpload studentId={form.studentId} id="photo1" label="1. Passport size photo" onUpload={(url) => handlePhotoUpload("1. Passport size photo", url)} previewUrl={getPhotoPreview("1. Passport size photo")} />
+            <PhotoUpload studentId={form.studentId} id="photo2" label="2. Student with interviewer" onUpload={(url) => handlePhotoUpload("2. Student with interviewer", url)} previewUrl={getPhotoPreview("2. Student with interviewer")} />
+            <PhotoUpload studentId={form.studentId} id="photo3" label="3. With parents & supervisor" onUpload={(url) => handlePhotoUpload("3. With parents & supervisor", url)} previewUrl={getPhotoPreview("3. With parents & supervisor")} />
+            <PhotoUpload studentId={form.studentId} id="photo4" label="4. With parents at house" onUpload={(url) => handlePhotoUpload("4. With parents at house", url)} previewUrl={getPhotoPreview("4. With parents at house")} />
+            <PhotoUpload studentId={form.studentId} id="photo5" label="5. In front of house" onUpload={(url) => handlePhotoUpload("5. In front of house", url)} previewUrl={getPhotoPreview("5. In front of house")} />
+            <PhotoUpload studentId={form.studentId} id="photo6" label="6. Full house photo" onUpload={(url) => handlePhotoUpload("6. Full house photo", url)} previewUrl={getPhotoPreview("6. Full house photo")} />
             <div className="col-span-2 sm:col-span-3">
-              <PhotoUpload id="photo7" label="7. Other photos" />
+              <PhotoUpload studentId={form.studentId} id="photo7" label="7. Other photos" onUpload={(url) => handlePhotoUpload("7. Other photos", url)} previewUrl={getPhotoPreview("7. Other photos")} />
             </div>
           </div>
         </SectionCard>
@@ -670,10 +762,10 @@ const HomeVerificationPage = () => {
             "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <SignatureField label="Student Signature" />
-            <SignatureField label="Father Signature" />
-            <SignatureField label="Mother Signature" />
-            <SignatureField label="Supervisor Signature" />
+            <SignatureField studentId={form.studentId} label="Student Signature" onUpload={url => handleChange({ target: { name: 'studentSignatureUrl', value: url }})} previewUrl={form.studentSignatureUrl} />
+            <SignatureField studentId={form.studentId} label="Father Signature" onUpload={url => handleChange({ target: { name: 'fatherSignatureUrl', value: url }})} previewUrl={form.fatherSignatureUrl} />
+            <SignatureField studentId={form.studentId} label="Mother Signature" onUpload={url => handleChange({ target: { name: 'motherSignatureUrl', value: url }})} previewUrl={form.motherSignatureUrl} />
+            <SignatureField studentId={form.studentId} label="Supervisor Signature" onUpload={url => handleChange({ target: { name: 'supervisorSignatureUrl', value: url }})} previewUrl={form.supervisorSignatureUrl} />
           </div>
         </SectionCard>
 
