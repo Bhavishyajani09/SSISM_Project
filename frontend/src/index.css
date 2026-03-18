@@ -34,11 +34,32 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: #cbd5e1; /* slate-300 */
     border-radius: 10px;
   }
   ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8; /* slate-400 */
+  }
+
+  /* Thin Horizontal Scrollbar */
+  .thin-scrollbar::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 20px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
+  }
+  /* Firefox */
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
   }
 }
 

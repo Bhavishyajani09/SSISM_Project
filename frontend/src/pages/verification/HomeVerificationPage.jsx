@@ -11,28 +11,55 @@ import ssismLogo from '../../assets/SSISM_Logo.png';
 
 // Helper: Collapsible Card (Accordion)
 const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onToggle }) => {
+  const cardRef = useRef(null);
+  
   const colorMap = {
-    orange: 'bg-orange-50 border-orange-200 text-orange-700',
-    blue: 'bg-blue-50 border-blue-200 text-blue-700',
-    green: 'bg-green-50 border-green-200 text-green-700',
-    purple: 'bg-purple-50 border-purple-200 text-purple-700',
-    rose: 'bg-rose-50 border-rose-200 text-rose-700',
-    teal: 'bg-teal-50 border-teal-200 text-teal-700',
-    amber: 'bg-amber-50 border-amber-200 text-amber-700',
-    indigo: 'bg-indigo-50 border-indigo-200 text-indigo-700',
+    indigo:  { iconBg: 'bg-indigo-50',  iconText: 'text-indigo-600' },
+    rose:    { iconBg: 'bg-rose-50',    iconText: 'text-rose-600' },
+    emerald: { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600' },
+    orange:  { iconBg: 'bg-orange-50',  iconText: 'text-orange-600' },
+    amber:   { iconBg: 'bg-amber-50',   iconText: 'text-amber-600' },
+    blue:    { iconBg: 'bg-blue-50',    iconText: 'text-blue-600' },
+    green:   { iconBg: 'bg-green-50',   iconText: 'text-green-600' },
+    violet:  { iconBg: 'bg-violet-50',  iconText: 'text-violet-600' },
+    slate:   { iconBg: 'bg-slate-50',   iconText: 'text-slate-600' },
+    sky:     { iconBg: 'bg-sky-50',     iconText: 'text-sky-600' },
   };
-  const headerColor = colorMap[color] || colorMap.orange;
+  const cfg = colorMap[color] || colorMap.indigo;
+
+  // Auto-scroll when opened
+  useEffect(() => {
+    if (open && cardRef.current) {
+      setTimeout(() => {
+        // Offset: 70px for mobile (main header), ~10px for desktop (no top header)
+        const isMobile = window.innerWidth < 1024;
+        const offset = isMobile ? 70 : 20;
+
+        const bodyRect = document.body.getBoundingClientRect().top;
+        const elementRect = cardRef.current.getBoundingClientRect().top;
+        const elementPosition = elementRect - bodyRect;
+        const offsetPosition = elementPosition - offset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }, 100);
+    }
+  }, [open]);
 
   return (
-    <div className={`bg-white rounded-2xl shadow-sm border ${open ? 'border-slate-200' : 'border-slate-100'} overflow-hidden transition-all duration-300`}>
+    <div ref={cardRef} className={`bg-white rounded-2xl shadow-sm border ${open ? 'border-slate-200' : 'border-slate-100'} overflow-hidden transition-all duration-300`}>
       <button
         type="button"
         onClick={onToggle}
-        className={`w-full flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 ${headerColor} ${open ? 'border-b shadow-sm' : ''} transition-all active:brightness-95`}
+        className={`w-full flex items-center justify-between px-4 py-3 sm:px-5 sm:py-4 bg-white transition-all active:brightness-95 hover:bg-slate-50/50 ${open ? 'border-b shadow-sm' : ''}`}
       >
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          <Icon size={18} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
-          <h2 className="font-bold text-sm sm:text-base leading-tight uppercase tracking-tight">{title}</h2>
+        <div className="flex items-center gap-2.5 sm:gap-4">
+          <div className={`p-2.5 rounded-2xl ${cfg.iconBg} ${cfg.iconText} border border-white transition-all shadow-sm`}>
+            <Icon size={18} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
+          </div>
+          <h2 className={`font-bold text-sm sm:text-[15px] leading-tight tracking-tight ${open ? 'text-slate-900' : 'text-slate-700'}`}>{title}</h2>
         </div>
         <div className="flex items-center gap-2">
           {!open && <span className="text-[9px] uppercase font-black opacity-40 hidden sm:inline">Tap to View</span>}
@@ -404,6 +431,11 @@ const HomeVerificationPage = () => {
     setActiveSection(prev => prev === sectionName ? null : sectionName);
   };
 
+  // Scroll to top on mount or ID change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
+
   // Form is locked if submitted, teacher_rejected, rejected, or approved
   const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'rejected' || status === 'approved';
 
@@ -429,7 +461,7 @@ const HomeVerificationPage = () => {
       setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
         pos => {
-          const coords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
+          const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setGpsCoords(coords);
           handleReverseGeocode(coords.lat, coords.lng);
           setIsLocating(false);
@@ -691,7 +723,7 @@ const HomeVerificationPage = () => {
       <input type="checkbox" name={name} value={value}
         checked={(form[name] || []).includes(value)}
         onChange={handleChange}
-        className="w-4 h-4 accent-blue-600" />
+        className="w-4 h-4 accent-brand-600" />
       {label}
     </label>
   );
@@ -701,7 +733,7 @@ const HomeVerificationPage = () => {
       <input type="radio" name={name} value={value}
         checked={form[name] === value}
         onChange={handleChange}
-        className="w-4 h-4 accent-blue-600" />
+        className="w-4 h-4 accent-brand-600" />
       {label}
     </label>
   );
@@ -736,69 +768,59 @@ const HomeVerificationPage = () => {
         );
       })()}
 
-      {/* Slim Sticky Header (Sub-navbar) */}
-      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-orange-100 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/home-verification')}
-              className="p-2 hover:bg-orange-50 rounded-xl transition-all text-slate-500 hover:text-orange-600 border border-transparent hover:border-orange-100 group"
-              title="Return to List"
-            >
-              <ArrowLeft size={20} className="group-active:-translate-x-1 transition-transform" />
-            </button>
-            <div className="h-8 w-px bg-slate-200 mx-1" />
-            <div>
-              <h1 className="text-sm font-bold text-slate-800 leading-tight">Verification Form</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-0.5">Edit mode</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {status && (
-              <span className={`text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border shadow-sm ${
-                status === 'approved' ? 'bg-green-50 text-green-700 border-green-200' :
-                status === 'submitted' ? 'bg-blue-50 text-blue-700 border-blue-200' :
-                status === 'teacher_rejected' ? 'bg-orange-50 text-orange-700 border-orange-200' :
-                status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
-                'bg-slate-50 text-slate-600 border-slate-200'
-              }`}>
-                {status === 'teacher_rejected' ? 'Teacher Rejected' : status.replace('_', ' ')}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Form Sections */}
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-5 pb-32">
 
-        {/* GPS + Timestamp info bar */}
-        <div className="flex flex-wrap gap-3 text-xs">
+        {/* Combined Info & Action Bar */}
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <button
+            onClick={() => navigate('/home-verification')}
+            className="p-2 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-xl border border-slate-200 shadow-sm transition-all group flex items-center justify-center"
+            title="Return to List"
+          >
+            <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+          </button>
+
+          <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
+
           <button onClick={captureGPS} disabled={isReadOnly || isLocating}
-            className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-200 transition-all font-semibold text-slate-600 disabled:opacity-60 shadow-sm group">
-            <div className={`p-1 rounded-lg ${isLocating ? 'bg-orange-100' : 'bg-orange-50'}`}>
-              <MapPin size={12} className={`text-orange-500 ${isLocating ? 'animate-bounce' : 'group-hover:scale-110'}`} />
-            </div>
-            <div className="flex flex-col items-start leading-tight">
-              <span className="text-[9px] uppercase tracking-widest text-slate-400">Location Details</span>
-              <span>{isLocating ? 'Determining location...' : (gpsCoords ? `${gpsCoords.lat}, ${gpsCoords.lng}` : 'Capture Location')}</span>
-            </div>
+            className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition-all font-semibold text-slate-600 disabled:opacity-60 shadow-sm group">
+            <MapPin size={12} className={`text-brand-500 ${isLocating ? 'animate-bounce' : 'group-hover:scale-110'}`} />
+            <span>{isLocating ? 'Locating...' : (gpsCoords ? `${Number(gpsCoords.lat).toFixed(4)}, ${Number(gpsCoords.lng).toFixed(4)}` : 'Capture GPS')}</span>
           </button>
           
           {locationAddress && !isLocating && (
-             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-2 text-emerald-700 font-medium shadow-sm animate-fade-in">
-               <div className="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                 <Home size={12} />
-               </div>
-               <span className="truncate max-w-[200px]">{locationAddress}</span>
+             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5 text-emerald-700 font-medium shadow-sm animate-fade-in">
+               <Home size={12} />
+               <span className="truncate max-w-[140px] sm:max-w-[200px]">{locationAddress}</span>
              </div>
           )}
 
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-semibold text-slate-500 shadow-sm ml-auto">
+          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-500 shadow-sm lg:ml-auto">
             <Clock size={12} className="text-slate-400" />
             {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
           </div>
+
+          {status && (
+            <div className={`px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-1.5 ${
+              status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+              status === 'submitted' ? 'bg-brand-50 border-brand-100 text-brand-700' :
+              status === 'teacher_rejected' ? 'bg-orange-50 border-orange-100 text-orange-700' :
+              status === 'rejected' ? 'bg-red-50 border-red-100 text-red-700' :
+              'bg-slate-50 border-slate-200 text-slate-600'
+            }`}>
+              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                status === 'approved' ? 'bg-emerald-500' :
+                status === 'submitted' ? 'bg-brand-500' :
+                status === 'teacher_rejected' ? 'bg-orange-500' :
+                status === 'rejected' ? 'bg-red-500' :
+                'bg-slate-400'
+              }`} />
+              <span className="text-[9px] font-black uppercase tracking-wider">
+                {status === 'teacher_rejected' ? 'Teacher Rejected' : status.replace('_', ' ')}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ── Read-Only Banner ── */}
@@ -837,7 +859,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={User} 
           title="Student Information" 
-          color="orange" 
+          color="indigo"
           open={activeSection === 'studentInfo'} 
           onToggle={() => toggleSection('studentInfo')}
         >
@@ -878,7 +900,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={BookOpen} 
           title="Academic Details" 
-          color="blue"
+          color="sky"
           open={activeSection === 'academic'} 
           onToggle={() => toggleSection('academic')}
         >
@@ -900,16 +922,16 @@ const HomeVerificationPage = () => {
                   <input 
                     readOnly 
                     value={`${totalMarks} / 400`}
-                    className={`${inputCls} bg-orange-50/50 border-orange-200 font-bold text-orange-700 pr-24 sm:pr-28`}
+                    className={`${inputCls} bg-slate-50 border-slate-200 font-bold text-slate-800 pr-24 sm:pr-28`}
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 bg-white/80 backdrop-blur-sm px-2 py-1 rounded-lg border border-orange-100 shadow-sm">
-                    <div className="w-12 sm:w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
+                    <div className="w-12 sm:w-16 h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-orange-500 transition-all duration-700" 
+                        className="h-full bg-brand-500 transition-all duration-700 shadow-[0_0_8px_rgba(249,115,22,0.4)]" 
                         style={{ width: `${Math.min(100, (parseFloat(totalMarks) / 400) * 100)}%` }}
                       />
                     </div>
-                    <span className="text-[10px] sm:text-xs font-black text-orange-600 whitespace-nowrap">
+                    <span className="text-[10px] sm:text-xs font-black text-brand-600 whitespace-nowrap">
                       {Math.round((parseFloat(totalMarks) / 400) * 100)}%
                     </span>
                   </div>
@@ -923,7 +945,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={User} 
           title="Personal Information" 
-          color="purple"
+          color="indigo"
           open={activeSection === 'personal'} 
           onToggle={() => toggleSection('personal')}
         >
@@ -1022,14 +1044,14 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={Users} 
           title="Family Information" 
-          color="teal"
+          color="emerald"
           open={activeSection === 'family'} 
           onToggle={() => toggleSection('family')}
         >
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 thin-scrollbar">
             <table className="w-full text-sm min-w-[600px]">
               <thead>
-                <tr className="bg-teal-50 text-teal-700">
+                <tr className="bg-slate-50 text-slate-600">
                   {['Name', 'Relation', 'Occupation', 'Income (₹)', 'Mobile', ''].map(h => (
                     <th key={h} className="px-3 py-2.5 text-left font-semibold text-xs">{h}</th>
                   ))}
@@ -1056,7 +1078,7 @@ const HomeVerificationPage = () => {
             </table>
           </div>
           <button onClick={addFamilyMember}
-            className="mt-3 flex items-center gap-2 text-sm font-semibold text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 px-4 py-2 rounded-xl transition-all border border-teal-200">
+            className="mt-3 flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-800 bg-brand-50/50 hover:bg-brand-50 px-4 py-2 rounded-xl transition-all border border-brand-100">
             <Plus size={16} /> Add Family Member
           </button>
         </SectionCard>
@@ -1065,7 +1087,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={FileText} 
           title="Family Income" 
-          color="amber"
+          color="orange"
           open={activeSection === 'income'} 
           onToggle={() => toggleSection('income')}
         >
@@ -1098,7 +1120,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={Home} 
           title="Housing Condition" 
-          color="orange"
+          color="amber"
           open={activeSection === 'housing'} 
           onToggle={() => toggleSection('housing')}
         >
@@ -1139,7 +1161,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={Home} 
           title="Household Resources & Vehicles" 
-          color="indigo"
+          color="blue"
           open={activeSection === 'resources'} 
           onToggle={() => toggleSection('resources')}
         >
@@ -1224,7 +1246,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={Camera} 
           title="Photo Documentation" 
-          color="purple"
+          color="violet"
           open={activeSection === 'photos'} 
           onToggle={() => toggleSection('photos')}
         >
@@ -1245,11 +1267,11 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={FileText} 
           title="Declaration" 
-          color="orange"
+          color="slate"
           open={activeSection === 'declaration'} 
           onToggle={() => toggleSection('declaration')}
         >
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-slate-700 leading-relaxed italic mb-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 leading-relaxed italic mb-4">
             "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -1264,7 +1286,7 @@ const HomeVerificationPage = () => {
         <SectionCard 
           icon={AlertCircle} 
           title="Supervisor Remarks" 
-          color="blue"
+          color="sky"
           open={activeSection === 'remarks'} 
           onToggle={() => toggleSection('remarks')}
         >

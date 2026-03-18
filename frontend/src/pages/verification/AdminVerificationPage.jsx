@@ -99,7 +99,7 @@ export default function AdminVerificationPage() {
       </div>
 
       {/* Status Tabs */}
-      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit scrollbar-hide no-scrollbar shadow-sm">
+      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit thin-scrollbar shadow-sm">
         {STATUS_TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
@@ -237,7 +237,7 @@ export default function AdminVerificationPage() {
           </div>
 
           {/* ── Desktop Table ── */}
-          <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm overflow-x-auto">
+          <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto thin-scrollbar">
             <table className="w-full text-sm min-w-[820px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>

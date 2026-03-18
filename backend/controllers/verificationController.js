@@ -48,7 +48,7 @@ exports.checkByStudentId = async (req, res) => {
   try {
     const { studentId } = req.params;
     const verification = await HomeVerification.findOne({ studentId });
-    if (!verification) return res.status(404).json({ message: 'No verification found for this student' });
+    if (!verification) return res.status(200).json({ verification: null });
     res.json({ verification });
   } catch (err) {
     res.status(500).json({ error: 'Failed to check verification' });
