@@ -8,6 +8,9 @@ import {
   AlertCircle, Trophy, Image
 } from 'lucide-react';
 import ssismLogo from '../../assets/SSISM_Logo.png';
+import Loader from '../../components/Loader';
+import toast from 'react-hot-toast';
+
 
 // Helper: Collapsible Card (Accordion)
 const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onToggle }) => {
@@ -236,7 +239,7 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
       >
         {loading ? (
           <div className="flex flex-col items-center gap-2">
-            <div className="w-6 h-6 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <Loader color="orange" size="sm" />
             <span className="text-[10px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
           </div>
         ) : displayUrl ? (
@@ -335,7 +338,7 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
       >
         {loading ? (
           <div className="flex flex-col items-center gap-2">
-            <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+            <Loader color="orange" size="sm" />
             <span className="text-[9px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
           </div>
         ) : displayUrl ? (
@@ -422,10 +425,11 @@ const HomeVerificationPage = () => {
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [apiMsg, setApiMsg] = useState('');
   const [gpsCoords, setGpsCoords] = useState(null);
-  const [successOverlay, setSuccessOverlay] = useState(null); // null | 'draft' | 'submitted' | 'rejected'
   const [isLocating, setIsLocating] = useState(false);
   const [locationAddress, setLocationAddress] = useState('');
   const [activeSection, setActiveSection] = useState('studentInfo');
+  const [loadingAction, setLoadingAction] = useState(null); // null | 'draft' | 'submitted' | 'teacher_rejected'
+
 
   const toggleSection = (sectionName) => {
     setActiveSection(prev => prev === sectionName ? null : sectionName);
@@ -621,14 +625,21 @@ const HomeVerificationPage = () => {
     return payload;
   };
 
-  // Show success overlay then redirect
+  // Show success toast then redirect
   const showSuccessAndRedirect = (actionStatus) => {
-    setSuccessOverlay(actionStatus);
-    setTimeout(() => navigate('/home-verification'), 1800);
+    const labels = {
+      draft: 'Draft Saved Successfully',
+      submitted: 'Verification Submitted Successfully',
+      teacher_rejected: 'Rejection Recorded'
+    };
+    toast.success(labels[actionStatus] || 'Success');
+    setTimeout(() => navigate('/home-verification'), 1000);
   };
 
+
   const handleSave = async () => {
-    setIsApiLoading(true); setApiMsg('');
+    setIsApiLoading(true); setLoadingAction('draft'); setApiMsg('');
+
     try {
       let res;
       if (verificationId) {
@@ -665,11 +676,13 @@ const HomeVerificationPage = () => {
     } catch (err) {
       console.error('Save Draft Error:', err);
       setApiMsg('Error: ' + err.message);
-    } finally { setIsApiLoading(false); }
+    } finally { setIsApiLoading(false); setLoadingAction(null); }
   };
 
+
   const handleSubmit = async (targetStatus = 'submitted') => {
-    setIsApiLoading(true); setApiMsg('');
+    setIsApiLoading(true); setLoadingAction(targetStatus); setApiMsg('');
+
     const payload = { ...buildPayload(), status: targetStatus };
     console.log(`Submitting form with status ${targetStatus}:`, payload);
 
@@ -708,8 +721,9 @@ const HomeVerificationPage = () => {
     } catch (err) {
       console.error('Submit Error:', err);
       setApiMsg('Error: ' + err.message);
-    } finally { setIsApiLoading(false); }
+    } finally { setIsApiLoading(false); setLoadingAction(null); }
   };
+
 
   const handleReject = () => handleSubmit('rejected');
   // NOTE: handleReject kept for potential future use but NOT exposed in teacher form UI.
@@ -738,35 +752,12 @@ const HomeVerificationPage = () => {
     </label>
   );
 
-  // Config for overlay
-  const overlayConfig = {
-    draft:            { icon: '💾', color: 'from-orange-400 to-amber-500',  ring: 'ring-orange-300', label: 'Draft Saved!',   sub: 'Your progress has been saved.' },
-    submitted:        { icon: '🚀', color: 'from-slate-700 to-slate-900',   ring: 'ring-slate-400',  label: 'Submitted!',     sub: 'Sent for admin review.' },
-    teacher_rejected: { icon: '🚫', color: 'from-red-500 to-rose-600',      ring: 'ring-red-300',    label: 'Marked as Rejected', sub: 'Teacher rejection recorded.' },
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-slate-50 font-sans">
 
-      {/* ── Full-screen Success Overlay ── */}
-      {successOverlay && (() => {
-        const cfg = overlayConfig[successOverlay] || overlayConfig.draft;
-        return (
-          <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/60 backdrop-blur-md">
-            <div className={`bg-gradient-to-br ${cfg.color} rounded-3xl px-10 py-10 flex flex-col items-center gap-4 shadow-2xl ring-4 ${cfg.ring} animate-bounce-in`}>
-              <div className="text-6xl">{cfg.icon}</div>
-              <div className="text-center">
-                <p className="text-white text-2xl font-black tracking-tight">{cfg.label}</p>
-                <p className="text-white/80 text-sm mt-1 font-medium">{cfg.sub}</p>
-              </div>
-              <div className="flex items-center gap-2 text-white/70 text-xs font-semibold mt-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Redirecting to verification list...
-              </div>
-            </div>
-          </div>
-        );
-      })()}
+
 
       {/* Form Sections */}
       <div className="max-w-4xl mx-auto px-4 py-5 space-y-5 pb-32">
@@ -1336,9 +1327,10 @@ const HomeVerificationPage = () => {
                 disabled={isApiLoading}
                 className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
               >
-                <Save size={18} />
+                {loadingAction === 'draft' ? <Loader size="sm" color="orange" /> : <Save size={18} />}
                 Save as Draft
               </button>
+
 
               <button 
                 onClick={() => {
@@ -1349,9 +1341,10 @@ const HomeVerificationPage = () => {
                 disabled={isApiLoading}
                 className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl transition-all shadow-md shadow-brand-100 active:scale-95 disabled:opacity-50"
               >
-                <Send size={18} />
+                {loadingAction === 'submitted' ? <Loader size="sm" color="white" /> : <Send size={18} />}
                 Submit Verification
               </button>
+
 
               <button 
                 onClick={() => {
@@ -1362,9 +1355,10 @@ const HomeVerificationPage = () => {
                 disabled={isApiLoading}
                 className="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold rounded-xl transition-all active:scale-95 disabled:opacity-50"
               >
-                <XCircle size={18} />
+                {loadingAction === 'teacher_rejected' ? <Loader size="sm" color="slate" /> : <XCircle size={18} />}
                 Reject
               </button>
+
             </div>
           ) : (
             // Locked state notice

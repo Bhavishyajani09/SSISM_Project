@@ -19,12 +19,12 @@ function buildVerificationMap(verifications) {
 }
 
 const STATUS_CONFIG = {
-  draft:            { label: 'Draft',            bg: 'bg-orange-100 text-orange-700 border-orange-200',  dot: 'bg-orange-400',  Icon: FileText },
-  submitted:        { label: 'Submitted',        bg: 'bg-blue-100 text-blue-700 border-blue-200',        dot: 'bg-blue-400',    Icon: Clock },
-  approved:         { label: 'Approved',         bg: 'bg-green-100 text-green-700 border-green-200',     dot: 'bg-green-400',   Icon: CheckCircle },
-  rejected:         { label: 'Admin Rejected',   bg: 'bg-red-100 text-red-700 border-red-200',           dot: 'bg-red-400',     Icon: XCircle },
+  draft: { label: 'Draft', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400', Icon: FileText },
+  submitted: { label: 'Submitted', bg: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-400', Icon: Clock },
+  approved: { label: 'Approved', bg: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-400', Icon: CheckCircle },
+  rejected: { label: 'Admin Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', Icon: XCircle },
   teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400', Icon: AlertCircle },
-  pending:          { label: 'Pending',          bg: 'bg-gray-100 text-gray-500 border-gray-200',        dot: 'bg-gray-300',    Icon: Clock },
+  pending: { label: 'Pending', bg: 'bg-gray-100 text-gray-500 border-gray-200', dot: 'bg-gray-300', Icon: Clock },
 };
 
 function StatusBadge({ status }) {
@@ -38,13 +38,13 @@ function StatusBadge({ status }) {
 }
 
 export default function VerificationListPage() {
-  const [students, setStudents]           = useState([]);
-  const [vMap, setVMap]                   = useState({}); // rollNumber → verification
-  const [loading, setLoading]             = useState(true);
-  const [searchTerm, setSearchTerm]       = useState('');
+  const [students, setStudents] = useState([]);
+  const [vMap, setVMap] = useState({}); // rollNumber → verification
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
-  const [statusFilter, setStatusFilter]   = useState('pending'); // all | pending | draft | submitted | rejected
-  const [currentPage, setCurrentPage]     = useState(1);
+  const [statusFilter, setStatusFilter] = useState('pending'); // all | pending | draft | submitted | rejected
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
@@ -85,27 +85,27 @@ export default function VerificationListPage() {
     const matchesSearch = s.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.rollNumber?.toString().includes(searchTerm);
     const matchesDistrict = districtFilter ? s.district === districtFilter : true;
-    const studentStatus   = getStatus(s);
-    const matchesStatus   = statusFilter === 'all' ? true : 
-                            statusFilter === 'rejected' ? (studentStatus === 'rejected' || studentStatus === 'teacher_rejected') :
-                            studentStatus === statusFilter;
+    const studentStatus = getStatus(s);
+    const matchesStatus = statusFilter === 'all' ? true :
+      statusFilter === 'rejected' ? (studentStatus === 'rejected' || studentStatus === 'teacher_rejected') :
+        studentStatus === statusFilter;
     return matchesSearch && matchesDistrict && matchesStatus;
   });
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm, districtFilter, statusFilter]);
 
-  const indexOfLastItem  = currentPage * itemsPerPage;
+  const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems     = filteredStudents.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages       = Math.ceil(filteredStudents.length / itemsPerPage);
+  const currentItems = filteredStudents.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
 
   const STATUS_TABS = [
-    { key: 'all',       label: 'All',       icon: LayoutGrid },
-    { key: 'pending',   label: 'Pending',   icon: Clock },
-    { key: 'draft',     label: 'Draft',     icon: FileText },
+    { key: 'all', label: 'All', icon: LayoutGrid },
+    { key: 'pending', label: 'Pending', icon: Clock },
+    { key: 'draft', label: 'Draft', icon: FileText },
     { key: 'submitted', label: 'Submitted', icon: Send },
-    { key: 'rejected',  label: 'Rejected',  icon: XCircle },
-    { key: 'approved',  label: 'Approved',  icon: CheckCircle },
+    { key: 'rejected', label: 'Rejected', icon: XCircle },
+    { key: 'approved', label: 'Approved', icon: CheckCircle },
   ];
 
   const handleOpen = (student) => {
@@ -134,11 +134,10 @@ export default function VerificationListPage() {
           <button
             key={key}
             onClick={() => setStatusFilter(key)}
-            className={`flex-shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold rounded-xl capitalize transition-all duration-300 ${
-              statusFilter === key
-                ? 'bg-white text-brand-600 shadow-md ring-1 ring-black/5 scale-[1.02]'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
-            }`}
+            className={`flex-shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold rounded-xl capitalize transition-all duration-300 ${statusFilter === key
+              ? 'bg-white text-brand-600 shadow-md ring-1 ring-black/5 scale-[1.02]'
+              : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+              }`}
           >
             <Icon size={13} className={`sm:w-[15px] sm:h-[15px] ${statusFilter === key ? 'text-brand-500' : 'text-gray-400'}`} />
             {label}
@@ -173,7 +172,7 @@ export default function VerificationListPage() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+          <Loader size="xl" />
           <span className="mt-4 text-gray-500 font-medium">Loading students...</span>
         </div>
       ) : filteredStudents.length === 0 ? (

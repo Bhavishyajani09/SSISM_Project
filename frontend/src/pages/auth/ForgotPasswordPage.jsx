@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Mail, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
+import Loader from '../../components/Loader';
 import { Link } from 'react-router-dom';
 import ssismLogo from '../../assets/SSISM_Logo.png';
 
@@ -101,7 +102,7 @@ const ForgotPasswordPage = () => {
                   className="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-200 flex items-center justify-center gap-3 active:scale-[0.98] transition-all disabled:opacity-70 disabled:cursor-not-allowed group"
                 >
                   {isLoading ? (
-                    <Loader2 className="animate-spin" size={20} />
+                    <Loader color="white" size="sm" />
                   ) : (
                     <>
                       <span>Send reset link</span>

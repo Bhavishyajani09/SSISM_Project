@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, MapPin, User, ChevronRight, Loader2, CheckCircle, XCircle, Clock, FileText, Send, AlertCircle } from 'lucide-react';
+import { Search, MapPin, User, ChevronRight, CheckCircle, XCircle, Clock, FileText, Send, AlertCircle } from 'lucide-react';
+import Loader from '../../components/Loader';
 import toast from 'react-hot-toast';
 
 const API_BASE = 'http://localhost:5000/api';
@@ -67,10 +68,17 @@ export default function AdminVerificationPage() {
   const totalPages     = Math.ceil(total / itemsPerPage);
 
   const handleAction = async (id, action) => {
+    const isReview = action === 'submit-for-review';
+    const confirmMsg = action === 'approve' ? 'Approve this verification?' : 
+                       action === 'reject' ? 'REJECT this verification?' : 
+                       'Move this back to submitted for review?';
+    
+    if (!window.confirm(confirmMsg)) return;
+
     setActionLoading(id + action);
     try {
-      const isReview = action === 'submit-for-review';
       const endpoint = isReview ? 'submit-for-review' : action;
+
       await axios.patch(`${API_BASE}/verifications/${id}/${endpoint}`, { remarks: `Admin ${action}d` });
       toast.success(isReview ? 'Moved to Submitted Successfully' : `Verification ${action === 'approve' ? 'Approved ✅' : 'Rejected ❌'}`);
       fetchVerifications();
@@ -142,7 +150,7 @@ export default function AdminVerificationPage() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+          <Loader size="xl" />
           <span className="mt-4 text-gray-500 font-medium">Loading verifications...</span>
         </div>
       ) : filteredVerifications.length === 0 ? (
@@ -195,7 +203,7 @@ export default function AdminVerificationPage() {
                       disabled={actionLoading === v._id + 'approve'}
                       className="flex-1 py-2.5 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                     >
-                      {actionLoading === v._id + 'approve' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                      {actionLoading === v._id + 'approve' ? <Loader size="xs" /> : <CheckCircle size={14} />}
                       Approve
                     </button>
                     <button
@@ -203,7 +211,7 @@ export default function AdminVerificationPage() {
                       disabled={actionLoading === v._id + 'reject'}
                       className="flex-1 py-2.5 bg-white text-red-600 border border-red-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-50 hover:border-red-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                     >
-                      {actionLoading === v._id + 'reject' ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                      {actionLoading === v._id + 'reject' ? <Loader size="xs" /> : <XCircle size={14} />}
                       Reject
                     </button>
                   </div>
@@ -214,7 +222,7 @@ export default function AdminVerificationPage() {
                     disabled={actionLoading === v._id + 'approve'}
                     className="w-full py-2.5 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                   >
-                    {actionLoading === v._id + 'approve' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                    {actionLoading === v._id + 'approve' ? <Loader size="xs" /> : <CheckCircle size={14} />}
                     Approve Anyway
                   </button>
                 )}
@@ -225,7 +233,7 @@ export default function AdminVerificationPage() {
                     className="w-full py-2.5 bg-white text-blue-600 border border-blue-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                   >
                     {actionLoading === v._id + 'submit-for-review' ? (
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader size="xs" />
                     ) : (
                       <Send size={14} />
                     )}
@@ -279,19 +287,21 @@ export default function AdminVerificationPage() {
                           <button
                             onClick={() => handleAction(v._id, 'approve')}
                             disabled={actionLoading === v._id + 'approve'}
-                            className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg border border-green-200 disabled:opacity-50 transition-colors"
+                            className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg border border-green-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
                             title="Approve"
                           >
-                            <CheckCircle size={16} />
+                            {actionLoading === v._id + 'approve' ? <Loader size="xs" color="brand" /> : <CheckCircle size={16} />}
                           </button>
+
                           <button
                             onClick={() => handleAction(v._id, 'reject')}
                             disabled={actionLoading === v._id + 'reject'}
-                            className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 disabled:opacity-50 transition-colors"
+                            className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
                             title="Reject"
                           >
-                            <XCircle size={16} />
+                            {actionLoading === v._id + 'reject' ? <Loader size="xs" color="slate" /> : <XCircle size={16} />}
                           </button>
+
                         </div>
                       )}
                       {statusFilter === 'rejected' && (
@@ -300,7 +310,7 @@ export default function AdminVerificationPage() {
                           disabled={actionLoading === v._id + 'approve'}
                           className="px-4 py-2 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
                         >
-                          {actionLoading === v._id + 'approve' ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                          {actionLoading === v._id + 'approve' ? <Loader size="xs" /> : <CheckCircle size={13} />}
                           Approve
                         </button>
                       )}
@@ -311,7 +321,7 @@ export default function AdminVerificationPage() {
                           className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-xl text-xs font-bold hover:bg-blue-50 hover:border-blue-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 group disabled:opacity-50"
                         >
                           {actionLoading === v._id + 'submit-for-review' ? (
-                            <Loader2 size={13} className="animate-spin" />
+                            <Loader size="xs" />
                           ) : (
                             <Send size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                           )}
