@@ -431,10 +431,10 @@ const HomeVerificationPage = () => {
     setActiveSection(prev => prev === sectionName ? null : sectionName);
   };
 
-  // Scroll to top on mount or ID change
+  // Scroll to top on mount or route change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [id]);
+  }, [id, location]);
 
   // Form is locked if submitted, teacher_rejected, rejected, or approved
   const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'rejected' || status === 'approved';

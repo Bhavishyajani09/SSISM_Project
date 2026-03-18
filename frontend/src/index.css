@@ -43,8 +43,8 @@
 
   /* Thin Horizontal Scrollbar */
   .thin-scrollbar::-webkit-scrollbar {
-    height: 5px;
-    width: 5px;
+    height: 3px;
+    width: 3px;
   }
   .thin-scrollbar::-webkit-scrollbar-track {
     background: transparent;

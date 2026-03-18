@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Search, MapPin, User, ChevronRight, Loader2, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -128,7 +129,7 @@ export default function VerificationListPage() {
       </div>
 
       {/* Status Tabs */}
-      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit scrollbar-hide no-scrollbar shadow-sm">
+      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit thin-scrollbar shadow-sm">
         {STATUS_TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}

@@ -3,6 +3,7 @@ const router = express.Router();
 const multer = require('multer');
 const XLSX = require('xlsx');
 const PassedStudent = require('../models/PassedStudent');
+const HomeVerification = require('../models/HomeVerification');
 
 // Multer config — store file in memory for processing
 const upload = multer({ storage: multer.memoryStorage() });
@@ -186,11 +187,24 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
 // ─── DELETE a student by ID ─────────────────────────────────────────────────
 router.delete('/:id', async (req, res) => {
     try {
-        const student = await PassedStudent.findByIdAndDelete(req.params.id);
+        // 1. Find the student first to get their rollNumber
+        const student = await PassedStudent.findById(req.params.id);
         if (!student) {
             return res.status(404).json({ success: false, message: 'Student not found.' });
         }
-        res.json({ success: true, message: 'Student deleted successfully.' });
+
+        const rollNumber = student.rollNumber;
+
+        // 2. Delete the student record
+        await PassedStudent.findByIdAndDelete(req.params.id);
+
+        // 3. Cascaded Delete: Remove associated home verification if it exists
+        if (rollNumber) {
+            await HomeVerification.deleteMany({ studentId: rollNumber });
+            console.log(`Cascaded Delete: Removed verifications for studentId: ${rollNumber}`);
+        }
+
+        res.json({ success: true, message: 'Student and associated verifications deleted successfully.' });
     } catch (error) {
         console.error('Error deleting student:', error);
         res.status(500).json({ success: false, message: 'Server error while deleting student.' });
