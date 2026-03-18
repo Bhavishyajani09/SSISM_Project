@@ -296,47 +296,47 @@ export default function TeacherDashboard() {
             <div className="p-5 sm:p-6 overflow-y-auto flex-1">
               <form onSubmit={handleUpdate} id="edit-form">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Student Name <span className="text-red-400">*</span></label>
-                  <input required value={editingStudent.studentName} onChange={(e) => setEditingStudent({...editingStudent, studentName: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Student Name <span className="text-red-400">*</span></label>
+                    <input required value={editingStudent.studentName} onChange={(e) => setEditingStudent({...editingStudent, studentName: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Father Name <span className="text-red-400">*</span></label>
+                    <input required value={editingStudent.fatherName} onChange={(e) => setEditingStudent({...editingStudent, fatherName: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Bus Track</label>
+                    <input value={editingStudent.busTrack} onChange={(e) => setEditingStudent({...editingStudent, busTrack: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Mobile Number <span className="text-red-400">*</span></label>
+                    <input required value={editingStudent.mobileNumber} onChange={(e) => setEditingStudent({...editingStudent, mobileNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">WhatsApp Number</label>
+                    <input value={editingStudent.whatsappNumber} onChange={(e) => setEditingStudent({...editingStudent, whatsappNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Subject in 12th</label>
+                    <input value={editingStudent.subjectIn12th} onChange={(e) => setEditingStudent({...editingStudent, subjectIn12th: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Village / Town</label>
+                    <input value={editingStudent.villageTown} onChange={(e) => setEditingStudent({...editingStudent, villageTown: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">District</label>
+                    <input value={editingStudent.district} onChange={(e) => setEditingStudent({...editingStudent, district: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Roll Number</label>
+                    <input value={editingStudent.rollNumber} onChange={(e) => setEditingStudent({...editingStudent, rollNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Scholarship Marks</label>
+                    <input type="number" min="0" max="50" value={editingStudent.scholarshipExamMarks} onChange={(e) => setEditingStudent({...editingStudent, scholarshipExamMarks: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
+                  </div>
                 </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Father Name <span className="text-red-400">*</span></label>
-                  <input required value={editingStudent.fatherName} onChange={(e) => setEditingStudent({...editingStudent, fatherName: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Roll Number <span className="text-red-400">*</span></label>
-                  <input required value={editingStudent.rollNumber} onChange={(e) => setEditingStudent({...editingStudent, rollNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Mobile Number <span className="text-red-400">*</span></label>
-                  <input required value={editingStudent.mobileNumber} onChange={(e) => setEditingStudent({...editingStudent, mobileNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">WhatsApp Number</label>
-                  <input value={editingStudent.whatsappNumber} onChange={(e) => setEditingStudent({...editingStudent, whatsappNumber: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Subject in 12th</label>
-                  <input value={editingStudent.subjectIn12th} onChange={(e) => setEditingStudent({...editingStudent, subjectIn12th: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Bus Track</label>
-                  <input value={editingStudent.busTrack} onChange={(e) => setEditingStudent({...editingStudent, busTrack: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Village / Town</label>
-                  <input value={editingStudent.villageTown} onChange={(e) => setEditingStudent({...editingStudent, villageTown: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">District</label>
-                  <input value={editingStudent.district} onChange={(e) => setEditingStudent({...editingStudent, district: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-                <div>
-                  <label className="text-[10px] sm:text-xs font-semibold text-gray-500">Scholarship Marks</label>
-                  <input type="number" min="0" max="50" required value={editingStudent.scholarshipExamMarks} onChange={(e) => setEditingStudent({...editingStudent, scholarshipExamMarks: e.target.value})} className="mt-1 w-full px-2.5 py-2 sm:px-3 sm:py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs sm:text-sm outline-none focus:border-brand-400" />
-                </div>
-              </div>
             </form>
           </div>
             <div className="px-5 py-4 sm:px-6 border-t border-gray-100 flex justify-end gap-2.5 sm:gap-3 shrink-0 bg-gray-50">
