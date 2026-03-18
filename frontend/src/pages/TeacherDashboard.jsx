@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { ChevronRight } from 'lucide-react';
+import Loader from '../components/Loader';
 
 
 const API_BASE = 'http://localhost:5000/api';
@@ -140,7 +141,7 @@ export default function TeacherDashboard() {
       {/* Students List */}
       {loading ? (
         <div className="bg-white rounded-2xl border border-gray-200 p-16 flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-brand-200 border-t-brand-500 rounded-full animate-spin"></div>
+          <Loader size="lg" />
           <span className="text-gray-400 text-sm">Loading students...</span>
         </div>
       ) : students.length === 0 ? (

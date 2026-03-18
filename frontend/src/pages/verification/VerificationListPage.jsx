@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, MapPin, User, ChevronRight, Loader2, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
+import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
+import Loader from '../../components/Loader';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -170,9 +171,9 @@ export default function VerificationListPage() {
         </div>
       </div>
 
-      {loading ? (
+        {loading ? (
         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <Loader2 className="w-10 h-10 text-brand-500 animate-spin" />
+          <Loader size="xl" />
           <span className="mt-4 text-gray-500 font-medium">Loading students...</span>
         </div>
       ) : filteredStudents.length === 0 ? (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, LogIn, Loader2, Mail, Lock, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Mail, Lock, AlertTriangle } from 'lucide-react';
+import Loader from '../../components/Loader';
 import { Link, useNavigate } from 'react-router-dom';
 import ssismLogo from '../../assets/SSISM_Logo.png';
 
@@ -199,7 +200,7 @@ const LoginPage = () => {
               className="w-full h-[48px] sm:h-[60px] flex items-center justify-center gap-2.5 btn-premium text-white rounded-xl font-bold text-sm sm:text-lg disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-orange-500/20"
             >
               {isLoading ? (
-                <><Loader2 className="animate-spin" size={22} /><span>Authenticating...</span></>
+                <><Loader color="white" size="sm" /><span>Authenticating...</span></>
               ) : (
                 <><LogIn size={22} /><span>Login to Dashboard</span></>
               )}
