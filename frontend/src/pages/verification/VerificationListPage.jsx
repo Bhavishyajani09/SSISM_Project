@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, MapPin, User, ChevronRight, Loader2, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
+import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Loader from '../../components/Loader';
 
 const API_BASE = 'http://localhost:5000/api';
 
