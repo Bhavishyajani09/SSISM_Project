@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, MapPin, User, ChevronRight, Loader2, FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Search, MapPin, User, ChevronRight, Loader2, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
 
 const API_BASE = 'http://localhost:5000/api';
 
@@ -22,7 +22,7 @@ const STATUS_CONFIG = {
   submitted:        { label: 'Submitted',        bg: 'bg-blue-100 text-blue-700 border-blue-200',        dot: 'bg-blue-400',    Icon: Clock },
   approved:         { label: 'Approved',         bg: 'bg-green-100 text-green-700 border-green-200',     dot: 'bg-green-400',   Icon: CheckCircle },
   rejected:         { label: 'Admin Rejected',   bg: 'bg-red-100 text-red-700 border-red-200',           dot: 'bg-red-400',     Icon: XCircle },
-  teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-red-100 text-red-700 border-red-200',           dot: 'bg-red-400',     Icon: XCircle },
+  teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400', Icon: AlertCircle },
   pending:          { label: 'Pending',          bg: 'bg-gray-100 text-gray-500 border-gray-200',        dot: 'bg-gray-300',    Icon: Clock },
 };
 
@@ -99,12 +99,12 @@ export default function VerificationListPage() {
   const totalPages       = Math.ceil(filteredStudents.length / itemsPerPage);
 
   const STATUS_TABS = [
-    { key: 'all',       label: 'All' },
-    { key: 'pending',   label: 'Pending' },
-    { key: 'draft',     label: 'Draft' },
-    { key: 'submitted', label: 'Submitted' },
-    { key: 'rejected',  label: 'Rejected' },
-    { key: 'approved',  label: 'Approved' },
+    { key: 'all',       label: 'All',       icon: LayoutGrid },
+    { key: 'pending',   label: 'Pending',   icon: Clock },
+    { key: 'draft',     label: 'Draft',     icon: FileText },
+    { key: 'submitted', label: 'Submitted', icon: Send },
+    { key: 'rejected',  label: 'Rejected',  icon: XCircle },
+    { key: 'approved',  label: 'Approved',  icon: CheckCircle },
   ];
 
   const handleOpen = (student) => {
@@ -128,18 +128,19 @@ export default function VerificationListPage() {
       </div>
 
       {/* Status Tabs */}
-      <div className="flex overflow-x-auto gap-2 mb-6 no-scrollbar pb-1 px-1">
-        {STATUS_TABS.map(tab => (
+      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit scrollbar-hide no-scrollbar shadow-sm">
+        {STATUS_TABS.map(({ key, label, icon: Icon }) => (
           <button
-            key={tab.key}
-            onClick={() => setStatusFilter(tab.key)}
-            className={`px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold whitespace-nowrap transition-all duration-300 border flex items-center gap-1.5 ${
-              statusFilter === tab.key 
-                ? 'bg-brand-500 border-brand-500 text-white shadow-md shadow-brand-200' 
-                : 'bg-white border-gray-100 text-gray-500 hover:border-brand-200 hover:text-brand-600'
+            key={key}
+            onClick={() => setStatusFilter(key)}
+            className={`flex-shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold rounded-xl capitalize transition-all duration-300 ${
+              statusFilter === key
+                ? 'bg-white text-brand-600 shadow-md ring-1 ring-black/5 scale-[1.02]'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
             }`}
           >
-            {tab.label}
+            <Icon size={13} className={`sm:w-[15px] sm:h-[15px] ${statusFilter === key ? 'text-brand-500' : 'text-gray-400'}`} />
+            {label}
           </button>
         ))}
       </div>
@@ -286,23 +287,23 @@ export default function VerificationListPage() {
               <p className="text-xs text-gray-400 text-center sm:text-left">
                 Showing {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, filteredStudents.length)} of {filteredStudents.length} results
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-1">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >← Prev</button>
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-sm active:scale-95 transition-all"
+                >← Previous</button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
                   <button
                     key={n}
                     onClick={() => setCurrentPage(n)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${n === currentPage ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                    className={`w-10 h-10 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-90 ${n === currentPage ? 'bg-brand-500 text-white ring-2 ring-brand-500/20' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                   >{n}</button>
                 ))}
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-sm active:scale-95 transition-all"
                 >Next →</button>
               </div>
             </div>

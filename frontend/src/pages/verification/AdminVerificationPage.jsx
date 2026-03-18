@@ -83,10 +83,10 @@ export default function AdminVerificationPage() {
   };
 
   const STATUS_TABS = [
-    { key: 'submitted',        label: 'Submitted', icon: Clock },
+    { key: 'submitted',        label: 'Submitted',        icon: Send },
     { key: 'teacher_rejected', label: 'Teacher Rejected', icon: AlertCircle },
-    { key: 'approved',         label: 'Approved',  icon: CheckCircle },
-    { key: 'rejected',         label: 'Rejected',  icon: XCircle },
+    { key: 'approved',         label: 'Approved',         icon: CheckCircle },
+    { key: 'rejected',         label: 'Rejected',         icon: XCircle },
   ];
 
   return (
@@ -99,18 +99,18 @@ export default function AdminVerificationPage() {
       </div>
 
       {/* Status Tabs */}
-      <div className="flex gap-1.5 mb-5 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit scrollbar-hide no-scrollbar shadow-sm">
         {STATUS_TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setStatusFilter(key)}
-            className={`flex items-center gap-1.5 px-4 py-2 text-xs font-semibold rounded-lg capitalize transition-all ${
+            className={`flex-shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold rounded-xl capitalize transition-all duration-300 ${
               statusFilter === key
-                ? 'bg-white text-brand-600 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-white text-brand-600 shadow-md ring-1 ring-black/5 scale-[1.02]'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
             }`}
           >
-            <Icon size={13} />
+            <Icon size={13} className={`sm:w-[15px] sm:h-[15px] ${statusFilter === key ? 'text-brand-500' : 'text-gray-400'}`} />
             {label}
           </button>
         ))}
@@ -193,16 +193,18 @@ export default function AdminVerificationPage() {
                     <button
                       onClick={() => handleAction(v._id, 'approve')}
                       disabled={actionLoading === v._id + 'approve'}
-                      className="flex-1 py-2 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-green-100 disabled:opacity-50 transition-colors"
+                      className="flex-1 py-2.5 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                     >
-                      <CheckCircle size={14} /> Approve
+                      {actionLoading === v._id + 'approve' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                      Approve
                     </button>
                     <button
                       onClick={() => handleAction(v._id, 'reject')}
                       disabled={actionLoading === v._id + 'reject'}
-                      className="flex-1 py-2 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-red-100 disabled:opacity-50 transition-colors"
+                      className="flex-1 py-2.5 bg-white text-red-600 border border-red-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-red-50 hover:border-red-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                     >
-                      <XCircle size={14} /> Reject
+                      {actionLoading === v._id + 'reject' ? <Loader2 size={14} className="animate-spin" /> : <XCircle size={14} />}
+                      Reject
                     </button>
                   </div>
                 )}
@@ -210,18 +212,24 @@ export default function AdminVerificationPage() {
                   <button
                     onClick={() => handleAction(v._id, 'approve')}
                     disabled={actionLoading === v._id + 'approve'}
-                    className="w-full py-2 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-green-100 disabled:opacity-50 transition-colors"
+                    className="w-full py-2.5 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                   >
-                    <CheckCircle size={14} /> Approve Anyway
+                    {actionLoading === v._id + 'approve' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                    Approve Anyway
                   </button>
                 )}
                 {statusFilter === 'teacher_rejected' && (
                   <button
                     onClick={() => handleAction(v._id, 'submit-for-review')}
                     disabled={actionLoading === v._id + 'submit-for-review'}
-                    className="w-full py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-100 disabled:opacity-50 transition-colors"
+                    className="w-full py-2.5 bg-white text-blue-600 border border-blue-200 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-blue-50 hover:border-blue-300 shadow-sm active:scale-[0.98] transition-all disabled:opacity-50"
                   >
-                    <Send size={14} /> Move to Submitted
+                    {actionLoading === v._id + 'submit-for-review' ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Send size={14} />
+                    )}
+                    Move to Submitted
                   </button>
                 )}
               </div>
@@ -290,18 +298,24 @@ export default function AdminVerificationPage() {
                         <button
                           onClick={() => handleAction(v._id, 'approve')}
                           disabled={actionLoading === v._id + 'approve'}
-                          className="px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-lg text-xs font-bold hover:bg-green-100 disabled:opacity-50 transition-colors flex items-center gap-1"
+                          className="px-4 py-2 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
                         >
-                          <CheckCircle size={13} /> Approve
+                          {actionLoading === v._id + 'approve' ? <Loader2 size={13} className="animate-spin" /> : <CheckCircle size={13} />}
+                          Approve
                         </button>
                       )}
                       {statusFilter === 'teacher_rejected' && (
                         <button
                           onClick={() => handleAction(v._id, 'submit-for-review')}
                           disabled={actionLoading === v._id + 'submit-for-review'}
-                          className="px-3 py-1.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg text-xs font-bold hover:bg-blue-100 disabled:opacity-50 transition-colors flex items-center gap-1"
+                          className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-xl text-xs font-bold hover:bg-blue-50 hover:border-blue-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 group disabled:opacity-50"
                         >
-                          <Send size={13} /> Move to Submitted
+                          {actionLoading === v._id + 'submit-for-review' ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Send size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                          )}
+                          Move to Submitted
                         </button>
                       )}
                       {statusFilter === 'approved' && (
@@ -320,19 +334,19 @@ export default function AdminVerificationPage() {
               <p className="text-xs text-gray-400 text-center sm:text-left">
                 Showing {indexOfFirst + 1}–{Math.min(indexOfLast, total)} of {total} results
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-1">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors">
-                  ← Prev
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-sm active:scale-95 transition-all">
+                  ← Previous
                 </button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
                   <button key={n} onClick={() => setCurrentPage(n)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${n === currentPage ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                    className={`w-10 h-10 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-90 ${n === currentPage ? 'bg-brand-500 text-white ring-2 ring-brand-500/20' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>
                     {n}
                   </button>
                 ))}
                 <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors">
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-sm active:scale-95 transition-all">
                   Next →
                 </button>
               </div>

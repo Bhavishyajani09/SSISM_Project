@@ -11,6 +11,7 @@ const PAGE_SIZE = 10;
 export default function TeacherDashboard() {
   const [studentCount, setStudentCount] = useState(0);
   const [students, setStudents] = useState([]);
+  const [vMap, setVMap] = useState({}); // rollNumber → verification
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -25,16 +26,48 @@ export default function TeacherDashboard() {
 
   const fetchStudents = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/passed-students`);
-      setStudents(res.data.data || []);
-      setStudentCount(res.data.count || 0);
-    } catch {
+      const [studentsRes, verificationsRes] = await Promise.all([
+        axios.get(`${API_BASE}/passed-students`),
+        axios.get(`${API_BASE}/verifications`),
+      ]);
+      setStudents(studentsRes.data.data || []);
+      setStudentCount(studentsRes.data.count || 0);
+
+      // Build status mapping
+      const mapping = {};
+      (verificationsRes.data.verifications || []).forEach(v => {
+        if (v.studentId) mapping[v.studentId] = v.status;
+      });
+      setVMap(mapping);
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
       setStudents([]);
       setStudentCount(0);
     } finally {
       setLoading(false);
     }
   };
+
+  const getStatus = (rollNumber) => vMap[rollNumber?.toString()] || 'pending';
+
+  const STATUS_CFG = {
+    pending:          { label: 'Pending',          bg: 'bg-gray-100 text-gray-500 border-gray-200',        dot: 'bg-gray-300' },
+    draft:            { label: 'Draft',            bg: 'bg-orange-100 text-orange-700 border-orange-200',  dot: 'bg-orange-400' },
+    submitted:        { label: 'Submitted',        bg: 'bg-blue-100 text-blue-700 border-blue-200',        dot: 'bg-blue-400' },
+    approved:         { label: 'Approved',         bg: 'bg-green-100 text-green-700 border-green-200',     dot: 'bg-green-400' },
+    rejected:         { label: 'Admin Rejected',   bg: 'bg-red-100 text-red-700 border-red-200',           dot: 'bg-red-400' },
+    teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400' },
+  };
+
+  function StatusBadge({ status }) {
+    const cfg = STATUS_CFG[status] || STATUS_CFG.pending;
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${cfg.bg}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+        {cfg.label}
+      </span>
+    );
+  }
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this student?")) return;
@@ -145,7 +178,10 @@ export default function TeacherDashboard() {
                       <p className="text-[10px] font-bold text-brand-500 tracking-tighter uppercase mt-0.5">ROLL: {s.rollNumber}</p>
                     </div>
                   </div>
-                  <ChevronRight size={14} className="text-gray-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5" />
+                  <div className="flex flex-col items-end gap-1.5">
+                    <StatusBadge status={getStatus(s.rollNumber)} />
+                    <ChevronRight size={14} className="text-gray-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5" />
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
                   {[
@@ -180,7 +216,7 @@ export default function TeacherDashboard() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Actions'].map(h => (
+                  {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Status', 'Actions'].map(h => (
                     <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -197,6 +233,9 @@ export default function TeacherDashboard() {
                     <td className="px-5 py-4 text-gray-500">{s.mobileNumber}</td>
                     <td className="px-5 py-4">
                       <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-50 text-green-600">{s.scholarshipExamMarks ?? 0}</span>
+                    </td>
+                    <td className="px-5 py-4">
+                      <StatusBadge status={getStatus(s.rollNumber)} />
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2">
@@ -221,24 +260,23 @@ export default function TeacherDashboard() {
               <p className="text-xs text-gray-400 text-center sm:text-left">
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, students.length)} of {students.length} students
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-1">
-                <button
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))} 
                   disabled={page === 1}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                >← Prev</button>
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-sm active:scale-95 transition-all"
+                >← Previous</button>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(n => (
-                  <button
-                    key={n}
+                  <button 
+                    key={n} 
                     onClick={() => setPage(n)}
-                    className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${n === page ? 'bg-brand-500 text-white' : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
-                      }`}
+                    className={`w-10 h-10 rounded-xl text-sm font-bold shadow-sm transition-all active:scale-90 ${n === page ? 'bg-brand-500 text-white ring-2 ring-brand-500/20' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
                   >{n}</button>
                 ))}
-                <button
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
                   disabled={page === totalPages}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 text-gray-600 bg-white hover:bg-gray-50 disabled:opacity-40 shadow-sm active:scale-95 transition-all"
                 >Next →</button>
               </div>
             </div>
