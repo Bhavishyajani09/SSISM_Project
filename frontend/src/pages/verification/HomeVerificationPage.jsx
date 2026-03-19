@@ -510,10 +510,10 @@ const HomeVerificationPage = () => {
       const data = await res.json();
       if (data.address) {
         const a = data.address;
-        const village = a.village || a.suburb || a.city_district || a.town || a.city || '';
+        const main = a.neighbourhood || a.suburb || a.city_district || a.village || a.hamlet || a.town || a.city || '';
         const district = a.district || a.county || '';
         const state = a.state || '';
-        const parts = [village, district, state].filter(Boolean);
+        const parts = [main, district, state].filter(Boolean);
         setLocationAddress(parts.join(', '));
       }
     } catch (err) {
