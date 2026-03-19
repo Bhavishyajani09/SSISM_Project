@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../api';
 import toast from 'react-hot-toast';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import Loader from '../components/Loader';
 import Skeleton, { TableRowSkeleton } from '../components/Skeleton';
 
@@ -205,7 +205,7 @@ export default function TeacherDashboard() {
           {userRole !== 'admin' && (
             <div className="grid grid-cols-1 gap-3 sm:hidden mb-10">
               {paginated.map((s, i) => (
-                <div key={s._id} onClick={() => handleVerify(s)} className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group cursor-pointer">
+                <div key={s._id} className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm transition-all relative overflow-hidden group">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2.5">
                       <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 font-bold group-hover:bg-brand-500 group-hover:text-white transition-colors text-xs">
@@ -218,7 +218,14 @@ export default function TeacherDashboard() {
                     </div>
                     <div className="flex flex-col items-end gap-1.5">
                       <StatusBadge status={getStatus(s.rollNumber)} />
-                      <ChevronRight size={14} className="text-gray-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5" />
+                      <div className="flex gap-2 mt-1">
+                        <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-1.5 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-brand-500 hover:bg-brand-50 hover:border-brand-200 transition-all shadow-sm">
+                          <Pencil size={12} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-1.5 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm">
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
@@ -248,14 +255,14 @@ export default function TeacherDashboard() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Status'].map(h => (
+                    {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Status', 'Actions'].map(h => (
                       <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {paginated.map((s, i) => (
-                    <tr key={s._id} onClick={() => handleVerify(s)} className="hover:bg-gray-50 transition-colors cursor-pointer group">
+                    <tr key={s._id} className="hover:bg-gray-50 transition-colors group">
                       <td className="px-5 py-4 text-gray-400 text-xs">{(page - 1) * PAGE_SIZE + i + 1}</td>
                       <td className="px-5 py-4 font-semibold text-gray-800">{s.studentName}</td>
                       <td className="px-5 py-4 text-gray-500">{s.fatherName}</td>
@@ -268,6 +275,16 @@ export default function TeacherDashboard() {
                       </td>
                       <td className="px-5 py-4">
                         <StatusBadge status={getStatus(s.rollNumber)} />
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex gap-2">
+                           <button onClick={() => handleEdit(s)} className="p-2 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-brand-500 hover:bg-brand-50 hover:border-brand-200 transition-all shadow-sm" title="Edit Student">
+                             <Pencil size={14} />
+                           </button>
+                           <button onClick={() => handleDelete(s._id)} className="p-2 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm" title="Delete Student">
+                             <Trash2 size={14} />
+                           </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
