@@ -130,15 +130,18 @@ export default function TeacherDashboard() {
           <p className="text-gray-400 text-[9px] sm:text-xs mt-1">All records in database</p>
         </div>
 
-        {userRole !== 'admin' && (
-          <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
-            <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
-            <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
-            <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
-              Add Students →
-            </span>
-          </Link>
-        )}
+        <Link 
+          to={userRole === 'admin' ? "/register-teacher" : "/add-passed-students"} 
+          className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm"
+        >
+          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
+          <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">
+            {userRole === 'admin' ? 'Add System Teacher' : 'Add Passed Students'}
+          </p>
+          <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
+            {userRole === 'admin' ? 'Add Teacher →' : 'Add Students →'}
+          </span>
+        </Link>
 
             <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
               <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">System Status</p>
@@ -183,11 +186,19 @@ export default function TeacherDashboard() {
           <div className="mb-4 flex justify-center opacity-30">
             <svg className="w-14 h-14 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
           </div>
-          <h3 className="text-base font-semibold text-gray-700 mb-1">No Students Yet</h3>
-          <p className="text-gray-400 text-sm mb-6">Add your first batch of passed students to see them here.</p>
-          <Link to="/add-passed-students"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors">
-            Add Students
+          <h3 className="text-base font-semibold text-gray-700 mb-1">
+            {userRole === 'admin' ? 'No Teachers Yet' : 'No Students Yet'}
+          </h3>
+          <p className="text-gray-400 text-sm mb-6">
+            {userRole === 'admin' 
+              ? 'Add your first teacher to start managing student records.' 
+              : 'Add your first batch of passed students to see them here.'}
+          </p>
+          <Link 
+            to={userRole === 'admin' ? "/register-teacher" : "/add-passed-students"}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors"
+          >
+            {userRole === 'admin' ? 'Add Teacher' : 'Add Students'}
           </Link>
         </div>
       ) : (
