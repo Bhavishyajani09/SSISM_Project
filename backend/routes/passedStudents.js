@@ -244,7 +244,7 @@ router.post('/upload-excel', auth, upload.single('file'), async (req, res) => {
 });
 
 // ─── DELETE a student by ID ─────────────────────────────────────────────────
-router.delete('/:id', auth, adminOnly, async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
         // 1. Find the student first to get their rollNumber
         const student = await PassedStudent.findById(req.params.id);
@@ -271,7 +271,7 @@ router.delete('/:id', auth, adminOnly, async (req, res) => {
 });
 
 // ─── UPDATE a student by ID ──────────────────────────────────────────────────
-router.put('/:id', auth, adminOnly, async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
 
     try {
         const student = await PassedStudent.findByIdAndUpdate(
