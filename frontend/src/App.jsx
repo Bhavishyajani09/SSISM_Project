@@ -67,7 +67,7 @@ function App() {
         <Route
           path="/home-verification"
           element={
-            <ProtectedRoute roles={['teacher']}>
+            <ProtectedRoute roles={['admin', 'teacher']}>
               <MainLayout>
                 <VerificationListPage />
               </MainLayout>

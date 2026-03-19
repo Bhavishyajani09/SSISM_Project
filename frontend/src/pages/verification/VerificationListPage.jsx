@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api';
-import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
+import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
 import { TableRowSkeleton, CardSkeleton } from '../../components/Skeleton';
@@ -226,9 +226,22 @@ export default function VerificationListPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    <StatusBadge status={student.currentStatus} />
-                    <ChevronRight className="text-gray-300 group-hover:text-brand-500 transition-colors" size={16} />
+                  <div className="flex flex-col items-end gap-2">
+                    <StatusBadge status={student.currentStatus || 'pending'} />
+                    <div className="flex gap-2">
+                      <button onClick={(e) => { e.stopPropagation(); handleEdit(student); }} className="p-2 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-brand-500 hover:border-brand-200 transition-all shadow-sm">
+                        <Pencil size={14} />
+                      </button>
+                      <button onClick={(e) => { e.stopPropagation(); handleDelete(student._id); }} className="p-2 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-200 transition-all shadow-sm">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleOpen(student); }}
+                      className="mt-1 px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-xl shadow-sm active:scale-95 transition-all flex items-center gap-1"
+                    >
+                      {student.currentStatus === 'pending' ? 'Start Verify' : 'Continue'} <ChevronRight size={14} />
+                    </button>
                   </div>
                 </div>
                 <div className="mt-2.5 space-y-1">

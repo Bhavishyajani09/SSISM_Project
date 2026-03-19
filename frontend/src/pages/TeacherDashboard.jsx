@@ -192,17 +192,14 @@ export default function TeacherDashboard() {
         </div>
       ) : (
         <>
-          {userRole !== 'admin' && (
             <div className="flex items-center justify-between mb-3 sm:mb-5">
               <h2 className="text-sm sm:text-base font-semibold text-gray-700">All Passed Students</h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-brand-50 text-brand-600">
                 {students.length} records
               </span>
             </div>
-          )}
 
           {/* Mobile Cards */}
-          {userRole !== 'admin' && (
             <div className="grid grid-cols-1 gap-3 sm:hidden mb-10">
               {paginated.map((s, i) => (
                 <div key={s._id} onClick={() => handleVerify(s)} className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group cursor-pointer">
@@ -248,10 +245,8 @@ export default function TeacherDashboard() {
                 </div>
               ))}
             </div>
-          )}
 
           {/* Desktop Table */}
-          {userRole !== 'admin' && (
             <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 border-b border-gray-200">
@@ -279,10 +274,10 @@ export default function TeacherDashboard() {
                       </td>
                       <td className="px-5 py-4">
                         <div className="flex gap-2">
-                           <button onClick={() => handleEdit(s)} className="p-2 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-brand-500 hover:bg-brand-50 hover:border-brand-200 transition-all shadow-sm" title="Edit Student">
+                           <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-2 rounded-lg bg-white border border-gray-200 text-gray-400 hover:text-brand-500 hover:bg-brand-50 hover:border-brand-200 transition-all shadow-sm" title="Edit Student">
                              <Pencil size={14} />
                            </button>
-                           <button onClick={() => handleDelete(s._id)} className="p-2 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm" title="Delete Student">
+                           <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-2 rounded-lg bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm" title="Delete Student">
                              <Trash2 size={14} />
                            </button>
                         </div>
@@ -292,11 +287,10 @@ export default function TeacherDashboard() {
                 </tbody>
               </table>
             </div>
-          )}
 
 
           {/* Pagination */}
-          {userRole !== 'admin' && totalPages > 1 && (
+          {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 px-1">
               <p className="text-xs text-gray-400 text-center sm:text-left">
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, students.length)} of {students.length} students
