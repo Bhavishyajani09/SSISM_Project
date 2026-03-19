@@ -40,6 +40,7 @@ const homeVerificationSchema = new mongoose.Schema({
   marks12: { type: Number },
   collegeExamMarks: { type: Number },
   homeVisitMarks: { type: Number },
+  attendance12: { type: Number },
   totalMarks: { type: Number },
 
   // --- Personal Information ---
@@ -61,7 +62,6 @@ const homeVerificationSchema = new mongoose.Schema({
   achievements: { type: String, trim: true },
 
   // --- Health Information ---
-  attendance12: { type: Number },
   hasIllness: { type: Boolean, default: false },
   illnessName: { type: String },
   symptoms: { type: String },

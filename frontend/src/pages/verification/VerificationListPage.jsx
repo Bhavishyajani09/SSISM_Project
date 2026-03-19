@@ -149,10 +149,10 @@ export default function VerificationListPage() {
       {loading ? (
         <>
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-             <div className="h-6 w-32 bg-gray-200 animate-pulse rounded-lg" />
-             <div className="h-5 w-20 bg-gray-100 animate-pulse rounded-full" />
+            <div className="h-6 w-32 bg-gray-200 animate-pulse rounded-lg" />
+            <div className="h-5 w-20 bg-gray-100 animate-pulse rounded-full" />
           </div>
-          
+
           {/* Mobile Skeletons */}
           <div className="grid grid-cols-1 md:hidden gap-3">
             {Array.from({ length: 5 }).map((_, i) => (
