@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Search, MapPin, User, ChevronRight, CheckCircle, XCircle, Clock, FileText, Send, AlertCircle } from 'lucide-react';
 import Loader from '../../components/Loader';
 import toast from 'react-hot-toast';
-
-const API_BASE = 'http://localhost:5000/api';
 
 const STATUS_CFG = {
   submitted:        { bg: 'bg-blue-100 text-blue-700 border-blue-200',   dot: 'bg-blue-400',   label: 'Submitted' },
@@ -34,11 +32,14 @@ export default function AdminVerificationPage() {
   const [actionLoading, setActionLoading]   = useState(null); // id of row being actioned
   const itemsPerPage = 10;
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role || 'teacher';
+  const isAdmin = userRole === 'admin';
 
   const fetchVerifications = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_BASE}/verifications?status=${statusFilter}`);
+      const res = await api.get(`/verifications?status=${statusFilter}`);
       setVerifications(res.data.verifications || []);
     } catch (err) {
       console.error('Error fetching verifications:', err);
@@ -79,7 +80,7 @@ export default function AdminVerificationPage() {
     try {
       const endpoint = isReview ? 'submit-for-review' : action;
 
-      await axios.patch(`${API_BASE}/verifications/${id}/${endpoint}`, { remarks: `Admin ${action}d` });
+      await api.patch(`/verifications/${id}/${endpoint}`, { remarks: `Admin ${action}d` });
       toast.success(isReview ? 'Moved to Submitted Successfully' : `Verification ${action === 'approve' ? 'Approved ✅' : 'Rejected ❌'}`);
       fetchVerifications();
     } catch (err) {
@@ -89,6 +90,7 @@ export default function AdminVerificationPage() {
       setActionLoading(null);
     }
   };
+
 
   const STATUS_TABS = [
     { key: 'submitted',        label: 'Submitted',        icon: Send },
@@ -196,7 +198,7 @@ export default function AdminVerificationPage() {
                 <div className="text-xs text-gray-500 mb-3">
                   📞 {v.mobile || '—'} &nbsp;|&nbsp; Verifier: {v.verifierName || '—'}
                 </div>
-                {statusFilter === 'submitted' && (
+                {isAdmin && statusFilter === 'submitted' && (
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleAction(v._id, 'approve')}
@@ -216,7 +218,7 @@ export default function AdminVerificationPage() {
                     </button>
                   </div>
                 )}
-                {statusFilter === 'rejected' && (
+                {isAdmin && statusFilter === 'rejected' && (
                   <button
                     onClick={() => handleAction(v._id, 'approve')}
                     disabled={actionLoading === v._id + 'approve'}
@@ -226,7 +228,7 @@ export default function AdminVerificationPage() {
                     Approve Anyway
                   </button>
                 )}
-                {statusFilter === 'teacher_rejected' && (
+                {isAdmin && statusFilter === 'teacher_rejected' && (
                   <button
                     onClick={() => handleAction(v._id, 'submit-for-review')}
                     disabled={actionLoading === v._id + 'submit-for-review'}
@@ -249,7 +251,7 @@ export default function AdminVerificationPage() {
             <table className="w-full text-sm min-w-[820px]">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  {['Date', 'Student', 'Roll / ID', 'Location', 'Mobile', 'Verifier', 'Status', 'Actions'].map(h => (
+                  {['Date', 'Student', 'Roll / ID', 'Location', 'Mobile', 'Verifier', 'Status', isAdmin ? 'Actions' : null].filter(Boolean).map(h => (
                     <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -281,57 +283,59 @@ export default function AdminVerificationPage() {
                     <td className="px-5 py-4">
                       <StatusBadge status={v.status} />
                     </td>
-                    <td className="px-5 py-4">
-                      {statusFilter === 'submitted' && (
-                        <div className="flex items-center gap-2">
+                    {isAdmin && (
+                      <td className="px-5 py-4">
+                        {statusFilter === 'submitted' && (
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleAction(v._id, 'approve')}
+                              disabled={actionLoading === v._id + 'approve'}
+                              className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg border border-green-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
+                              title="Approve"
+                            >
+                              {actionLoading === v._id + 'approve' ? <Loader size="xs" color="brand" /> : <CheckCircle size={16} />}
+                            </button>
+
+                            <button
+                              onClick={() => handleAction(v._id, 'reject')}
+                              disabled={actionLoading === v._id + 'reject'}
+                              className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
+                              title="Reject"
+                            >
+                              {actionLoading === v._id + 'reject' ? <Loader size="xs" color="slate" /> : <XCircle size={16} />}
+                            </button>
+
+                          </div>
+                        )}
+                        {statusFilter === 'rejected' && (
                           <button
                             onClick={() => handleAction(v._id, 'approve')}
                             disabled={actionLoading === v._id + 'approve'}
-                            className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg border border-green-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
-                            title="Approve"
+                            className="px-4 py-2 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
                           >
-                            {actionLoading === v._id + 'approve' ? <Loader size="xs" color="brand" /> : <CheckCircle size={16} />}
+                            {actionLoading === v._id + 'approve' ? <Loader size="xs" /> : <CheckCircle size={13} />}
+                            Approve
                           </button>
-
+                        )}
+                        {statusFilter === 'teacher_rejected' && (
                           <button
-                            onClick={() => handleAction(v._id, 'reject')}
-                            disabled={actionLoading === v._id + 'reject'}
-                            className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
-                            title="Reject"
+                            onClick={() => handleAction(v._id, 'submit-for-review')}
+                            disabled={actionLoading === v._id + 'submit-for-review'}
+                            className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-xl text-xs font-bold hover:bg-blue-50 hover:border-blue-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 group disabled:opacity-50"
                           >
-                            {actionLoading === v._id + 'reject' ? <Loader size="xs" color="slate" /> : <XCircle size={16} />}
+                            {actionLoading === v._id + 'submit-for-review' ? (
+                              <Loader size="xs" />
+                            ) : (
+                              <Send size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                            )}
+                            Move to Submitted
                           </button>
-
-                        </div>
-                      )}
-                      {statusFilter === 'rejected' && (
-                        <button
-                          onClick={() => handleAction(v._id, 'approve')}
-                          disabled={actionLoading === v._id + 'approve'}
-                          className="px-4 py-2 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
-                        >
-                          {actionLoading === v._id + 'approve' ? <Loader size="xs" /> : <CheckCircle size={13} />}
-                          Approve
-                        </button>
-                      )}
-                      {statusFilter === 'teacher_rejected' && (
-                        <button
-                          onClick={() => handleAction(v._id, 'submit-for-review')}
-                          disabled={actionLoading === v._id + 'submit-for-review'}
-                          className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-xl text-xs font-bold hover:bg-blue-50 hover:border-blue-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 group disabled:opacity-50"
-                        >
-                          {actionLoading === v._id + 'submit-for-review' ? (
-                            <Loader size="xs" />
-                          ) : (
-                            <Send size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                          )}
-                          Move to Submitted
-                        </button>
-                      )}
-                      {statusFilter === 'approved' && (
-                        <span className="text-gray-300 text-xs">—</span>
-                      )}
-                    </td>
+                        )}
+                        {statusFilter === 'approved' && (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

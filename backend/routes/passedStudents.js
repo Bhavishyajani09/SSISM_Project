@@ -40,8 +40,10 @@ const COLUMN_MAP = {
     'scholarship exam marks': 'scholarshipExamMarks',
 };
 
-// ─── GET all passed students (with pagination, search & status filter) ─────
-router.get('/', async (req, res) => {
+const { auth, adminOnly } = require('../middleware/auth');
+
+// ─── GET all passed students ────────────────────────────────────────────────
+router.get('/', auth, async (req, res) => {
     try {
         const { page = 1, limit = 10, search = '', district = '', status = 'all' } = req.query;
         const pageNum = parseInt(page, 10);
@@ -109,7 +111,7 @@ router.get('/', async (req, res) => {
 });
 
 // ─── POST manual entry (single or multiple) ────────────────────────────────
-router.post('/manual', async (req, res) => {
+router.post('/manual', auth, async (req, res) => {
     try {
         const { students } = req.body; // expects { students: [ {...}, {...} ] }
 
@@ -159,7 +161,7 @@ router.post('/manual', async (req, res) => {
 });
 
 // ─── POST upload Excel ──────────────────────────────────────────────────────
-router.post('/upload-excel', upload.single('file'), async (req, res) => {
+router.post('/upload-excel', auth, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Please upload an Excel file.' });
@@ -242,7 +244,7 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
 });
 
 // ─── DELETE a student by ID ─────────────────────────────────────────────────
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
     try {
         // 1. Find the student first to get their rollNumber
         const student = await PassedStudent.findById(req.params.id);
@@ -269,7 +271,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 // ─── UPDATE a student by ID ──────────────────────────────────────────────────
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
+
     try {
         const student = await PassedStudent.findByIdAndUpdate(
             req.params.id,

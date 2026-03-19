@@ -3,6 +3,7 @@ import { Eye, EyeOff, LogIn, Mail, Lock, AlertTriangle } from 'lucide-react';
 import Loader from '../../components/Loader';
 import { Link, useNavigate } from 'react-router-dom';
 import ssismLogo from '../../assets/SSISM_Logo.png';
+import api from '../../api';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -21,22 +22,22 @@ const LoginPage = () => {
     setError('');
     setIsLoading(true);
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, password: formData.password }),
+      const res = await api.post('/auth/login', {
+        email: formData.email,
+        password: formData.password
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Login failed. Please try again.');
+      const data = res.data;
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
       navigate('/dashboard');
     } catch (err) {
-      setError(err.message || 'Something went wrong. Please try again.');
+      setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row text-slate-800 font-sans overflow-x-hidden selection:bg-orange-100 selection:text-orange-900">
@@ -133,9 +134,10 @@ const LoginPage = () => {
           </div>
 
           <div className="text-center mb-5 sm:mb-8">
-            <h2 className="text-xl sm:text-3xl font-extrabold text-slate-800 mb-1 sm:mb-2">Teacher Login</h2>
-            <p className="text-slate-400 text-[10px] sm:text-sm font-medium uppercase tracking-widest">Secure Access Portal</p>
+            <h2 className="text-xl sm:text-3xl font-extrabold text-slate-800 mb-1 sm:mb-2 text-center">SSISM Portal</h2>
+            <p className="text-slate-400 text-[10px] sm:text-sm font-medium uppercase tracking-widest text-center">Secure Access Login</p>
           </div>
+
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100 flex items-start gap-3">

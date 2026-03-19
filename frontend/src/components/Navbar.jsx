@@ -22,6 +22,9 @@ export default function Navbar() {
     navigate('/');
   };
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role || 'teacher';
+
   const navLinks = [
     {
       to: '/dashboard',
@@ -35,6 +38,7 @@ export default function Navbar() {
     {
       to: '/add-passed-students',
       label: 'Add Students',
+      roles: ['teacher'],
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -44,6 +48,7 @@ export default function Navbar() {
     {
       to: '/home-verification',
       label: 'Home Verification',
+      roles: ['teacher'],
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -53,14 +58,26 @@ export default function Navbar() {
     {
       to: '/admin-verification',
       label: 'Admin Verifications',
+      roles: ['admin', 'teacher'],
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 12a4 4 0 100-8 4 4 0 000 8z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l5 5m0 0l-5 5m5-5H9m0 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V9a2 2 0 012-2h4a2 2 0 012 2v5" />
         </svg>
       )
+    },
+    {
+       to: '/register-teacher',
+       label: 'Add Teacher',
+       roles: ['admin'],
+       icon: (
+         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
+           <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+         </svg>
+       )
     }
-  ];
+  ].filter(link => !link.roles || link.roles.includes(userRole));
+
 
   return (
     <>

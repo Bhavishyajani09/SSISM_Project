@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-require('dotenv').config({ path: 'c:/Users/HP/OneDrive/Desktop/SSISM/SSISM_Project/backend/.env' });
+require('dotenv').config();
 
 const testConnection = async () => {
   try {
