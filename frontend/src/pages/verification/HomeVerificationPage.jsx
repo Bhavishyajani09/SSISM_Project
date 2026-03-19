@@ -541,18 +541,14 @@ const HomeVerificationPage = () => {
   };
 
   const fetchExistingVerification = async (sid) => {
-    if (!sid || id) return; // Don't auto-fetch if we're already on a specific record (ID in URL)
+    if (!sid || id) return;
     try {
-      // 1. First check if a verification record already exists
       const res = await api.get(`/verifications/check/${sid}`);
       if (res.data.verification) {
         const { familyMembers: fm, ...formData } = res.data.verification;
-        // Clean up Mongo metadata
         delete formData._id; delete formData.__v; delete formData.createdAt; delete formData.updatedAt;
-
         formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
         formData.hasAchievements = formData.achievements ? 'yes' : 'no';
-
         setForm(prev => ({ ...prev, ...formData }));
         if (fm) setFamilyMembers(fm);
         setVerificationId(res.data.verification._id);
@@ -562,15 +558,12 @@ const HomeVerificationPage = () => {
         }
         setApiMsg('');
         navigate(`/verification/home/${res.data.verification._id}`, { replace: true });
-        return; // Exit if found
+        return;
       }
 
-      // 2. If no verification found, fetch basic student info from passed-students
-      const studentRes = await fetch(`http://localhost:5000/api/passed-students/roll/${sid}`);
-    if (studentRes.ok) {
-      const sData = await studentRes.json();
-      if (sData.data) {
-        const s = sData.data;
+      const studentRes = await api.get(`/passed-students/roll/${sid}`);
+      const s = studentRes.data.data;
+      if (s) {
         setForm(prev => ({
           ...prev,
           studentId: s.rollNumber || '',
@@ -599,19 +592,18 @@ const HomeVerificationPage = () => {
         }
         setApiMsg('');
       }
+    } catch (err) {
+      console.error('Error checking existing:', err);
     }
-  } catch (err) {
-    console.error('Error checking existing:', err);
-  }
-};
+  };
 
 // Load student data from location state or ID param
 useEffect(() => {
   if (id) {
     setVerificationId(id);
-    fetch(`${API_URL}/${id}`)
-      .then(res => res.json())
-      .then(data => {
+    api.get(`/verifications/${id}`)
+      .then(res => {
+        const data = res.data;
         if (data.verification) {
           console.log('Loaded Verification Data:', data.verification);
           const { familyMembers: fm, ...formData } = data.verification;
@@ -756,22 +748,16 @@ const handleSave = async () => {
 
   try {
     let res;
+    const path = verificationId ? `/verifications/${verificationId}` : `/verifications`;
+    const payload = { ...buildPayload(), status: 'draft' };
+
     if (verificationId) {
-      res = await fetch(`${API_URL}/${verificationId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...buildPayload(), status: 'draft' }),
-      });
+      res = await api.put(path, payload);
     } else {
-      res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...buildPayload(), status: 'draft' }),
-      });
+      res = await api.post(path, payload);
     }
-    const data = await res.json();
+    const data = res.data;
     console.log('Save Draft Success Response:', data);
-    if (!res.ok) throw new Error(data.error || 'Save failed');
 
     if (data.verification) {
       setVerificationId(data.verification._id);
@@ -872,22 +858,15 @@ const handleSubmit = async (targetStatus = 'submitted') => {
 
   try {
     let res;
+    const path = verificationId ? `/verifications/${verificationId}` : `/verifications`;
+
     if (verificationId) {
-      res = await fetch(`${API_URL}/${verificationId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      res = await api.put(path, payload);
     } else {
-      res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      res = await api.post(path, payload);
     }
-    const data = await res.json();
+    const data = res.data;
     console.log('Final Submit Success Response:', data);
-    if (!res.ok) throw new Error(data.error || `${targetStatus} failed`);
 
     if (data.verification) {
       setVerificationId(data.verification._id);

@@ -118,19 +118,25 @@ export default function VerificationListPage() {
         <p className="text-xs sm:text-sm text-gray-500 mt-1">Select a student to start or continue their home verification.</p>
       </div>
 
-      {/* Status Tabs */}
-      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit thin-scrollbar shadow-sm">
+      {/* Status Tabs - Gen Z Premium Redesign */}
+      <div className="flex overflow-x-auto gap-1.5 mb-8 bg-slate-50/50 backdrop-blur-md border border-slate-200/50 p-1.5 rounded-2xl w-full sm:w-fit scrollbar-hide shadow-sm group/tabs">
         {STATUS_TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setStatusFilter(key)}
-            className={`flex-shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold rounded-xl capitalize transition-all duration-300 ${statusFilter === key
-              ? 'bg-white text-brand-600 shadow-md ring-1 ring-black/5 scale-[1.02]'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
+            className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 text-[11px] sm:text-xs font-black rounded-xl uppercase tracking-wider transition-all duration-300 relative group/tab ${statusFilter === key
+              ? 'bg-gradient-to-r from-brand-500 to-rose-500 text-white shadow-lg shadow-brand-200 ring-2 ring-white/50 scale-[1.05] z-10'
+              : 'text-slate-500 hover:text-slate-900 hover:bg-white/80 active:scale-95'
               }`}
           >
-            <Icon size={13} className={`sm:w-[15px] sm:h-[15px] ${statusFilter === key ? 'text-brand-500' : 'text-gray-400'}`} />
+            <Icon 
+              size={14} 
+              className={`transition-transform duration-500 ${statusFilter === key ? 'scale-110 rotate-3' : 'group-hover/tab:scale-110 group-hover/tab:-rotate-3'}`} 
+            />
             {label}
+            {statusFilter === key && (
+              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full shadow-glow" />
+            )}
           </button>
         ))}
       </div>
