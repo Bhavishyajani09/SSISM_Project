@@ -1,11 +1,10 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import Loader from '../components/Loader';
 
-const API_BASE = 'http://localhost:5000/api';
 
 const EMPTY_STUDENT = {
   studentName: '',
@@ -101,11 +100,11 @@ export default function AddPassedStudents() {
         }
 
         const headers = Object.keys(data[0]).map(h => h.trim().toLowerCase());
-        const requiredHeaders = ['student name', 'father name', 'mobile number', 'roll number'];
+        const requiredHeaders = ['student name', 'father name', 'mobile number'];
         const missing = requiredHeaders.filter(h => !headers.includes(h));
 
         if (missing.length > 0) {
-          toast.error('Wrong format. Expected columns: Serial Number, Student Name, Father Name, Bus Track, Mobile Number, Whatsapp Number, Subject in 12th, Village / Town, District, Roll Number, Scholarship Exam Marks');
+          toast.error('Wrong format. Required columns: Student Name, Father Name, Mobile Number');
           setSelectedFile(null);
           return;
         }
@@ -143,9 +142,7 @@ export default function AddPassedStudents() {
     formData.append('file', selectedFile);
 
     try {
-      const res = await axios.post(`${API_BASE}/passed-students/upload-excel`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await api.post('/passed-students/upload-excel', formData);
       toast.success(res.data.message);
       setSelectedFile(null);
       setPreviewData([]);
@@ -156,6 +153,7 @@ export default function AddPassedStudents() {
       setLoading(false);
     }
   };
+
 
   const clearFile = () => {
     setSelectedFile(null);
@@ -216,7 +214,8 @@ export default function AddPassedStudents() {
         scholarshipExamMarks: s.scholarshipExamMarks ? Number(s.scholarshipExamMarks) : 0,
       }));
 
-      const res = await axios.post(`${API_BASE}/passed-students/manual`, { students: payload });
+      const res = await api.post('/passed-students/manual', { students: payload });
+
       toast.success(res.data.message);
       setStudents([{ ...EMPTY_STUDENT }]);
       navigate('/dashboard');

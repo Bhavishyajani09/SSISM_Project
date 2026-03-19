@@ -10,7 +10,7 @@ import {
 import ssismLogo from '../../assets/SSISM_Logo.png';
 import Loader from '../../components/Loader';
 import toast from 'react-hot-toast';
-
+import api from '../../api';
 
 // Helper: Collapsible Card (Accordion)
 const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onToggle }) => {
@@ -197,6 +197,7 @@ const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
   );
 };
 
+
 // Photo Preview Item
 const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
   const [localPreview, setLocalPreview] = useState(null);
@@ -215,13 +216,9 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
       formData.append('image', file);
 
       try {
-        const res = await fetch('http://localhost:5000/api/upload', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        if (data.url && onUpload) {
-          onUpload(data.url);
+        const res = await api.post('/upload', formData);
+        if (res.data.url && onUpload) {
+          onUpload(res.data.url);
         }
       } catch (err) {
         console.error('Upload error', err);
@@ -230,6 +227,7 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId }) => {
       }
     }
   };
+
 
   return (
     <div className="flex flex-col gap-1 w-full mx-auto">
@@ -314,19 +312,16 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
       formData.append('image', file);
 
       try {
-        const res = await fetch('http://localhost:5000/api/upload', {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        if (data.url && onUpload) {
-          onUpload(data.url);
+        const res = await api.post('/upload', formData);
+        if (res.data.url && onUpload) {
+          onUpload(res.data.url);
         }
       } catch (err) {
         console.error('Upload error', err);
       } finally {
         setLoading(false);
       }
+
     }
   };
 
@@ -388,10 +383,6 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
   );
 };
 
-
-
-const API_URL = 'http://localhost:5000/api/verifications';
-
 const HomeVerificationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -404,7 +395,7 @@ const HomeVerificationPage = () => {
     fatherName: '', schoolName: '', classFees12: '', subject12: '', address: '',
     village: '', tehsil: '', district: '', pincode: '', track: '', futureGoal: '',
     attendance12: '', hasIllness: 'no', illnessName: '', symptoms: '',
-    totalAnnualIncome: '', incomeSources: [], incomeOther: '', familyChallenges: '',
+    totalAnnualIncome: '', familyChallenges: '', familyMembers: [],
     houseType: '', numRooms: '', houseBuilder: '', houseSchemeName: '',
     appliances: [], numVehicles: '', vehicleTypes: [],
     totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '',
@@ -483,63 +474,58 @@ const HomeVerificationPage = () => {
     if (!sid || id) return; // Don't auto-fetch if we're already on a specific record (ID in URL)
     try {
       // 1. First check if a verification record already exists
-      const res = await fetch(`${API_URL}/check/${sid}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.verification) {
-          const { familyMembers: fm, ...formData } = data.verification;
-          // Clean up Mongo metadata
-          delete formData._id; delete formData.__v; delete formData.createdAt; delete formData.updatedAt;
+      const res = await api.get(`/verifications/check/${sid}`);
+      if (res.data.verification) {
+        const { familyMembers: fm, ...formData } = res.data.verification;
+        // Clean up Mongo metadata
+        delete formData._id; delete formData.__v; delete formData.createdAt; delete formData.updatedAt;
 
-          formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
-          formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+        formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
+        formData.hasAchievements = formData.achievements ? 'yes' : 'no';
 
-          setForm(prev => ({ ...prev, ...formData }));
-          if (fm) setFamilyMembers(fm);
-          setVerificationId(data.verification._id);
-          setStatus(data.verification.status);
-          if (data.verification.gpsLat && data.verification.gpsLng) {
-            setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
-          }
-          setApiMsg('Found existing draft for this student. Loaded latest data.');
-          navigate(`/verification/home/${data.verification._id}`, { replace: true });
-          return; // Exit if found
+        setForm(prev => ({ ...prev, ...formData }));
+        if (fm) setFamilyMembers(fm);
+        setVerificationId(res.data.verification._id);
+        setStatus(res.data.verification.status);
+        if (res.data.verification.gpsLat && res.data.verification.gpsLng) {
+          setGpsCoords({ lat: res.data.verification.gpsLat, lng: res.data.verification.gpsLng });
         }
+        setApiMsg('Found existing draft for this student. Loaded latest data.');
+        navigate(`/verification/home/${res.data.verification._id}`, { replace: true });
+        return; // Exit if found
       }
 
       // 2. If no verification found, fetch basic student info from passed-students
-      const studentRes = await fetch(`http://localhost:5000/api/passed-students/roll/${sid}`);
-      if (studentRes.ok) {
-        const sData = await studentRes.json();
-        if (sData.data) {
-          const s = sData.data;
-          setForm(prev => ({
-            ...prev,
-            studentId: s.rollNumber || '',
-            studentName: s.studentName || '',
-            fatherName: s.fatherName || '',
-            mobile: s.mobileNumber || '',
-            village: s.villageTown || '',
-            district: s.district || '',
-            collegeExamMarks: s.scholarshipExamMarks || '',
-            track: s.busTrack || '',
-            subject12: s.subjectIn12th || '',
-          }));
-          setApiMsg('Loaded student details from registration database.');
-        }
+      const studentRes = await api.get(`/passed-students/roll/${sid}`);
+      if (studentRes.data.data) {
+        const s = studentRes.data.data;
+        setForm(prev => ({
+          ...prev,
+          studentId: s.rollNumber || '',
+          studentName: s.studentName || '',
+          fatherName: s.fatherName || '',
+          mobile: s.mobileNumber || '',
+          village: s.villageTown || '',
+          district: s.district || '',
+          collegeExamMarks: s.scholarshipExamMarks || '',
+          track: s.busTrack || '',
+          subject12: s.subjectIn12th || '',
+        }));
+        setApiMsg('Loaded student details from registration database.');
       }
     } catch (err) {
       console.error('Error checking existing:', err);
     }
   };
 
+
   // Load student data from location state or ID param
   useEffect(() => {
     if (id) {
       setVerificationId(id);
-      fetch(`${API_URL}/${id}`)
-        .then(res => res.json())
-        .then(data => {
+      api.get(`/verifications/${id}`)
+        .then(res => {
+          const data = res.data;
           if (data.verification) {
             console.log('Loaded Verification Data:', data.verification);
             const { familyMembers: fm, ...formData } = data.verification;
@@ -560,6 +546,7 @@ const HomeVerificationPage = () => {
           }
         })
         .catch(err => setApiMsg('Error loading record: ' + err.message));
+
     } else if (location.state?.studentData) {
       // Coming from List or Dashboard
       const s = location.state.studentData;
@@ -643,21 +630,12 @@ const HomeVerificationPage = () => {
     try {
       let res;
       if (verificationId) {
-        res = await fetch(`${API_URL}/${verificationId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: 'draft' }),
-        });
+        res = await api.put(`/verifications/${verificationId}`, { ...buildPayload(), status: 'draft' });
       } else {
-        res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...buildPayload(), status: 'draft' }),
-        });
+        res = await api.post('/verifications', { ...buildPayload(), status: 'draft' });
       }
-      const data = await res.json();
+      const data = res.data;
       console.log('Save Draft Success Response:', data);
-      if (!res.ok) throw new Error(data.error || 'Save failed');
 
       if (data.verification) {
         setVerificationId(data.verification._id);
@@ -675,9 +653,10 @@ const HomeVerificationPage = () => {
       showSuccessAndRedirect('draft');
     } catch (err) {
       console.error('Save Draft Error:', err);
-      setApiMsg('Error: ' + err.message);
+      setApiMsg('Error: ' + (err.response?.data?.error || err.message));
     } finally { setIsApiLoading(false); setLoadingAction(null); }
   };
+
 
 
   const handleSubmit = async (targetStatus = 'submitted') => {
@@ -689,19 +668,12 @@ const HomeVerificationPage = () => {
     try {
       let res;
       if (verificationId) {
-        res = await fetch(`${API_URL}/${verificationId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        res = await api.put(`/verifications/${verificationId}`, payload);
       } else {
-        res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        });
+        res = await api.post('/verifications', payload);
       }
-      const data = await res.json();
+      const data = res.data;
+
       console.log('Final Submit Success Response:', data);
       if (!res.ok) throw new Error(data.error || `${targetStatus} failed`);
       

@@ -40,8 +40,10 @@ const COLUMN_MAP = {
     'scholarship exam marks': 'scholarshipExamMarks',
 };
 
+const { auth, adminOnly } = require('../middleware/auth');
+
 // ─── GET all passed students ────────────────────────────────────────────────
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
     try {
         const students = await PassedStudent.find().sort({ serialNumber: 1 });
         res.json({ success: true, data: students, count: students.length });
@@ -52,7 +54,7 @@ router.get('/', async (req, res) => {
 });
 
 // ─── POST manual entry (single or multiple) ────────────────────────────────
-router.post('/manual', async (req, res) => {
+router.post('/manual', auth, async (req, res) => {
     try {
         const { students } = req.body; // expects { students: [ {...}, {...} ] }
 
@@ -102,7 +104,7 @@ router.post('/manual', async (req, res) => {
 });
 
 // ─── POST upload Excel ──────────────────────────────────────────────────────
-router.post('/upload-excel', upload.single('file'), async (req, res) => {
+router.post('/upload-excel', auth, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ success: false, message: 'Please upload an Excel file.' });
@@ -185,7 +187,7 @@ router.post('/upload-excel', upload.single('file'), async (req, res) => {
 });
 
 // ─── DELETE a student by ID ─────────────────────────────────────────────────
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, adminOnly, async (req, res) => {
     try {
         // 1. Find the student first to get their rollNumber
         const student = await PassedStudent.findById(req.params.id);
@@ -212,7 +214,8 @@ router.delete('/:id', async (req, res) => {
 });
 
 // ─── UPDATE a student by ID ──────────────────────────────────────────────────
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, adminOnly, async (req, res) => {
+
     try {
         const student = await PassedStudent.findByIdAndUpdate(
             req.params.id,

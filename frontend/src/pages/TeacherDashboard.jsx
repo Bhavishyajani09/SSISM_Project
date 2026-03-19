@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import toast from 'react-hot-toast';
 import { ChevronRight } from 'lucide-react';
 import Loader from '../components/Loader';
 
 
-const API_BASE = 'http://localhost:5000/api';
 const PAGE_SIZE = 10;
 
 export default function TeacherDashboard() {
@@ -28,8 +27,8 @@ export default function TeacherDashboard() {
   const fetchStudents = async () => {
     try {
       const [studentsRes, verificationsRes] = await Promise.all([
-        axios.get(`${API_BASE}/passed-students`),
-        axios.get(`${API_BASE}/verifications`),
+        api.get('/passed-students'),
+        api.get('/verifications'),
       ]);
       setStudents(studentsRes.data.data || []);
       setStudentCount(studentsRes.data.count || 0);
@@ -73,7 +72,7 @@ export default function TeacherDashboard() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this student?")) return;
     try {
-      await axios.delete(`${API_BASE}/passed-students/${id}`);
+      await api.delete(`/passed-students/${id}`);
       toast.success("Student deleted successfully.");
       fetchStudents();
     } catch (err) {
@@ -89,7 +88,7 @@ export default function TeacherDashboard() {
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${API_BASE}/passed-students/${editingStudent._id}`, editingStudent);
+      await api.put(`/passed-students/${editingStudent._id}`, editingStudent);
       toast.success("Student updated successfully.");
       setEditModalOpen(false);
       setEditingStudent(null);
@@ -98,6 +97,10 @@ export default function TeacherDashboard() {
       toast.error(err.response?.data?.message || "Failed to update student.");
     }
   };
+
+
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role || 'teacher';
 
   const totalPages = Math.ceil(students.length / PAGE_SIZE);
   const paginated = students.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -108,35 +111,60 @@ export default function TeacherDashboard() {
 
       {/* Page Header */}
       <div className="mb-4 sm:mb-8">
-        <h1 className="text-lg sm:text-2xl font-bold text-gray-800">Teacher Dashboard</h1>
+        <h1 className="text-lg sm:text-2xl font-bold text-gray-800">{userRole === 'admin' ? 'Admin' : 'Teacher'} Dashboard</h1>
         <p className="text-gray-500 mt-0.5 text-xs sm:text-sm">Manage and oversee passed student records</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-10">
-        <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
-          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Total Students</p>
-          <p className="text-2xl sm:text-4xl font-black text-brand-500">{loading ? '—' : studentCount}</p>
-          <p className="text-gray-400 text-[9px] sm:text-xs mt-1">All records in database</p>
-        </div>
-
-        <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
-          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
-          <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
-          <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
-            Add Students →
-          </span>
-        </Link>
-
-        <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
-          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Status</p>
-          <div className="flex items-center gap-2 mt-1">
-            <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
-            <span className="text-gray-700 font-bold text-sm sm:text-lg">System Live</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-10">
+        {userRole !== 'admin' && (
+          <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
+            <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Total Students</p>
+            <p className="text-2xl sm:text-4xl font-black text-brand-500">{loading ? '—' : studentCount}</p>
+            <p className="text-gray-400 text-[9px] sm:text-xs mt-1">All records in database</p>
           </div>
-          <p className="text-gray-400 text-[9px] sm:text-xs mt-1">Ready for verification</p>
-        </div>
+        )}
+
+        {userRole === 'admin' ? (
+          <>
+            <Link to="/admin-verification" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm flex-1">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Verification Action</p>
+              <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Review Verifications</p>
+              <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
+                Go to Portal →
+              </span>
+            </Link>
+
+            <Link to="/register-teacher" className="bg-white rounded-xl border border-blue-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-blue-400 hover:shadow-sm transition-all shadow-sm flex-1">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Admin Action</p>
+              <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Manage System Users</p>
+              <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-blue-600 transition-colors shadow-sm shadow-blue-100">
+                Add Teacher →
+              </span>
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
+              <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
+              <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
+                Add Students →
+              </span>
+            </Link>
+
+            <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
+              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">System Status</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="w-2 h-2 rounded-full bg-green-400 inline-block"></span>
+                <span className="text-gray-700 font-bold text-sm sm:text-lg">Live</span>
+              </div>
+              <p className="text-gray-400 text-[9px] sm:text-xs mt-1">Updates in real-time</p>
+            </div>
+          </>
+        )}
       </div>
+
 
       {/* Students List */}
       {loading ? (
@@ -158,105 +186,93 @@ export default function TeacherDashboard() {
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between mb-3 sm:mb-5">
-            <h2 className="text-sm sm:text-base font-semibold text-gray-700">All Passed Students</h2>
-            <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-brand-50 text-brand-600">
-              {students.length} records
-            </span>
-          </div>
+          {userRole !== 'admin' && (
+            <div className="flex items-center justify-between mb-3 sm:mb-5">
+              <h2 className="text-sm sm:text-base font-semibold text-gray-700">All Passed Students</h2>
+              <span className="px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-brand-50 text-brand-600">
+                {students.length} records
+              </span>
+            </div>
+          )}
 
           {/* Mobile Cards */}
-          <div className="grid grid-cols-1 gap-3 sm:hidden mb-10">
-            {paginated.map((s, i) => (
-              <div key={s._id} onClick={() => handleVerify(s)} className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group cursor-pointer">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 font-bold group-hover:bg-brand-500 group-hover:text-white transition-colors text-xs">
-                      {i + 1}
+          {userRole !== 'admin' && (
+            <div className="grid grid-cols-1 gap-3 sm:hidden mb-10">
+              {paginated.map((s, i) => (
+                <div key={s._id} onClick={() => handleVerify(s)} className="bg-white border border-gray-100 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all active:scale-[0.98] relative overflow-hidden group cursor-pointer">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-500 font-bold group-hover:bg-brand-500 group-hover:text-white transition-colors text-xs">
+                        {i + 1}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-gray-900 leading-tight">{s.studentName}</p>
+                        <p className="text-[10px] font-bold text-brand-500 tracking-tighter uppercase mt-0.5">ROLL: {s.rollNumber}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs font-bold text-gray-900 leading-tight">{s.studentName}</p>
-                      <p className="text-[10px] font-bold text-brand-500 tracking-tighter uppercase mt-0.5">ROLL: {s.rollNumber}</p>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <StatusBadge status={getStatus(s.rollNumber)} />
+                      <ChevronRight size={14} className="text-gray-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5" />
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5">
-                    <StatusBadge status={getStatus(s.rollNumber)} />
-                    <ChevronRight size={14} className="text-gray-300 group-hover:text-brand-500 transition-transform group-hover:translate-x-0.5" />
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
+                    {[
+                      ['Father', s.fatherName],
+                      ['Mobile', s.mobileNumber],
+                      ['Marks', s.scholarshipExamMarks ?? 0],
+                      ['Subject', s.subjectIn12th || '—'],
+                      ['Village', s.villageTown || '—'],
+                      ['District', s.district || '—'],
+                      ['Bus Track', s.busTrack || '—'],
+                    ].map(([label, val]) => (
+                      <div key={label}>
+                        <p className="text-gray-400 leading-tight">{label}</p>
+                        <p className="text-gray-700 font-medium truncate leading-tight">{val}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-[10px]">
-                  {[
-                    ['Father', s.fatherName],
-                    ['Mobile', s.mobileNumber],
-                    ['Marks', s.scholarshipExamMarks ?? 0],
-                    ['Subject', s.subjectIn12th || '—'],
-                    ['Village', s.villageTown || '—'],
-                    ['District', s.district || '—'],
-                    ['Bus Track', s.busTrack || '—'],
-                  ].map(([label, val]) => (
-                    <div key={label}>
-                      <p className="text-gray-400 leading-tight">{label}</p>
-                      <p className="text-gray-700 font-medium truncate leading-tight">{val}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-gray-100">
-                   <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit">
-                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                   </button>
-                   <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Delete">
-                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                   </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Desktop Table */}
-          <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Status', 'Actions'].map(h => (
-                    <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {paginated.map((s, i) => (
-                  <tr key={s._id} onClick={() => handleVerify(s)} className="hover:bg-gray-50 transition-colors cursor-pointer group">
-                    <td className="px-5 py-4 text-gray-400 text-xs">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                    <td className="px-5 py-4 font-semibold text-gray-800">{s.studentName}</td>
-                    <td className="px-5 py-4 text-gray-500">{s.fatherName}</td>
-                    <td className="px-5 py-4">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-600">{s.rollNumber}</span>
-                    </td>
-                    <td className="px-5 py-4 text-gray-500">{s.mobileNumber}</td>
-                    <td className="px-5 py-4">
-                      <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-50 text-green-600">{s.scholarshipExamMarks ?? 0}</span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <StatusBadge status={getStatus(s.rollNumber)} />
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-
-                        <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Delete">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      </div>
-                    </td>
+          {userRole !== 'admin' && (
+            <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Status'].map(h => (
+                      <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginated.map((s, i) => (
+                    <tr key={s._id} onClick={() => handleVerify(s)} className="hover:bg-gray-50 transition-colors cursor-pointer group">
+                      <td className="px-5 py-4 text-gray-400 text-xs">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                      <td className="px-5 py-4 font-semibold text-gray-800">{s.studentName}</td>
+                      <td className="px-5 py-4 text-gray-500">{s.fatherName}</td>
+                      <td className="px-5 py-4">
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-600">{s.rollNumber}</span>
+                      </td>
+                      <td className="px-5 py-4 text-gray-500">{s.mobileNumber}</td>
+                      <td className="px-5 py-4">
+                        <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-green-50 text-green-600">{s.scholarshipExamMarks ?? 0}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <StatusBadge status={getStatus(s.rollNumber)} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {userRole !== 'admin' && totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 px-1">
               <p className="text-xs text-gray-400 text-center sm:text-left">
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, students.length)} of {students.length} students

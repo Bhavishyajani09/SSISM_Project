@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api';
 import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
 
-const API_BASE = 'http://localhost:5000/api';
 
 // Maps roll number → verification record
 function buildVerificationMap(verifications) {
@@ -54,8 +53,8 @@ export default function VerificationListPage() {
     try {
       // Fetch students + all verifications in parallel
       const [studentsRes, verificationsRes] = await Promise.all([
-        axios.get(`${API_BASE}/passed-students`),
-        axios.get(`${API_BASE}/verifications`),
+        api.get('/passed-students'),
+        api.get('/verifications'),
       ]);
       const studentList = studentsRes.data.data || [];
       const verificationList = verificationsRes.data.verifications || [];
@@ -67,6 +66,7 @@ export default function VerificationListPage() {
       setLoading(false);
     }
   }, []);
+
 
   useEffect(() => {
     fetchAll();

@@ -17,16 +17,14 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Main Routes
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', authRoutes);
 app.use('/api/verifications', require('./routes/verificationRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
+app.use('/api/passed-students', passedStudentsRoutes);
 
 app.get('/', (req, res) => {
     res.send('Backend Server is Running!');
 });
-
-app.use('/api/passed-students', passedStudentsRoutes);
-app.use('/api/auth', authRoutes);
 
 // Start Server
 app.listen(PORT, () => {

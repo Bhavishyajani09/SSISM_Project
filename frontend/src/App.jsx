@@ -7,11 +7,18 @@ import AddPassedStudents from './pages/AddPassedStudents';
 import VerificationListPage from './pages/verification/VerificationListPage';
 import HomeVerificationPage from './pages/verification/HomeVerificationPage';
 import AdminVerificationPage from './pages/verification/AdminVerificationPage';
+import RegisterTeacherPage from './pages/auth/RegisterTeacherPage';
 
 const isAuthenticated = () => !!localStorage.getItem('token');
+const getUserRole = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  return user.role || 'teacher';
+};
 
-function ProtectedRoute({ children }) {
-  return isAuthenticated() ? children : <Navigate to="/" replace />;
+function ProtectedRoute({ children, roles }) {
+  if (!isAuthenticated()) return <Navigate to="/" replace />;
+  if (roles && !roles.includes(getUserRole())) return <Navigate to="/dashboard" replace />;
+  return children;
 }
 
 function MainLayout({ children }) {
@@ -43,7 +50,7 @@ function App() {
         <Route
           path="/add-passed-students"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['admin', 'teacher']}>
               <MainLayout>
                 <AddPassedStudents />
               </MainLayout>
@@ -53,7 +60,7 @@ function App() {
         <Route
           path="/home-verification"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['teacher']}>
               <MainLayout>
                 <VerificationListPage />
               </MainLayout>
@@ -63,9 +70,19 @@ function App() {
         <Route
           path="/admin-verification"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute roles={['admin', 'teacher']}>
               <MainLayout>
                 <AdminVerificationPage />
+              </MainLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/register-teacher"
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <MainLayout>
+                <RegisterTeacherPage />
               </MainLayout>
             </ProtectedRoute>
           }
@@ -82,6 +99,7 @@ function App() {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+
       <Toaster
         position="bottom-center"
         toastOptions={{
