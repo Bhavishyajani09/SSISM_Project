@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import LoginPage from './pages/auth/LoginPage';
 import TeacherDashboard from './pages/TeacherDashboard';
@@ -35,7 +36,12 @@ function MainLayout({ children }) {
 function App() {
   return (
     <Router>
-      <Routes>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Loader size="xl" />
+        </div>
+      }>
+        <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route
           path="/dashboard"

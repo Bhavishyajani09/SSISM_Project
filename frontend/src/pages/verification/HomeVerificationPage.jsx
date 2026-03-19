@@ -658,8 +658,79 @@ const HomeVerificationPage = () => {
   };
 
 
+  const validateHomeVerification = () => {
+    const isVal = (v) => v !== '' && v !== null && v !== undefined;
+
+    // 1. Basic Info
+    if (!isVal(form.scholarshipType)) return "Scholarship Type is required.";
+    if (!isVal(form.studentId)) return "Student ID is required.";
+    if (!isVal(form.studentName)) return "Student Name is required.";
+    if (!isVal(form.mobile)) return "Mobile Number is required.";
+    if (form.mobile && !/^\d{10}$/.test(form.mobile)) return "Mobile Number must be 10 digits.";
+    if (!isVal(form.verifierName)) return "Verifier Name is required.";
+
+    // 2. Academic Info
+    if (!isVal(form.marks10)) return "10th Percentage is required.";
+    if (!isVal(form.marks11)) return "11th Percentage is required.";
+    if (!isVal(form.marks12)) return "12th Percentage is required.";
+    if (!isVal(form.collegeExamMarks)) return "College Exam Marks are required.";
+    if (!isVal(form.homeVisitMarks)) return "Home Visit Marks are required.";
+
+    // 3. Personal Info
+    if (!isVal(form.fatherName)) return "Father's Name is required.";
+    if (!isVal(form.address)) return "Address is required.";
+    if (!isVal(form.village)) return "Village is required.";
+    if (!isVal(form.tehsil)) return "Tehsil is required.";
+    if (!isVal(form.district)) return "District is required.";
+    if (!isVal(form.pincode)) return "Pincode is required.";
+    if (form.pincode && !/^\d{6}$/.test(form.pincode)) return "Pincode must be 6 digits.";
+
+    // 4. Family Income
+    if (!isVal(form.totalAnnualIncome)) return "Total Annual Income is required.";
+    if (!form.incomeSources || form.incomeSources.length === 0) return "At least one Income Source must be selected.";
+
+    // 5. Housing
+    if (!isVal(form.houseType)) return "House Type is required.";
+    if (!isVal(form.numRooms)) return "Number of Rooms is required.";
+    if (!isVal(form.houseBuilder)) return "House Builder Info is required.";
+
+    // 6. Documentation (Photos)
+    const requiredPhotos = [
+      "1. Passport size photo",
+      "2. Student with interviewer",
+      "3. With parents & supervisor",
+      "4. With parents at house",
+      "5. In front of house",
+      "6. Full house photo"
+    ];
+    for (const label of requiredPhotos) {
+      const p = form.photos?.find(p => p.label === label);
+      if (!p || !p.url) {
+        return `Documentation Photo missing: ${label}`;
+      }
+    }
+
+    // 7. Signatures
+    if (!form.studentSignatureUrl) return "Student Signature is required.";
+    if (!form.fatherSignatureUrl) return "Father Signature is required.";
+    if (!form.motherSignatureUrl) return "Mother Signature is required.";
+    if (!form.supervisorSignatureUrl) return "Supervisor Signature is required.";
+
+    return null; // All good
+  };
+
 
   const handleSubmit = async (targetStatus = 'submitted') => {
+    // Strict validation only for final submission
+    if (targetStatus === 'submitted') {
+      const error = validateHomeVerification();
+      if (error) {
+        toast.error(`ALL FIELDS REQUIRED: ${error}`, { duration: 5000, position: 'top-center' });
+        setApiMsg(''); 
+        return;
+      }
+    }
+
     setIsApiLoading(true); setLoadingAction(targetStatus); setApiMsg('');
 
     const payload = { ...buildPayload(), status: targetStatus };
@@ -1306,6 +1377,12 @@ const HomeVerificationPage = () => {
 
               <button 
                 onClick={() => {
+                  const error = validateHomeVerification();
+                  if (error) {
+                    toast.error(`ALL FIELDS REQUIRED: ${error}`, { duration: 5000, position: 'top-center' });
+                    setApiMsg('');
+                    return;
+                  }
                   if (window.confirm("ARE YOU SURE? \n\nOnce you submit, this form will be LOCKED for final admin review. You will not be able to edit it again.")) {
                     handleSubmit('submitted');
                   }

@@ -3,6 +3,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
 const connectDB = require('./config/db');
+const compression = require('compression');
 const passedStudentsRoutes = require('./routes/passedStudents');
 const authRoutes = require('./routes/authRoutes');
 
@@ -14,6 +15,7 @@ connectDB();
 
 // Middleware
 app.use(cors());
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 
 // Main Routes

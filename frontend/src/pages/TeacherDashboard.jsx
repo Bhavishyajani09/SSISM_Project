@@ -4,6 +4,7 @@ import api from '../api';
 import toast from 'react-hot-toast';
 import { ChevronRight } from 'lucide-react';
 import Loader from '../components/Loader';
+import Skeleton, { TableRowSkeleton } from '../components/Skeleton';
 
 
 const PAGE_SIZE = 10;
@@ -26,23 +27,25 @@ export default function TeacherDashboard() {
 
   const fetchStudents = async () => {
     try {
-      const [studentsRes, verificationsRes] = await Promise.all([
-        api.get('/passed-students'),
-        api.get('/verifications'),
-      ]);
-      setStudents(studentsRes.data.data || []);
-      setStudentCount(studentsRes.data.count || 0);
+      setLoading(true);
+      // Use the new paginated/joined endpoint
+      const res = await axios.get(`${API_BASE}/passed-students`, {
+        params: { page: 1, limit: 1000 } // Fetch enough for the dashboard overview
+      });
+      const studentList = res.data.data || [];
+      setStudents(studentList);
+      setStudentCount(res.data.total || studentList.length);
 
-      // Build status mapping
+      // Status mapping is now easier as it's included in student data
       const mapping = {};
-      (verificationsRes.data.verifications || []).forEach(v => {
-        if (v.studentId) mapping[v.studentId] = v.status;
+      studentList.forEach(s => {
+        if (s.rollNumber) mapping[s.rollNumber] = s.currentStatus;
       });
       setVMap(mapping);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
       setStudents([]);
-      setStudentCount(0);
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
@@ -116,42 +119,24 @@ export default function TeacherDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-10">
-        {userRole !== 'admin' && (
-          <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
-            <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Total Students</p>
-            <p className="text-2xl sm:text-4xl font-black text-brand-500">{loading ? '—' : studentCount}</p>
-            <p className="text-gray-400 text-[9px] sm:text-xs mt-1">All records in database</p>
-          </div>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-6 sm:mb-10">
+        <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
+          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Total Students</p>
+          {loading ? (
+            <Skeleton className="h-8 sm:h-10 w-20 sm:w-32 bg-brand-50" />
+          ) : (
+            <p className="text-2xl sm:text-4xl font-black text-brand-500">{studentCount}</p>
+          )}
+          <p className="text-gray-400 text-[9px] sm:text-xs mt-1">All records in database</p>
+        </div>
 
-        {userRole === 'admin' ? (
-          <>
-            <Link to="/admin-verification" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm flex-1">
-              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Verification Action</p>
-              <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Review Verifications</p>
-              <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
-                Go to Portal →
-              </span>
-            </Link>
-
-            <Link to="/register-teacher" className="bg-white rounded-xl border border-blue-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-blue-400 hover:shadow-sm transition-all shadow-sm flex-1">
-              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Admin Action</p>
-              <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Manage System Users</p>
-              <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-blue-600 transition-colors shadow-sm shadow-blue-100">
-                Add Teacher →
-              </span>
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
-              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
-              <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
-              <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
-                Add Students →
-              </span>
-            </Link>
+        <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
+          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
+          <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
+          <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
+            Add Students →
+          </span>
+        </Link>
 
             <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
               <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">System Status</p>
@@ -168,10 +153,31 @@ export default function TeacherDashboard() {
 
       {/* Students List */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-gray-200 p-16 flex flex-col items-center gap-3">
-          <Loader size="lg" />
-          <span className="text-gray-400 text-sm">Loading students...</span>
-        </div>
+        <>
+          <div className="flex items-center justify-between mb-3 sm:mb-5">
+            <div className="h-5 w-40 bg-gray-200 animate-pulse rounded-lg" />
+            <div className="h-5 w-20 bg-gray-100 animate-pulse rounded-full" />
+          </div>
+          <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <table className="w-full text-sm">
+               <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Mobile', 'Marks', 'Status', 'Actions'].map(h => (
+                    <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <TableRowSkeleton rows={6} cols={8} />
+              </tbody>
+            </table>
+          </div>
+          <div className="grid grid-cols-1 gap-3 sm:hidden px-1">
+             {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm h-40 animate-pulse" />
+             ))}
+          </div>
+        </>
       ) : students.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center">
           <div className="mb-4 flex justify-center opacity-30">

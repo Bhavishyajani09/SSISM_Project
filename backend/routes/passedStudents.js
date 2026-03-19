@@ -45,10 +45,67 @@ const { auth, adminOnly } = require('../middleware/auth');
 // ─── GET all passed students ────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
     try {
-        const students = await PassedStudent.find().sort({ serialNumber: 1 });
-        res.json({ success: true, data: students, count: students.length });
+        const { page = 1, limit = 10, search = '', district = '', status = 'all' } = req.query;
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+
+        // Build Match Object for PassedStudent
+        const matchQuery = {};
+        if (search) {
+            matchQuery.$or = [
+                { studentName: { $regex: search, $options: 'i' } },
+                { rollNumber: { $regex: search, $options: 'i' } },
+            ];
+        }
+        if (district) {
+            matchQuery.district = district;
+        }
+
+        const pipeline = [
+            { $match: matchQuery },
+            {
+                $lookup: {
+                    from: 'homeverifications', // MongoDB collection name
+                    localField: 'rollNumber',
+                    foreignField: 'studentId',
+                    as: 'verification'
+                }
+            },
+            { $addFields: { verification: { $arrayElemAt: ['$verification', 0] } } },
+            { $addFields: { currentStatus: { $ifNull: ['$verification.status', 'pending'] } } }
+        ];
+
+        // Filter by Status if not 'all'
+        if (status !== 'all') {
+            if (status === 'rejected') {
+                pipeline.push({ $match: { currentStatus: { $in: ['rejected', 'teacher_rejected'] } } });
+            } else {
+                pipeline.push({ $match: { currentStatus: status } });
+            }
+        }
+
+        // Count total matching records
+        const countPipeline = [...pipeline, { $count: 'total' }];
+        const countResult = await PassedStudent.aggregate(countPipeline);
+        const total = countResult.length > 0 ? countResult[0].total : 0;
+
+        // Final Pagination & Sorting
+        pipeline.push({ $sort: { serialNumber: 1 } });
+        pipeline.push({ $skip: (pageNum - 1) * limitNum });
+        pipeline.push({ $limit: limitNum });
+
+        const students = await PassedStudent.aggregate(pipeline);
+
+        res.json({
+            success: true,
+            data: students,
+            total,
+            page: pageNum,
+            totalPages: Math.ceil(total / limitNum),
+            count: students.length
+        });
     } catch (error) {
-        console.error('Error fetching students:', error);
+        console.error('Error fetching students with aggregate:', error);
         res.status(500).json({ success: false, message: 'Server error while fetching students.' });
     }
 });

@@ -38,7 +38,6 @@ export default function Navbar() {
     {
       to: '/add-passed-students',
       label: 'Add Students',
-      roles: ['teacher'],
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
@@ -143,8 +142,8 @@ export default function Navbar() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-1.5">
-          <div className="px-2 mb-4">
+        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2.5">
+          <div className="px-2 mb-5">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Main Menu</p>
             <div className="h-0.5 w-8 bg-orange-400 rounded-full" />
           </div>
@@ -155,7 +154,7 @@ export default function Navbar() {
               end={link.to === '/dashboard'}
               onClick={() => setIsMobileOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all duration-200 border ${
+                `flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold transition-all duration-200 border ${
                   isActive 
                     ? 'bg-orange-50 border-orange-100 text-orange-600 shadow-[0_2px_10px_-3px_rgba(249,115,22,0.1)]' 
                     : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 border-transparent'

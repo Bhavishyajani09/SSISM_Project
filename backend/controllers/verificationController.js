@@ -125,15 +125,34 @@ exports.submitForReview = async (req, res) => {
   }
 };
 
-// Get all verifications (with optional status filter)
+// Get all verifications (with optional status filter & pagination)
 exports.getAllVerifications = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, page = 1, limit = 100 } = req.query; // Higher limit for verifications as they are needed for mapping
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+
     const filter = status ? { status } : {};
-    const verifications = await HomeVerification.find(filter)
-      .sort({ createdAt: -1 })
-      .select('studentName studentId scholarshipType status verificationDate verifierName village district mobile');
-    res.json({ count: verifications.length, verifications });
+    
+    // If limit is -1, fetch all (useful for frontend mapping if dataset is small)
+    let query = HomeVerification.find(filter).sort({ createdAt: -1 });
+    
+    if (limitNum !== -1) {
+      query = query.skip((pageNum - 1) * limitNum).limit(limitNum);
+    }
+
+    const [verifications, total] = await Promise.all([
+      query.select('studentName studentId scholarshipType status verificationDate verifierName village district mobile'),
+      HomeVerification.countDocuments(filter)
+    ]);
+
+    res.json({ 
+      count: verifications.length, 
+      verifications,
+      total,
+      page: pageNum,
+      totalPages: limitNum !== -1 ? Math.ceil(total / limitNum) : 1
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch verifications' });
   }
