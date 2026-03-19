@@ -147,4 +147,9 @@ homeVerificationSchema.pre(['update', 'findOneAndUpdate', 'findByIdAndUpdate'], 
   }
 });
 
+// Indexes for faster filtering and sorting
+homeVerificationSchema.index({ status: 1 });
+homeVerificationSchema.index({ verifierId: 1 });
+homeVerificationSchema.index({ verificationDate: -1 });
+
 module.exports = mongoose.model('HomeVerification', homeVerificationSchema);

@@ -1,12 +1,16 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
-import LoginPage from './pages/auth/LoginPage';
-import TeacherDashboard from './pages/TeacherDashboard';
-import AddPassedStudents from './pages/AddPassedStudents';
-import VerificationListPage from './pages/verification/VerificationListPage';
-import HomeVerificationPage from './pages/verification/HomeVerificationPage';
-import AdminVerificationPage from './pages/verification/AdminVerificationPage';
+import Loader from './components/Loader';
+
+// Lazy load pages
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const TeacherDashboard = lazy(() => import('./pages/TeacherDashboard'));
+const AddPassedStudents = lazy(() => import('./pages/AddPassedStudents'));
+const VerificationListPage = lazy(() => import('./pages/verification/VerificationListPage'));
+const HomeVerificationPage = lazy(() => import('./pages/verification/HomeVerificationPage'));
+const AdminVerificationPage = lazy(() => import('./pages/verification/AdminVerificationPage'));
 
 const isAuthenticated = () => !!localStorage.getItem('token');
 
@@ -28,7 +32,12 @@ function MainLayout({ children }) {
 function App() {
   return (
     <Router>
-      <Routes>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <Loader size="xl" />
+        </div>
+      }>
+        <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route
           path="/dashboard"
@@ -81,7 +90,8 @@ function App() {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </Suspense>
       <Toaster
         position="bottom-center"
         toastOptions={{

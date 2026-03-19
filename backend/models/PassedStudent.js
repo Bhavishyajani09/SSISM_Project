@@ -64,4 +64,10 @@ const passedStudentSchema = new mongoose.Schema({
     },
 });
 
+// Indexes for faster queries and sorting
+passedStudentSchema.index({ rollNumber: 1 });
+passedStudentSchema.index({ serialNumber: 1 });
+passedStudentSchema.index({ studentName: 1 });
+passedStudentSchema.index({ district: 1 });
+
 module.exports = mongoose.model('PassedStudent', passedStudentSchema);

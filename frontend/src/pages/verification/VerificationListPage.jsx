@@ -4,20 +4,9 @@ import axios from 'axios';
 import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
+import { TableRowSkeleton, CardSkeleton } from '../../components/Skeleton';
 
 const API_BASE = 'http://localhost:5000/api';
-
-// Maps roll number → verification record
-function buildVerificationMap(verifications) {
-  const map = {};
-  for (const v of verifications) {
-    if (v.studentId) {
-      // keep most recent per studentId
-      if (!map[v.studentId]) map[v.studentId] = v;
-    }
-  }
-  return map;
-}
 
 const STATUS_CONFIG = {
   draft: { label: 'Draft', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400', Icon: FileText },
@@ -40,65 +29,53 @@ function StatusBadge({ status }) {
 
 export default function VerificationListPage() {
   const [students, setStudents] = useState([]);
-  const [vMap, setVMap] = useState({}); // rollNumber → verification
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('pending'); // all | pending | draft | submitted | rejected
+  const [statusFilter, setStatusFilter] = useState('pending');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 10;
   const navigate = useNavigate();
 
-  const fetchAll = useCallback(async () => {
+  // Search Debounce
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchStudents = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch students + all verifications in parallel
-      const [studentsRes, verificationsRes] = await Promise.all([
-        axios.get(`${API_BASE}/passed-students`),
-        axios.get(`${API_BASE}/verifications`),
-      ]);
-      const studentList = studentsRes.data.data || [];
-      const verificationList = verificationsRes.data.verifications || [];
-      setStudents(studentList);
-      setVMap(buildVerificationMap(verificationList));
+      const params = {
+        page: currentPage,
+        limit: itemsPerPage,
+        search: debouncedSearch,
+        district: districtFilter,
+        status: statusFilter
+      };
+      const res = await axios.get(`${API_BASE}/passed-students`, { params });
+      setStudents(res.data.data || []);
+      setTotalRecords(res.data.total || 0);
+      setTotalPages(res.data.totalPages || 0);
     } catch (err) {
-      console.error('Error fetching data:', err);
+      console.error('Error fetching students:', err);
+      toast.error('Failed to load students');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, debouncedSearch, districtFilter, statusFilter]);
 
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    fetchStudents();
+  }, [fetchStudents]);
 
-  // Derive student-level status
-  const getStatus = (student) => {
-    const v = vMap[student.rollNumber?.toString()];
-    return v ? v.status : 'pending';
-  };
-
-  const getVerification = (student) => vMap[student.rollNumber?.toString()];
-
-  const uniqueDistricts = [...new Set(students.map(s => s.district).filter(Boolean))].sort();
-
-  const filteredStudents = students.filter(s => {
-    const matchesSearch = s.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.rollNumber?.toString().includes(searchTerm);
-    const matchesDistrict = districtFilter ? s.district === districtFilter : true;
-    const studentStatus = getStatus(s);
-    const matchesStatus = statusFilter === 'all' ? true :
-      statusFilter === 'rejected' ? (studentStatus === 'rejected' || studentStatus === 'teacher_rejected') :
-        studentStatus === statusFilter;
-    return matchesSearch && matchesDistrict && matchesStatus;
-  });
-
-  useEffect(() => { setCurrentPage(1); }, [searchTerm, districtFilter, statusFilter]);
-
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredStudents.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  // Reset to page 1 on filter change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, districtFilter, statusFilter]);
 
   const STATUS_TABS = [
     { key: 'all', label: 'All', icon: LayoutGrid },
@@ -110,12 +87,10 @@ export default function VerificationListPage() {
   ];
 
   const handleOpen = (student) => {
-    const v = getVerification(student);
+    const v = student.verification;
     if (v?._id) {
-      // Open existing record
       navigate(`/verification/home/${v._id}`);
     } else {
-      // New record pre-filled with student data
       navigate('/verification/home', { state: { studentData: student } });
     }
   };
@@ -164,7 +139,7 @@ export default function VerificationListPage() {
             className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all text-gray-700 text-xs sm:text-sm"
           >
             <option value="">All Districts</option>
-            {uniqueDistricts.map(d => (
+            {['Barwani', 'Dhar', 'Khargone', 'Jhabua', 'Alirajpur'].map(d => (
               <option key={d} value={d}>{d}</option>
             ))}
           </select>
@@ -172,11 +147,51 @@ export default function VerificationListPage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm">
-          <Loader size="xl" />
-          <span className="mt-4 text-gray-500 font-medium">Loading students...</span>
-        </div>
-      ) : filteredStudents.length === 0 ? (
+        <>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+             <div className="h-6 w-32 bg-gray-200 animate-pulse rounded-lg" />
+             <div className="h-5 w-20 bg-gray-100 animate-pulse rounded-full" />
+          </div>
+          
+          {/* Mobile Skeletons */}
+          <div className="grid grid-cols-1 md:hidden gap-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 animate-pulse" />
+                    <div>
+                      <div className="h-3 w-24 bg-gray-200 animate-pulse rounded mb-1" />
+                      <div className="h-2 w-16 bg-gray-100 animate-pulse rounded" />
+                    </div>
+                  </div>
+                  <div className="h-5 w-16 bg-gray-100 animate-pulse rounded-full" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-2 w-full bg-gray-50 animate-pulse rounded" />
+                  <div className="h-2 w-2/3 bg-gray-50 animate-pulse rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop Skeletons */}
+          <div className="hidden sm:block bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+            <table className="w-full text-xs">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Location', 'Mobile', 'Status', 'Action'].map(h => (
+                    <th key={h} className="px-4 py-3 text-left font-bold text-gray-300 border-none uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                <TableRowSkeleton rows={8} cols={8} />
+              </tbody>
+            </table>
+          </div>
+        </>
+      ) : students.length === 0 ? (
         <div className="py-20 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
           <p className="text-gray-400 font-medium">No students found matching your criteria.</p>
         </div>
@@ -185,52 +200,49 @@ export default function VerificationListPage() {
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h2 className="text-sm sm:text-base font-semibold text-gray-700">Verification List</h2>
             <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold bg-brand-50 text-brand-600">
-              {filteredStudents.length} records
+              {totalRecords} records
             </span>
           </div>
 
           {/* ── Mobile Cards ── */}
           <div className="grid grid-cols-1 md:hidden gap-3">
-            {currentItems.map(student => {
-              const st = getStatus(student);
-              return (
-                <div
-                  key={student._id}
-                  onClick={() => handleOpen(student)}
-                  className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-brand-200 cursor-pointer transition-all group relative overflow-hidden"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                        <User size={20} />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors text-xs">
-                          {student.studentName}
-                        </h3>
-                        <p className="text-[10px] font-bold text-brand-500 uppercase tracking-tighter">
-                          ROLL: {student.rollNumber}
-                        </p>
-                      </div>
+            {students.map(student => (
+              <div
+                key={student._id}
+                onClick={() => handleOpen(student)}
+                className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-brand-200 cursor-pointer transition-all group relative overflow-hidden"
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
+                      <User size={20} />
                     </div>
-                    <div className="flex flex-col items-end gap-1.5">
-                      <StatusBadge status={st} />
-                      <ChevronRight className="text-gray-300 group-hover:text-brand-500 transition-colors" size={16} />
+                    <div>
+                      <h3 className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors text-xs">
+                        {student.studentName}
+                      </h3>
+                      <p className="text-[10px] font-bold text-brand-500 uppercase tracking-tighter">
+                        ROLL: {student.rollNumber}
+                      </p>
                     </div>
                   </div>
-                  <div className="mt-2.5 space-y-1">
-                    <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
-                      <MapPin size={11} />
-                      <span className="truncate">{student.villageTown || '—'}, {student.district || '—'}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
-                      <span className="font-semibold text-gray-600">Mobile:</span>
-                      <span>{student.mobileNumber || '—'}</span>
-                    </div>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <StatusBadge status={student.currentStatus} />
+                    <ChevronRight className="text-gray-300 group-hover:text-brand-500 transition-colors" size={16} />
                   </div>
                 </div>
-              );
-            })}
+                <div className="mt-2.5 space-y-1">
+                  <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
+                    <MapPin size={11} />
+                    <span className="truncate">{student.villageTown || '—'}, {student.district || '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
+                    <span className="font-semibold text-gray-600">Mobile:</span>
+                    <span>{student.mobileNumber || '—'}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* ── Desktop Table ── */}
@@ -244,40 +256,37 @@ export default function VerificationListPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {currentItems.map((s, i) => {
-                  const st = getStatus(s);
-                  return (
-                    <tr
-                      key={s._id}
-                      onClick={() => handleOpen(s)}
-                      className="hover:bg-gray-50 transition-colors cursor-pointer group"
-                    >
-                      <td className="px-5 py-4 text-gray-400 text-xs">{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                      <td className="px-5 py-4 font-semibold text-gray-800 group-hover:text-brand-600 transition-colors">{s.studentName}</td>
-                      <td className="px-5 py-4 text-gray-500">{s.fatherName}</td>
-                      <td className="px-5 py-4">
-                        <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-600">{s.rollNumber}</span>
-                      </td>
-                      <td className="px-5 py-4 text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <MapPin size={12} className="text-gray-400" />
-                          <span className="truncate">{s.villageTown || '—'}, {s.district || '—'}</span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-4 text-gray-500">{s.mobileNumber || '—'}</td>
-                      <td className="px-5 py-4">
-                        <StatusBadge status={st} />
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <span className="text-xs font-semibold text-brand-500 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 flex items-center gap-0.5">
-                            {st === 'pending' ? 'Verify' : 'Open'} <ChevronRight size={14} />
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {students.map((s, i) => (
+                  <tr
+                    key={s._id}
+                    onClick={() => handleOpen(s)}
+                    className="hover:bg-gray-50 transition-colors cursor-pointer group"
+                  >
+                    <td className="px-5 py-4 text-gray-400 text-xs">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                    <td className="px-5 py-4 font-semibold text-gray-800 group-hover:text-brand-600 transition-colors">{s.studentName}</td>
+                    <td className="px-5 py-4 text-gray-500">{s.fatherName}</td>
+                    <td className="px-5 py-4">
+                      <span className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-50 text-brand-600">{s.rollNumber}</span>
+                    </td>
+                    <td className="px-5 py-4 text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <MapPin size={12} className="text-gray-400" />
+                        <span className="truncate">{s.villageTown || '—'}, {s.district || '—'}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-gray-500">{s.mobileNumber || '—'}</td>
+                    <td className="px-5 py-4">
+                      <StatusBadge status={s.currentStatus} />
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="text-xs font-semibold text-brand-500 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 flex items-center gap-0.5">
+                          {s.currentStatus === 'pending' ? 'Verify' : 'Open'} <ChevronRight size={14} />
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -286,7 +295,7 @@ export default function VerificationListPage() {
           {totalPages > 1 && (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-5 px-1">
               <p className="text-xs text-gray-400 text-center sm:text-left">
-                Showing {indexOfFirstItem + 1}–{Math.min(indexOfLastItem, filteredStudents.length)} of {filteredStudents.length} results
+                Showing {(currentPage - 1) * itemsPerPage + 1}–{Math.min(currentPage * itemsPerPage, totalRecords)} of {totalRecords} results
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
