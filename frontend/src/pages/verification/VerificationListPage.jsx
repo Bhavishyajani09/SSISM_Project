@@ -95,6 +95,20 @@ export default function VerificationListPage() {
     }
   };
 
+  const handleEdit = (student) => handleOpen(student); // Edit is same as Open for now
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this student record?")) return;
+    try {
+      await api.delete(`/passed-students/${id}`);
+      toast.success('Student record deleted');
+      fetchStudents();
+    } catch (err) {
+      console.error('Delete error:', err);
+      toast.error('Failed to delete student');
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-fade-in">
 

@@ -555,16 +555,15 @@ const HomeVerificationPage = () => {
 
         setForm(prev => ({ ...prev, ...formData }));
         if (fm) setFamilyMembers(fm);
-        setVerificationId(data.verification._id);
-        setStatus(data.verification.status);
-        if (data.verification.gpsLat && data.verification.gpsLng) {
-          setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+        setVerificationId(res.data.verification._id);
+        setStatus(res.data.verification.status);
+        if (res.data.verification.gpsLat && res.data.verification.gpsLng) {
+          setGpsCoords({ lat: res.data.verification.gpsLat, lng: res.data.verification.gpsLng });
         }
         setApiMsg('');
-        navigate(`/verification/home/${data.verification._id}`, { replace: true });
+        navigate(`/verification/home/${res.data.verification._id}`, { replace: true });
         return; // Exit if found
       }
-    }
 
       // 2. If no verification found, fetch basic student info from passed-students
       const studentRes = await fetch(`http://localhost:5000/api/passed-students/roll/${sid}`);
