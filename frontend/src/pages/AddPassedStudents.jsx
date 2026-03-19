@@ -23,14 +23,14 @@ const EMPTY_STUDENT = {
 const FIELDS = [
   { key: 'studentName', label: 'Student Name', type: 'text', required: true, placeholder: 'Full name' },
   { key: 'fatherName', label: 'Father Name', type: 'text', required: true, placeholder: "Father's full name" },
-  { key: 'busTrack', label: 'Bus Track', type: 'text', required: false, placeholder: 'e.g. Route A' },
+  { key: 'busTrack', label: 'Bus Track', type: 'text', required: true, placeholder: 'e.g. Route A' },
   { key: 'mobileNumber', label: 'Mobile Number', type: 'tel', required: true, placeholder: '10-digit number' },
-  { key: 'whatsappNumber', label: 'WhatsApp Number', type: 'tel', required: false, placeholder: 'WhatsApp number' },
-  { key: 'subjectIn12th', label: 'Subject in 12th', type: 'text', required: false, placeholder: 'e.g. Science, Commerce' },
-  { key: 'villageTown', label: 'Village / Town', type: 'text', required: false, placeholder: 'Village or town name' },
-  { key: 'district', label: 'District', type: 'text', required: false, placeholder: 'District name' },
-  { key: 'rollNumber', label: 'Roll Number', type: 'text', required: false, placeholder: 'e.g. SCH2024001' },
-  { key: 'scholarshipExamMarks', label: 'Scholarship Marks', type: 'number', required: false, placeholder: '0 - 50' },
+  { key: 'whatsappNumber', label: 'WhatsApp Number', type: 'tel', required: true, placeholder: 'WhatsApp number (10 digits)' },
+  { key: 'subjectIn12th', label: 'Subject in 12th', type: 'text', required: true, placeholder: 'e.g. Science, Commerce' },
+  { key: 'villageTown', label: 'Village / Town', type: 'text', required: true, placeholder: 'Village or town name' },
+  { key: 'district', label: 'District', type: 'text', required: true, placeholder: 'District name' },
+  { key: 'rollNumber', label: 'Roll Number', type: 'text', required: true, placeholder: 'e.g. SCH2024001' },
+  { key: 'scholarshipExamMarks', label: 'Scholarship Marks', type: 'number', required: true, placeholder: '0 - 50' },
 ];
 
 const EXCEL_COL_MAP = {
@@ -189,23 +189,36 @@ export default function AddPassedStudents() {
       const s = students[i];
       if (!s.studentName?.trim()) { firstError = `Student ${i + 1}: Student Name is required`; break; }
       if (!s.fatherName?.trim()) { firstError = `Student ${i + 1}: Father Name is required`; break; }
+      if (!s.busTrack?.trim()) { firstError = `Student ${i + 1}: Bus Track is required`; break; }
       if (!s.mobileNumber?.trim()) { firstError = `Student ${i + 1}: Mobile Number is required`; break; }
       if (s.mobileNumber?.trim() && !/^\d{10}$/.test(s.mobileNumber.trim())) { 
         firstError = `Student ${i + 1}: Mobile Number must be exactly 10 digits`; break; 
       }
+      if (!s.whatsappNumber?.trim()) { firstError = `Student ${i + 1}: WhatsApp Number is required`; break; }
       if (s.whatsappNumber?.trim() && !/^\d{10}$/.test(s.whatsappNumber.trim())) { 
         firstError = `Student ${i + 1}: WhatsApp Number must be exactly 10 digits`; break; 
       }
-      if (s.scholarshipExamMarks !== '' && s.scholarshipExamMarks !== null && s.scholarshipExamMarks !== undefined) {
-        const marks = Number(s.scholarshipExamMarks);
-        if (isNaN(marks) || marks < 0 || marks > 50) {
-          firstError = `Student ${i + 1}: Scholarship Marks must be between 0 and 50`; break;
-        }
+      if (!s.subjectIn12th?.trim()) { firstError = `Student ${i + 1}: Subject in 12th is required`; break; }
+      if (!s.villageTown?.trim()) { firstError = `Student ${i + 1}: Village/Town is required`; break; }
+      if (!s.district?.trim()) { firstError = `Student ${i + 1}: District is required`; break; }
+      if (!s.rollNumber?.trim()) { firstError = `Student ${i + 1}: Roll Number is required`; break; }
+      
+      if (s.scholarshipExamMarks === '' || s.scholarshipExamMarks === null || s.scholarshipExamMarks === undefined) {
+        firstError = `Student ${i + 1}: Scholarship Marks is required`; break;
+      }
+      
+      const marks = Number(s.scholarshipExamMarks);
+      if (isNaN(marks) || marks < 0 || marks > 50) {
+        firstError = `Student ${i + 1}: Scholarship Marks must be between 0 and 50`; break;
       }
     }
 
     if (firstError) {
-      toast.error(firstError);
+      toast.error(`ALL FIELDS REQUIRED: ${firstError}`, { duration: 5000, position: 'top-center' });
+      return;
+    }
+
+    if (!window.confirm("Are you sure you want to add these students? This action will save them to the database.")) {
       return;
     }
 
