@@ -746,7 +746,6 @@ const HomeVerificationPage = () => {
       const data = res.data;
 
       console.log('Final Submit Success Response:', data);
-      if (!res.ok) throw new Error(data.error || `${targetStatus} failed`);
       
       if (data.verification) {
         setVerificationId(data.verification._id);

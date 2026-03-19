@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Toaster } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
+import Loader from './components/Loader';
 import LoginPage from './pages/auth/LoginPage';
 import TeacherDashboard from './pages/TeacherDashboard';
 import AddPassedStudents from './pages/AddPassedStudents';
@@ -125,6 +126,7 @@ function App() {
           error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
         }}
       />
+      </Suspense>
     </Router>
   );
 }

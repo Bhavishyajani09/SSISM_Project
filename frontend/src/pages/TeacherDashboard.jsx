@@ -29,7 +29,7 @@ export default function TeacherDashboard() {
     try {
       setLoading(true);
       // Use the new paginated/joined endpoint
-      const res = await axios.get(`${API_BASE}/passed-students`, {
+      const res = await api.get('/passed-students', {
         params: { page: 1, limit: 1000 } // Fetch enough for the dashboard overview
       });
       const studentList = res.data.data || [];
@@ -130,13 +130,15 @@ export default function TeacherDashboard() {
           <p className="text-gray-400 text-[9px] sm:text-xs mt-1">All records in database</p>
         </div>
 
-        <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
-          <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
-          <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
-          <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
-            Add Students →
-          </span>
-        </Link>
+        {userRole !== 'admin' && (
+          <Link to="/add-passed-students" className="bg-white rounded-xl border border-brand-200 px-3.5 py-3 sm:p-6 no-underline group hover:border-brand-400 hover:shadow-sm transition-all shadow-sm">
+            <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">Quick Action</p>
+            <p className="text-gray-800 font-bold text-sm sm:text-lg leading-snug">Add Passed Students</p>
+            <span className="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-brand-500 text-white text-[11px] sm:text-sm font-bold group-hover:bg-brand-600 transition-colors shadow-sm shadow-brand-100">
+              Add Students →
+            </span>
+          </Link>
+        )}
 
             <div className="bg-white rounded-xl border border-gray-200 px-3.5 py-3 sm:p-6 shadow-sm">
               <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-widest mb-1 sm:mb-3">System Status</p>
@@ -146,8 +148,6 @@ export default function TeacherDashboard() {
               </div>
               <p className="text-gray-400 text-[9px] sm:text-xs mt-1">Updates in real-time</p>
             </div>
-          </>
-        )}
       </div>
 
 

@@ -38,6 +38,7 @@ export default function Navbar() {
     {
       to: '/add-passed-students',
       label: 'Add Students',
+      roles: ['teacher'],
       icon: (
         <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />

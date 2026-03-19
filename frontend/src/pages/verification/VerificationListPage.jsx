@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
 import { TableRowSkeleton, CardSkeleton } from '../../components/Skeleton';
 
-const API_BASE = 'http://localhost:5000/api';
+
 
 const STATUS_CONFIG = {
   draft: { label: 'Draft', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400', Icon: FileText },
@@ -56,7 +56,7 @@ export default function VerificationListPage() {
         district: districtFilter,
         status: statusFilter
       };
-      const res = await axios.get(`${API_BASE}/passed-students`, { params });
+      const res = await api.get('/passed-students', { params });
       setStudents(res.data.data || []);
       setTotalRecords(res.data.total || 0);
       setTotalPages(res.data.totalPages || 0);
