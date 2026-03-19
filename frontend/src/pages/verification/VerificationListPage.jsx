@@ -118,25 +118,19 @@ export default function VerificationListPage() {
         <p className="text-xs sm:text-sm text-gray-500 mt-1">Select a student to start or continue their home verification.</p>
       </div>
 
-      {/* Status Tabs - Gen Z Premium Redesign */}
-      <div className="flex overflow-x-auto gap-1.5 mb-8 bg-slate-50/50 backdrop-blur-md border border-slate-200/50 p-1.5 rounded-2xl w-full sm:w-fit scrollbar-hide shadow-sm group/tabs">
+      {/* Status Tabs */}
+      <div className="flex overflow-x-auto gap-1 sm:gap-1.5 mb-6 bg-gray-50 border border-gray-100 p-1 sm:p-1.5 rounded-2xl w-full sm:w-fit thin-scrollbar shadow-sm">
         {STATUS_TABS.map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setStatusFilter(key)}
-            className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 text-[11px] sm:text-xs font-black rounded-xl uppercase tracking-wider transition-all duration-300 relative group/tab ${statusFilter === key
-              ? 'bg-gradient-to-r from-brand-500 to-rose-500 text-white shadow-lg shadow-brand-200 ring-2 ring-white/50 scale-[1.05] z-10'
-              : 'text-slate-500 hover:text-slate-900 hover:bg-white/80 active:scale-95'
+            className={`flex-shrink-0 flex items-center gap-1.5 sm:gap-2.5 px-3 sm:px-4 py-2 sm:py-2.5 text-[10px] sm:text-xs font-bold rounded-xl capitalize transition-all duration-300 ${statusFilter === key
+              ? 'bg-white text-brand-600 shadow-md ring-1 ring-black/5 scale-[1.02]'
+              : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
               }`}
           >
-            <Icon 
-              size={14} 
-              className={`transition-transform duration-500 ${statusFilter === key ? 'scale-110 rotate-3' : 'group-hover/tab:scale-110 group-hover/tab:-rotate-3'}`} 
-            />
+            <Icon size={13} className={`sm:w-[15px] sm:h-[15px] ${statusFilter === key ? 'text-brand-500' : 'text-gray-400'}`} />
             {label}
-            {statusFilter === key && (
-              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full shadow-glow" />
-            )}
           </button>
         ))}
       </div>
@@ -224,15 +218,15 @@ export default function VerificationListPage() {
             </span>
           </div>
 
-          {/* ── Mobile Cards ── */}
+          {/* Mobile Cards */}
           <div className="grid grid-cols-1 md:hidden gap-3">
             {students.map(student => (
               <div
                 key={student._id}
                 onClick={() => handleOpen(student)}
-                className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-brand-200 cursor-pointer transition-all group relative overflow-hidden"
+                className="bg-white border border-gray-100 rounded-xl p-3 shadow-sm hover:shadow-md hover:border-brand-200 cursor-pointer transition-all group"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
                       <User size={20} />
@@ -241,37 +235,24 @@ export default function VerificationListPage() {
                       <h3 className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors text-xs">
                         {student.studentName}
                       </h3>
-                      <p className="text-[10px] font-bold text-brand-500 uppercase tracking-tighter">
-                        ROLL: {student.rollNumber}
-                      </p>
+                      <p className="text-[10px] text-gray-400 font-medium">ROLL: {student.rollNumber}</p>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <StatusBadge status={student.currentStatus || 'pending'} />
-                    <div className="flex gap-2">
-                      <button onClick={(e) => { e.stopPropagation(); handleEdit(student); }} className="p-2 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-brand-500 hover:border-brand-200 transition-all shadow-sm">
-                        <Pencil size={14} />
-                      </button>
-                      <button onClick={(e) => { e.stopPropagation(); handleDelete(student._id); }} className="p-2 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:border-red-200 transition-all shadow-sm">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); handleOpen(student); }}
-                      className="mt-1 px-4 py-2 bg-brand-500 text-white text-xs font-bold rounded-xl shadow-sm active:scale-95 transition-all flex items-center gap-1"
-                    >
-                      {student.currentStatus === 'pending' ? 'Start Verify' : 'Continue'} <ChevronRight size={14} />
-                    </button>
-                  </div>
+                  <StatusBadge status={student.currentStatus || 'pending'} />
                 </div>
-                <div className="mt-2.5 space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
-                    <MapPin size={11} />
+                    <MapPin size={11} className="text-gray-400" />
                     <span className="truncate">{student.villageTown || '—'}, {student.district || '—'}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
-                    <span className="font-semibold text-gray-600">Mobile:</span>
-                    <span>{student.mobileNumber || '—'}</span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
+                      <span className="font-semibold text-gray-600">Mobile:</span>
+                      <span>{student.mobileNumber || '—'}</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-brand-500 flex items-center gap-0.5">
+                      Verify <ChevronRight size={12} />
+                    </span>
                   </div>
                 </div>
               </div>
