@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import Loader from '../components/Loader';
 import Skeleton, { TableRowSkeleton } from '../components/Skeleton';
+import { confirmAction } from '../utils/notifications';
 
 
 const PAGE_SIZE = 10;
@@ -73,14 +74,18 @@ export default function TeacherDashboard() {
   }
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this student?")) return;
-    try {
-      await api.delete(`/passed-students/${id}`);
-      toast.success("Student deleted successfully.");
-      fetchStudents();
-    } catch (err) {
-      toast.error("Failed to delete student.");
-    }
+    confirmAction(
+      "Delete this student?",
+      async () => {
+        try {
+          await api.delete(`/passed-students/${id}`);
+          toast.success("Student deleted successfully.");
+          fetchStudents();
+        } catch (err) {
+          toast.error("Failed to delete student.");
+        }
+      }
+    );
   };
 
   const handleEdit = (student) => {

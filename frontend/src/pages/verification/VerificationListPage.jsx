@@ -5,6 +5,7 @@ import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clo
 import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
 import { TableRowSkeleton, CardSkeleton } from '../../components/Skeleton';
+import { confirmAction } from '../../utils/notifications';
 
 
 
@@ -98,15 +99,19 @@ export default function VerificationListPage() {
   const handleEdit = (student) => handleOpen(student); // Edit is same as Open for now
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this student record?")) return;
-    try {
-      await api.delete(`/passed-students/${id}`);
-      toast.success('Student record deleted');
-      fetchStudents();
-    } catch (err) {
-      console.error('Delete error:', err);
-      toast.error('Failed to delete student');
-    }
+    confirmAction(
+      "Delete this student record?",
+      async () => {
+        try {
+          await api.delete(`/passed-students/${id}`);
+          toast.success('Student record deleted');
+          fetchStudents();
+        } catch (err) {
+          console.error('Delete error:', err);
+          toast.error('Failed to delete student');
+        }
+      }
+    );
   };
 
   return (

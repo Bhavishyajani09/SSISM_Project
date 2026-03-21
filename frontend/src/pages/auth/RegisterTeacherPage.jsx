@@ -3,6 +3,7 @@ import { UserPlus, Mail, Lock, Shield, Users, Activity, Clock, Trash2 } from 'lu
 import api from '../../api';
 import toast from 'react-hot-toast';
 import Loader from '../../components/Loader';
+import { confirmAction } from '../../utils/notifications';
 
 const RegisterTeacherPage = () => {
   const [formData, setFormData] = useState({
@@ -50,15 +51,18 @@ const RegisterTeacherPage = () => {
   };
 
   const handleDeleteUser = async (id, email) => {
-    if (!window.confirm(`Are you sure you want to delete user ${email}?`)) return;
-    
-    try {
-      await api.delete(`/auth/users/${id}`);
-      toast.success('User deleted successfully!');
-      fetchUsers();
-    } catch (err) {
-      toast.error(err.response?.data?.error || 'Failed to delete user');
-    }
+    confirmAction(
+      `Delete user ${email}?`,
+      async () => {
+        try {
+          await api.delete(`/auth/users/${id}`);
+          toast.success('User deleted successfully!');
+          fetchUsers();
+        } catch (err) {
+          toast.error(err.response?.data?.error || 'Failed to delete user');
+        }
+      }
+    );
   };
 
 
