@@ -29,7 +29,13 @@ const LoginPage = () => {
       const data = res.data;
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      navigate('/dashboard');
+      
+      // Redirect based on role
+      if (data.user.role === 'admin') {
+        navigate('/admin-verification');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {
