@@ -568,6 +568,7 @@ const HomeVerificationPage = () => {
         delete formData._id; delete formData.__v; delete formData.createdAt; delete formData.updatedAt;
         formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
         formData.hasAchievements = formData.achievements ? 'yes' : 'no';
+        if (formData.pincode === -1 || formData.pincode === '-1') formData.pincode = '';
         setForm(prev => ({ ...prev, ...formData }));
         if (fm) setFamilyMembers(fm);
         setVerificationId(res.data.verification._id);
@@ -638,6 +639,7 @@ const HomeVerificationPage = () => {
             formData.hasIllness = formData.hasIllness ? 'yes' : 'no';
             formData.hasAchievements = formData.achievements ? 'yes' : 'no';
 
+            if (formData.pincode === -1 || formData.pincode === '-1') formData.pincode = '';
             setForm(prev => ({ ...prev, ...formData }));
             const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts'];
             const dbStream = (formData.subject12 || '').trim();
@@ -1222,7 +1224,18 @@ const HomeVerificationPage = () => {
                 <input name="district" value={form.district} onChange={handleChange} placeholder="District" className={inputCls} />
               </Field>
               <Field label="Pincode">
-                <input name="pincode" value={form.pincode} onChange={handleChange} placeholder="6-digit pincode" type="number" className={inputCls} />
+                <input 
+                  name="pincode" 
+                  value={form.pincode} 
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setForm(prev => ({ ...prev, pincode: val }));
+                  }} 
+                  placeholder="6-digit pincode" 
+                  type="text" 
+                  inputMode="numeric"
+                  className={inputCls} 
+                />
               </Field>
               <Field label="Track Name">
                 <select
@@ -1367,13 +1380,14 @@ const HomeVerificationPage = () => {
                         )}
                       </td>
                       <td className="px-2 py-2">
-                        {['Labour', 'Farmer', 'Job', ''].includes(m.occupation) ? (
+                        {['Labour', 'Farmer', 'Job', 'Student', ''].includes(m.occupation) ? (
                           <select value={m.occupation} onChange={e => updateMember(i, 'occupation', e.target.value)}
                             className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
                             <option value="">Select Occupation</option>
                             <option value="Labour">Labour</option>
                             <option value="Farmer">Farmer</option>
                             <option value="Job">Job</option>
+                            <option value="Student">Student</option>
                             <option value="Other">Other</option>
                           </select>
                         ) : (
