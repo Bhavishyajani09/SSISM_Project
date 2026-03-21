@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, ToastBar, toast } from 'react-hot-toast';
 import { lazy, Suspense } from 'react';
 import Navbar from './components/Navbar';
 import Loader from './components/Loader';
@@ -110,7 +110,7 @@ function App() {
       <Toaster
         position="top-center"
         toastOptions={{
-          duration: 3500,
+          duration: 2000,
           style: {
             background: 'rgba(255, 255, 255, 0.95)',
             backdropFilter: 'blur(10px)',
@@ -123,6 +123,7 @@ function App() {
             fontWeight: '600',
             padding: '12px 20px',
             maxWidth: '450px',
+            cursor: 'pointer'
           },
           success: { 
             iconTheme: { primary: '#10b981', secondary: '#fff' },
@@ -133,7 +134,13 @@ function App() {
             style: { borderLeft: '5px solid #ef4444' }
           },
         }}
-      />
+      >
+        {(t) => (
+          <div onClick={() => toast.dismiss(t.id)} className="transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <ToastBar toast={t} />
+          </div>
+        )}
+      </Toaster>
       </Suspense>
     </Router>
   );

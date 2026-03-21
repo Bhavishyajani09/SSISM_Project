@@ -26,6 +26,7 @@ const homeVerificationSchema = new mongoose.Schema({
   },
   gpsLat: { type: Number },
   gpsLng: { type: Number },
+  gpsAddress: { type: String, trim: true },
 
   // --- Verification Info ---
   scholarshipType: {

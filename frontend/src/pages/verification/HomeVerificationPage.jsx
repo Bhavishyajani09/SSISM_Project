@@ -525,6 +525,10 @@ const HomeVerificationPage = () => {
   };
 
   const captureGPS = () => {
+    if (gpsCoords && verificationId) {
+      toast.error("Location is already locked for this record.");
+      return;
+    }
     if (navigator.geolocation) {
       setIsLocating(true);
       navigator.geolocation.getCurrentPosition(
@@ -558,6 +562,11 @@ const HomeVerificationPage = () => {
         setStatus(res.data.verification.status);
         if (res.data.verification.gpsLat && res.data.verification.gpsLng) {
           setGpsCoords({ lat: res.data.verification.gpsLat, lng: res.data.verification.gpsLng });
+          if (res.data.verification.gpsAddress) {
+            setLocationAddress(res.data.verification.gpsAddress);
+          } else {
+            handleReverseGeocode(res.data.verification.gpsLat, res.data.verification.gpsLng);
+          }
         }
         setApiMsg('');
         navigate(`/verification/home/${res.data.verification._id}`, { replace: true });
@@ -637,7 +646,11 @@ useEffect(() => {
           setStatus(data.verification.status);
           if (data.verification.gpsLat && data.verification.gpsLng) {
             setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
-            handleReverseGeocode(data.verification.gpsLat, data.verification.gpsLng);
+            if (data.verification.gpsAddress) {
+              setLocationAddress(data.verification.gpsAddress);
+            } else {
+              handleReverseGeocode(data.verification.gpsLat, data.verification.gpsLng);
+            }
           }
         }
       })
@@ -650,9 +663,9 @@ useEffect(() => {
   }
 }, [id, location.state]);
 
-// Auto-capture GPS on mount if not already set
+// Auto-capture GPS on mount if not already set (replaces older logic to capture only on new)
 useEffect(() => {
-  if (!gpsCoords && !id) {
+  if (!gpsCoords) {
     captureGPS();
   }
 }, []);
@@ -716,6 +729,7 @@ const buildPayload = () => {
     track: form.track === 'Other' ? form.trackCustom : form.track,
     gpsLat: gpsCoords?.lat,
     gpsLng: gpsCoords?.lng,
+    gpsAddress: locationAddress,
   };
   console.log('Building payload for backend:', payload);
   return payload;
@@ -944,10 +958,15 @@ return (
 
         <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
 
-        <button onClick={captureGPS} disabled={isReadOnly || isLocating}
-          className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition-all font-semibold text-slate-600 disabled:opacity-60 shadow-sm group">
+        <button 
+          onClick={captureGPS} 
+          disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
+          className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition-all font-semibold text-slate-600 disabled:opacity-60 shadow-sm group disabled:cursor-not-allowed"
+          title={(gpsCoords && (verificationId || id)) ? "Location is locked for this record" : "Capture Location"}
+        >
           <MapPin size={12} className={`text-brand-500 ${isLocating ? 'animate-bounce' : 'group-hover:scale-110'}`} />
           <span>{isLocating ? 'Locating...' : (gpsCoords ? `${Number(gpsCoords.lat).toFixed(4)}, ${Number(gpsCoords.lng).toFixed(4)}` : 'Capture GPS')}</span>
+          {(gpsCoords && (verificationId || id)) && <Lock size={10} className="text-slate-400 opacity-50 ml-1" />}
         </button>
 
         {locationAddress && !isLocating && (

@@ -10,7 +10,15 @@ exports.saveVerification = async (req, res) => {
       return res.status(400).json({ error: 'Student ID is required.' });
     }
 
+    const existing = await HomeVerification.findOne({ studentId });
     const data = { ...req.body, status: req.body.status || 'draft' };
+
+    // Strict Location Handling: Prevent overwriting existing GPS data
+    if (existing && (existing.gpsLat || existing.gpsLng)) {
+      delete data.gpsLat;
+      delete data.gpsLng;
+      delete data.gpsAddress;
+    }
 
     // Sanitize empty strings for enum fields
     ['scholarshipType', 'houseType', 'houseBuilder', 'landType'].forEach(k => {
@@ -59,13 +67,23 @@ exports.checkByStudentId = async (req, res) => {
 exports.submitVerification = async (req, res) => {
   try {
     const { id } = req.params;
+    const existing = await HomeVerification.findById(id);
     const targetStatus = req.body.status || 'submitted';
+    const updateData = { ...req.body, status: targetStatus };
+
+    // Strict Location Handling: Prevent overwriting existing GPS data
+    if (existing && (existing.gpsLat || existing.gpsLng)) {
+      delete updateData.gpsLat;
+      delete updateData.gpsLng;
+      delete updateData.gpsAddress;
+    }
+
     console.log(`Updating verification ${id} to status: ${targetStatus}`);
     console.log('Update payload studentId:', req.body.studentId);
     
     const verification = await HomeVerification.findByIdAndUpdate(
       id,
-      { ...req.body, status: targetStatus },
+      updateData,
       { returnDocument: 'after', runValidators: true }
     );
     if (!verification) {

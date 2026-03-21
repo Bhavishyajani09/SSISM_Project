@@ -35,7 +35,7 @@ export const confirmAction = (message, onConfirm) => {
       </div>
     </div>
   ), {
-    duration: 6000,
+    duration: 3500,
     style: {
       minWidth: '320px',
       padding: '16px',
