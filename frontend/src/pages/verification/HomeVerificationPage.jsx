@@ -14,7 +14,7 @@ import api from '../../api';
 import { confirmAction } from '../../utils/notifications';
 
 // Helper: Collapsible Card (Accordion)
-const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onToggle }) => {
+const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onToggle, locked }) => {
   const cardRef = useRef(null);
 
   const colorMap = {
@@ -74,7 +74,11 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onTo
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </div>
       </button>
-      {open && <div className="p-4 sm:p-5 space-y-4 md:space-y-6 animate-fade-in-up">{children}</div>}
+      {open && (
+        <div className={`p-4 sm:p-5 space-y-4 md:space-y-6 animate-fade-in-up ${locked ? 'pointer-events-none opacity-80' : ''}`}>
+          {children}
+        </div>
+      )}
     </div>
   );
 };
@@ -486,6 +490,10 @@ const HomeVerificationPage = () => {
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
   const [holdReason, setHoldReason] = useState('');
   const [holdReasonError, setHoldReasonError] = useState('');
+  
+  const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = storedUser.role || 'teacher';
+  const isAdmin = userRole === 'admin';
 
   const subjectRef = useRef(null);
   const trackRef = useRef(null);
@@ -1047,8 +1055,8 @@ const HomeVerificationPage = () => {
           </div>
         )}
 
-        {/* ── Read-Only Banner ── */}
-        {isReadOnly && (
+        {/* ── Read-Only Banner (Hidden for Admins) ── */}
+        {!isAdmin && isReadOnly && (
           <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-sm font-semibold ${status === 'submitted'
             ? 'bg-blue-50 border-blue-200 text-blue-800'
             : status === 'rejected'
@@ -1075,8 +1083,8 @@ const HomeVerificationPage = () => {
           </div>
         )}
 
-        {/* Form fields — wrapped in pointer-events-none when locked */}
-        <div className={isReadOnly ? 'pointer-events-none select-none opacity-75' : ''}>
+        {/* Form fields — accordion headers are clickable, content is locked if read-only */}
+        <div className={isReadOnly ? 'select-none' : ''}>
 
           {/* 1. STUDENT INFORMATION */}
           <SectionCard
@@ -1085,6 +1093,7 @@ const HomeVerificationPage = () => {
             color="indigo"
             open={activeSection === 'studentInfo'}
             onToggle={() => toggleSection('studentInfo')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Scholarship Type" required>
@@ -1138,6 +1147,7 @@ const HomeVerificationPage = () => {
             color="sky"
             open={activeSection === 'academic'}
             onToggle={() => toggleSection('academic')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
               {[
@@ -1160,6 +1170,7 @@ const HomeVerificationPage = () => {
             color="indigo"
             open={activeSection === 'personal'}
             onToggle={() => toggleSection('personal')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Father Name" required>
@@ -1277,6 +1288,7 @@ const HomeVerificationPage = () => {
             color="rose"
             open={activeSection === 'health'}
             onToggle={() => toggleSection('health')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Do you have any illness?">
@@ -1305,6 +1317,7 @@ const HomeVerificationPage = () => {
             color="emerald"
             open={activeSection === 'family'}
             onToggle={() => toggleSection('family')}
+            locked={isReadOnly}
           >
             <div className="overflow-x-auto rounded-xl border border-slate-200 thin-scrollbar">
               <table className="w-full text-sm min-w-[600px]">
@@ -1415,6 +1428,7 @@ const HomeVerificationPage = () => {
             color="orange"
             open={activeSection === 'income'}
             onToggle={() => toggleSection('income')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label="Total Annual Family Income (₹)" required>
@@ -1448,6 +1462,7 @@ const HomeVerificationPage = () => {
             color="amber"
             open={activeSection === 'housing'}
             onToggle={() => toggleSection('housing')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -1512,6 +1527,7 @@ const HomeVerificationPage = () => {
             color="blue"
             open={activeSection === 'resources'}
             onToggle={() => toggleSection('resources')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
@@ -1543,6 +1559,7 @@ const HomeVerificationPage = () => {
             color="green"
             open={activeSection === 'land'}
             onToggle={() => toggleSection('land')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="flex gap-2">
@@ -1597,6 +1614,7 @@ const HomeVerificationPage = () => {
             color="violet"
             open={activeSection === 'photos'}
             onToggle={() => toggleSection('photos')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
               <PhotoUpload studentId={form.studentId} id="photo1" label="1. Passport size photo" onUpload={(url) => handlePhotoUpload("1. Passport size photo", url)} previewUrl={getPhotoPreview("1. Passport size photo")} />
@@ -1645,6 +1663,7 @@ const HomeVerificationPage = () => {
             color="slate"
             open={activeSection === 'declaration'}
             onToggle={() => toggleSection('declaration')}
+            locked={isReadOnly}
           >
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 leading-relaxed italic mb-4">
               "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
@@ -1664,6 +1683,7 @@ const HomeVerificationPage = () => {
             color="sky"
             open={activeSection === 'remarks'}
             onToggle={() => toggleSection('remarks')}
+            locked={isReadOnly}
           >
             <div className="grid grid-cols-1 gap-5">
               <Field label="Home Visit Marks (Max 50)">
@@ -1758,31 +1778,66 @@ const HomeVerificationPage = () => {
               </button>
             </div>
           ) : (
-            // Locked state notice
-            <div className={`flex flex-col items-center justify-center gap-3 py-6 px-4 rounded-3xl text-sm font-bold border-2 animate-fade-in ${status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-800' :
-              status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-50 border-red-100 text-red-800' :
-                'bg-green-50 border-green-100 text-green-800'
-              }`}>
-              <div className={`p-3 rounded-2xl ${status === 'submitted' ? 'bg-blue-100 text-blue-600' :
-                status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-100 text-red-600' :
-                  'bg-green-100 text-green-600'
-                }`}>
-                {status === 'submitted' ? <Clock size={24} className="animate-pulse" /> : status === 'approved' ? <CheckCircle size={24} /> : <XCircle size={24} />}
-              </div>
-              <div className="text-center">
-                <p className="uppercase tracking-widest text-[10px] opacity-60 mb-1">Current Record Status</p>
-                <p className="text-lg tracking-tight">{
-                  status === 'submitted' ? 'Awaiting Admin Review' :
-                    status === 'teacher_rejected' ? 'Rejected by Teacher' :
-                      status === 'rejected' ? 'Rejected by Administrator' :
-                        'Approved & Finalized'
-                }</p>
-                <p className="text-xs font-medium opacity-60 mt-1">{
-                  status === 'submitted' ? 'Form is locked for editing during review.' :
-                    status === 'approved' ? 'Record is authorized and completed.' :
-                      'This student has been rejected for scholarship.'
-                }</p>
-              </div>
+            <div className="space-y-4">
+              {/* Locked state notice (Hidden for Admins) */}
+              {!isAdmin && (
+                <div className={`flex flex-col items-center justify-center gap-3 py-6 px-4 rounded-3xl text-sm font-bold border-2 animate-fade-in ${status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-800' :
+                  status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-50 border-red-100 text-red-800' :
+                    'bg-green-50 border-green-100 text-green-800'
+                  }`}>
+                  <div className={`p-3 rounded-2xl ${status === 'submitted' ? 'bg-blue-100 text-blue-600' :
+                    status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-100 text-red-600' :
+                      'bg-green-100 text-green-600'
+                    }`}>
+                    {status === 'submitted' ? <Clock size={24} className="animate-pulse" /> : status === 'approved' ? <CheckCircle size={24} /> : <XCircle size={24} />}
+                  </div>
+                  <div className="text-center">
+                    <p className="uppercase tracking-widest text-[10px] opacity-60 mb-1">Current Record Status</p>
+                    <p className="text-lg tracking-tight">{
+                      status === 'submitted' ? 'Awaiting Admin Review' :
+                        status === 'teacher_rejected' ? 'Rejected by Teacher' :
+                          status === 'rejected' ? 'Rejected by Administrator' :
+                            'Approved & Finalized'
+                    }</p>
+                    <p className="text-xs font-medium opacity-60 mt-1">{
+                      status === 'submitted' ? 'Form is locked for editing during review.' :
+                        status === 'approved' ? 'Record is authorized and completed.' :
+                          'This student has been rejected for scholarship.'
+                    }</p>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Admin Action Buttons (Visible only to Admins on Submitted/Teacher Rejected records) ── */}
+              {isAdmin && (status === 'submitted' || status === 'teacher_rejected') && (
+                <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in">
+                  <button
+                    onClick={() => confirmAction("Reject this verification?", () => handleSubmit('rejected'))}
+                    disabled={isApiLoading}
+                    className="w-full sm:flex-1 flex items-center justify-center py-3 bg-white text-red-600 border border-red-200 rounded-2xl font-bold hover:bg-red-50 hover:border-red-300 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
+                  >
+                    {loadingAction === 'rejected' ? <Loader size="sm" color="red" /> : (
+                      <>
+                        <XCircle size={18} className="mr-2" />
+                        Reject Verification
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => confirmAction("Approve this verification?", () => handleSubmit('approved'))}
+                    disabled={isApiLoading}
+                    className="w-full sm:flex-1 flex items-center justify-center py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-50 uppercase tracking-wider"
+                  >
+                    {loadingAction === 'approved' ? <Loader size="sm" color="white" /> : (
+                      <>
+                        <CheckCircle size={18} className="mr-2" />
+                        Approve & Finalize
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
