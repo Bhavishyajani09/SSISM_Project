@@ -291,7 +291,7 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId, required, isM
                 className="w-full py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white hover:bg-white/30 flex items-center justify-center transition-all shadow-sm"
                 title="Replace from Gallery"
               >
-                <Image size={18} />
+                <ImageIcon size={18} />
               </button>
             </div>
           </div>
@@ -402,7 +402,7 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
                 className="w-full py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white flex items-center justify-center shadow-sm transition-all"
                 title="Replace from Gallery"
               >
-                <Image size={16} />
+                <ImageIcon size={16} />
               </button>
             </div>
           </div>
