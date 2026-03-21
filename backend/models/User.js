@@ -20,6 +20,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'teacher'
   },
+  resetPasswordOTP: {
+    type: String
+  },
+  resetPasswordExpires: {
+    type: Date
+  },
   createdAt: {
     type: Date,
     default: Date.now
