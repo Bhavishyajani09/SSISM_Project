@@ -5,9 +5,12 @@ import {
   User, Home, MapPin, LandPlot, ClipboardCheck, Trash2,
   X, RotateCw, Check, ArrowLeft, BookOpen, Heart, Users,
   Tractor, FileText, Clock, CheckCircle, XCircle, Send,
-  AlertCircle, Trophy, Image, Lock
+  AlertCircle, Trophy, Image as ImageIcon, Lock, Download
 } from 'lucide-react';
 import ssismLogo from '../../assets/SSISM_Logo.png';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import Loader from '../../components/Loader';
 import toast from 'react-hot-toast';
 import api from '../../api';
@@ -309,7 +312,7 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId, required, isM
                 className="flex-1 flex items-center justify-center py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
                 title="Add from Gallery"
               >
-                <Image size={14} />
+                <ImageIcon size={14} />
               </button>
             </div>
           </div>
@@ -415,7 +418,7 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
               className="flex-1 flex items-center justify-center py-2 bg-white border border-slate-200 text-slate-600 rounded-xl active:scale-95 transition-all shadow-sm"
               title="Add from Gallery"
             >
-              <Image size={14} />
+              <ImageIcon size={14} />
             </button>
           </div>
         )}
@@ -949,6 +952,251 @@ const HomeVerificationPage = () => {
   const totalMarks = [form.marks10, form.marks11, form.collegeExamMarks, form.homeVisitMarks]
     .reduce((sum, v) => sum + (parseFloat(v) || 0), 0).toFixed(2);
 
+  const generatePDF = async () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    toast.loading('Generating PDF with signatures...', { id: 'pdf-gen' });
+
+    // Helper for title sections
+    const addSectionTitle = (title, yPos) => {
+      doc.setFontSize(12);
+      doc.setTextColor(79, 70, 229);
+      doc.setFont('helvetica', 'bold');
+      doc.text(title.toUpperCase(), 20, yPos);
+      doc.setDrawColor(79, 70, 229);
+      doc.setLineWidth(0.5);
+      doc.line(20, yPos + 2, pageWidth - 20, yPos + 2);
+      return yPos + 10;
+    };
+
+    // Helper to load image to base64
+    const loadImage = (url) => {
+      return new Promise((resolve) => {
+        if (!url) return resolve(null);
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
+    };
+
+    // --- Header ---
+    doc.setFillColor(248, 251, 255);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setFontSize(24);
+    doc.setTextColor(30, 41, 59);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SSISM PORTAL', 20, 22);
+    doc.setFontSize(10);
+    doc.setTextColor(100, 116, 139);
+    doc.setFont('helvetica', 'normal');
+    doc.text('COMPLETE HOME VERIFICATION REPORT', 20, 30);
+    doc.setDrawColor(226, 232, 240);
+    doc.line(20, 36, pageWidth - 20, 36);
+
+    let y = 50;
+
+    // --- 1. Basic Info ---
+    y = addSectionTitle('Student & Registry Details', y);
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['Student Name', form.studentName, 'Roll Number', form.studentId],
+        ['Father Name', form.fatherName, 'Mobile', form.mobileNumber],
+        ['Scholarship Type', form.scholarshipType, 'Bus Track', form.track === 'Other' ? form.trackCustom : form.track],
+        ['Verifier Name', form.verifierName, 'Verification Date', form.verificationDate],
+        ['Status', (status || '').toUpperCase(), 'GPS Address', locationAddress || 'N/A']
+      ],
+      theme: 'plain',
+      styles: { fontSize: 9, cellPadding: 2 },
+      columnStyles: { 0: { fontStyle: 'bold', width: 35 }, 2: { fontStyle: 'bold', width: 35 } }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+
+    // --- 2. Academic & Marks ---
+    y = addSectionTitle('Academic Details & Marks', y);
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['10th Percentage', `${form.marks10}%`, '11th Percentage', `${form.marks11}%`],
+        ['College Exam Marks', form.collegeExamMarks, '12th Attendance', `${form.attendance12}%`],
+        ['Home Visit Marks', form.homeVisitMarks, 'Final Total Score', totalMarks],
+        ['School Name', form.schoolName || 'N/A', '12th Class Fees', form.classFees12 || 'N/A']
+      ],
+      theme: 'grid',
+      styles: { fontSize: 9 }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+
+    // --- 3. Personal & Health ---
+    y = addSectionTitle('Personal & Health Information', y);
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['Full Address', form.address],
+        ['Village/Tehsil', `${form.village} / ${form.tehsil}`, 'District/Pincode', `${form.district} / ${form.pincode}`],
+        ['Future Goal', form.futureGoal],
+        ['Has Illness?', form.hasIllness === 'yes' ? `Yes (${form.illnessName})` : 'No', 'Symptoms', form.symptoms || 'None']
+      ],
+      theme: 'plain',
+      styles: { fontSize: 9 }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+
+    // --- 4. Family Details ---
+    y = addSectionTitle('Family Members', y);
+    autoTable(doc, {
+      startY: y,
+      head: [['Member Name', 'Relation', 'Occupation', 'Annual Income', 'Mobile']],
+      body: familyMembers.map(m => [m.name, m.relation, m.occupation, `Rs. ${m.income}`, m.mobile]),
+      headStyles: { fillColor: [79, 70, 229] },
+      styles: { fontSize: 8 }
+    });
+    y = doc.lastAutoTable.finalY + 5;
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['Income Sources', (Array.isArray(form.incomeSources) ? form.incomeSources : []).join(', ')],
+        ['Family Challenges', form.familyChallenges || 'None reported']
+      ],
+      theme: 'plain',
+      styles: { fontSize: 9 }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+
+    // --- New Page if needed for Housing ---
+    if (y > pageHeight - 80) { doc.addPage(); y = 20; }
+
+    // --- 5. Housing & Assets ---
+    y = addSectionTitle('Housing Condition & Assets', y);
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['Type of House', form.houseType === 'Other' ? form.houseTypeCustom : form.houseType],
+        ['Rooms Count', form.numRooms, 'Built By', form.houseBuilder],
+        ['Government Scheme', form.houseSchemeName || 'None'],
+        ['Appliances', (Array.isArray(form.appliances) ? form.appliances : []).join(', ') || 'None'],
+        ['Vehicles', `${form.numVehicles || '0'} (${(Array.isArray(form.vehicleTypes) ? form.vehicleTypes : []).join(', ')})`]
+      ],
+      theme: 'grid',
+      styles: { fontSize: 9 }
+    });
+    y = doc.lastAutoTable.finalY + 12;
+
+    // --- 6. Land & Farming ---
+    y = addSectionTitle('Land & Farming', y);
+    autoTable(doc, {
+      startY: y,
+      body: [
+        ['Total Land', `${form.totalLand || '0'} ${form.landUnit}`, 'Ownership', form.landOwnership],
+        ['Land Type', form.landType, 'Irrigation', form.irrigationSource],
+        ['Livestock', (Array.isArray(form.livestock) ? form.livestock : []).join(', ') || 'None']
+      ],
+      theme: 'plain',
+      styles: { fontSize: 9 }
+    });
+    y = doc.lastAutoTable.finalY + 15;
+
+    // --- 7. Evaluation & Remarks ---
+    y = addSectionTitle('Supervisor Evaluation', y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    const splitRemarks = doc.splitTextToSize(form.supervisorRemarks || 'No formal remarks provided.', pageWidth - 40);
+    doc.text(splitRemarks, 20, y);
+
+    // --- Signatures Area ---
+    y += splitRemarks.length * 5 + 35;
+    if (y > pageHeight - 50) { doc.addPage(); y = 40; }
+
+    // Pre-load signatures
+    const parentSigUrl = form.fatherSignatureUrl || form.motherSignatureUrl;
+    const [studentSig, parentSig, supervisorSig] = await Promise.all([
+      loadImage(form.studentSignatureUrl),
+      loadImage(parentSigUrl),
+      loadImage(form.supervisorSignatureUrl)
+    ]);
+
+    // Student Signature
+    if (studentSig) {
+      doc.addImage(studentSig, 'JPEG', 20, y - 25, 40, 20);
+    }
+    doc.setDrawColor(200);
+    doc.line(20, y, 70, y);
+    doc.setFont('helvetica', 'bold'); doc.text('Student Sign', 35, y + 5);
+
+    // Parent Signature
+    if (parentSig) {
+      doc.addImage(parentSig, 'JPEG', pageWidth / 2 - 20, y - 25, 40, 20);
+    }
+    doc.line(pageWidth / 2 - 25, y, pageWidth / 2 + 25, y);
+    doc.text('Parent Sign', pageWidth / 2 - 10, y + 5);
+
+    // Supervisor Signature
+    if (supervisorSig) {
+      doc.addImage(supervisorSig, 'JPEG', pageWidth - 60, y - 25, 40, 20);
+    }
+    doc.line(pageWidth - 70, y, pageWidth - 20, y);
+    doc.text('Supervisor Sign', pageWidth - 55, y + 5);
+
+    // --- 8. Photo Documentation ---
+    if (Array.isArray(form.photos) && form.photos.length > 0) {
+      toast.loading('Processing photos for PDF...', { id: 'pdf-gen' });
+      doc.addPage();
+      let py = 20;
+      py = addSectionTitle('Photo Documentation', py);
+
+      const photoWidth = 75;
+      const photoHeight = 55;
+      const margin = 20;
+      const spacing = 15;
+      let curX = margin;
+      let curY = py + 5;
+
+      const loadedPhotos = await Promise.all(
+        form.photos.map(p => loadImage(p.url).then(img => ({ img, label: p.label })))
+      );
+
+      for (const { img, label } of loadedPhotos) {
+        if (!img) continue;
+
+        if (curY + photoHeight + 15 > pageHeight) {
+          doc.addPage();
+          curY = 25;
+        }
+
+        doc.setDrawColor(230, 230, 230);
+        doc.rect(curX - 1, curY - 1, photoWidth + 2, photoHeight + 2, 'S');
+        doc.addImage(img, 'JPEG', curX, curY, photoWidth, photoHeight);
+
+        doc.setFontSize(8);
+        doc.setTextColor(80, 80, 80);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Label: ${label || 'Visitation Photo'}`, curX, curY + photoHeight + 6);
+
+        if (curX === margin) {
+          curX = margin + photoWidth + spacing;
+        } else {
+          curX = margin;
+          curY += photoHeight + 20;
+        }
+      }
+    }
+
+    doc.save(`${(form.studentName || 'Student').replace(/\s+/g, '_')}_Verification_Report_${form.studentId || 'ID'}.pdf`);
+    toast.success('Full Report Downloaded Successfully', { id: 'pdf-gen' });
+  };
+
+
   const CheckItem = ({ name, value, label }) => (
     <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
       <input type="checkbox" name={name} value={value}
@@ -1009,29 +1257,44 @@ const HomeVerificationPage = () => {
             </div>
           )}
 
-          <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-500 shadow-sm lg:ml-auto">
-            <Clock size={12} className="text-slate-400" />
-            {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          {/* Date & Status Group - Stay on same line on mobile */}
+          <div className="flex items-center gap-3 lg:ml-auto">
+            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-500 shadow-sm whitespace-nowrap">
+              <Clock size={12} className="text-slate-400" />
+              {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            </div>
+
+            {status && (
+              <div className={`px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-1.5 whitespace-nowrap ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                status === 'submitted' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
+                  status === 'teacher_rejected' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
+                    status === 'rejected' ? 'bg-red-50 border-red-100 text-red-700' :
+                      status === 'hold' ? 'bg-orange-50 border-orange-100 text-orange-700' :
+                        'bg-slate-50 border-slate-200 text-slate-600'
+                }`}>
+                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${status === 'approved' ? 'bg-emerald-500' :
+                  status === 'submitted' ? 'bg-brand-500' :
+                    status === 'teacher_rejected' ? 'bg-orange-500' :
+                      status === 'rejected' ? 'bg-red-500' :
+                        status === 'hold' ? 'bg-orange-500' :
+                          'bg-slate-400'
+                  }`} />
+                <span className="text-[9px] font-black uppercase tracking-wider">
+                  {status === 'teacher_rejected' ? 'Teacher Rejected' : status.replace('_', ' ')}
+                </span>
+              </div>
+            )}
           </div>
 
           {status && (
-            <div className={`px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-1.5 ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-              status === 'submitted' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
-                status === 'teacher_rejected' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
-                  status === 'rejected' ? 'bg-red-50 border-red-100 text-red-700' :
-                    status === 'hold' ? 'bg-orange-50 border-orange-100 text-orange-700' :
-                      'bg-slate-50 border-slate-200 text-slate-600'
-              }`}>
-              <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${status === 'approved' ? 'bg-emerald-500' :
-                status === 'submitted' ? 'bg-brand-500' :
-                  status === 'teacher_rejected' ? 'bg-orange-500' :
-                    status === 'rejected' ? 'bg-red-500' :
-                      status === 'hold' ? 'bg-orange-500' :
-                        'bg-slate-400'
-                }`} />
-              <span className="text-[9px] font-black uppercase tracking-wider">
-                {status === 'teacher_rejected' ? 'Teacher Rejected' : status.replace('_', ' ')}
-              </span>
+            <div className="w-full mt-2 sm:mt-3 px-1">
+              <button
+                onClick={generatePDF}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-brand-200 rounded-xl text-[11px] font-black uppercase tracking-wider text-brand-600 hover:bg-brand-50 transition-all shadow-sm active:scale-95 group"
+              >
+                <FileText size={15} className="text-brand-500" />
+                Download PDF Report
+              </button>
             </div>
           )}
         </div>
@@ -1213,17 +1476,17 @@ const HomeVerificationPage = () => {
                 <input name="district" value={form.district} onChange={handleChange} placeholder="District" className={inputCls} />
               </Field>
               <Field label="Pincode">
-                <input 
-                  name="pincode" 
-                  value={form.pincode} 
+                <input
+                  name="pincode"
+                  value={form.pincode}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, '').slice(0, 6);
                     setForm(prev => ({ ...prev, pincode: val }));
-                  }} 
-                  placeholder="6-digit pincode" 
-                  type="text" 
+                  }}
+                  placeholder="6-digit pincode"
+                  type="text"
                   inputMode="numeric"
-                  className={inputCls} 
+                  className={inputCls}
                 />
               </Field>
               <Field label="Track Name">

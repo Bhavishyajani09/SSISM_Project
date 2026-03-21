@@ -306,4 +306,109 @@ router.get('/roll/:rollNumber', async (req, res) => {
     }
 });
 
+// ─── GET export all students (Excel) ──────────────────────────────────────
+router.get('/export', auth, async (req, res) => {
+    try {
+        const pipeline = [
+            {
+                $lookup: {
+                    from: 'homeverifications',
+                    localField: 'rollNumber',
+                    foreignField: 'studentId',
+                    as: 'verification'
+                }
+            },
+            { $addFields: { verification: { $arrayElemAt: ['$verification', 0] } } },
+            { $addFields: { currentStatus: { $ifNull: ['$verification.status', 'pending'] } } },
+            { $sort: { serialNumber: 1 } }
+        ];
+
+        const students = await PassedStudent.aggregate(pipeline);
+
+        // Format ALL data for Excel (except photos)
+        const exportData = students.map(s => {
+            const v = s.verification || {};
+            return {
+                // --- Basic Registry (PassedStudent) ---
+                'S.No': s.serialNumber,
+                'Roll No': s.rollNumber,
+                'Student Name': s.studentName,
+                'Father Name': s.fatherName,
+                'Mobile (Reg)': s.mobileNumber,
+                'WhatsApp (Reg)': s.whatsappNumber || '',
+                'Subject (12th)': s.subjectIn12th || '',
+                'Bus Track': s.busTrack || '',
+                'Village (Reg)': s.villageTown || '',
+                'District (Reg)': s.district || '',
+                'Marks (Scholarship)': s.scholarshipExamMarks || 0,
+
+                // --- Verification Metadata ---
+                'Status': s.currentStatus.toUpperCase(),
+                'Verifier Name': v.verifierName || '',
+                'Verification Date': v.verificationDate ? new Date(v.verificationDate).toLocaleDateString() : '',
+                'Hold Reason': v.holdReason || '',
+                'GPS Address': v.gpsAddress || '',
+                'GPS Lat': v.gpsLat || '',
+                'GPS Lng': v.gpsLng || '',
+
+                // --- Academic Verification ---
+                'Scholarship Type': v.scholarshipType || '',
+                '10th %': v.marks10 || '',
+                '11th %': v.marks11 || '',
+                'College Exam Marks': v.collegeExamMarks || '',
+                '12th Attendance %': v.attendance12 || '',
+                'Home Visit Marks': v.homeVisitMarks || '',
+                'School Name': v.schoolName || '',
+                '12th Class Fees': v.classFees12 || '',
+
+                // --- Personal & Address ---
+                'Current Address': v.address || '',
+                'Village': v.village || '',
+                'Tehsil': v.tehsil || '',
+                'District': v.district || '',
+                'Pincode': v.pincode || '',
+                'Track Used': v.track === 'Other' ? v.trackCustom : v.track,
+                'Future Goal': v.futureGoal || '',
+
+                // --- Health ---
+                'Has Illness?': v.hasIllness ? 'Yes' : 'No',
+                'Illness Name': v.illnessName || '',
+                'Symptoms': v.symptoms || '',
+
+                // --- Family & Income ---
+                'Total Annual Income': v.totalAnnualIncome || '',
+                'Income Sources': (v.incomeSources || []).join(', '),
+                'Other Income Info': v.incomeOther || '',
+                'Family Challenges': v.familyChallenges || '',
+                'Family Members Count': (v.familyMembers || []).length,
+
+                // --- Housing ---
+                'House Type': v.houseType || '',
+                'Num Rooms': v.numRooms || '',
+                'Who Built?': v.houseBuilder || '',
+                'Scheme Name': v.houseSchemeName || '',
+                'Appliances': (v.appliances || []).join(', '),
+                'Vehicles Count': v.numVehicles || 0,
+                'Vehicle Types': (v.vehicleTypes || []).join(', '),
+
+                // --- Land & Farming ---
+                'Total Land': v.totalLand || '',
+                'Land Unit': v.landUnit || '',
+                'Ownership': v.landOwnership || '',
+                'Land Type': v.landType || '',
+                'Irrigation Source': v.irrigationSource || '',
+                'Livestock': (v.livestock || []).join(', '),
+
+                // --- Evaluation ---
+                'Supervisor Remarks': v.supervisorRemarks || ''
+            };
+        });
+
+        res.json({ success: true, data: exportData });
+    } catch (error) {
+        console.error('Export error:', error);
+        res.status(500).json({ success: false, message: 'Server error during export.' });
+    }
+});
+
 module.exports = router;
