@@ -10,6 +10,7 @@ import VerificationListPage from './pages/verification/VerificationListPage';
 import HomeVerificationPage from './pages/verification/HomeVerificationPage';
 import AdminVerificationPage from './pages/verification/AdminVerificationPage';
 import RegisterTeacherPage from './pages/auth/RegisterTeacherPage';
+import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 
 const isAuthenticated = () => !!localStorage.getItem('token');
 const getUserRole = () => {
@@ -44,6 +45,7 @@ function App() {
       }>
         <Routes>
         <Route path="/" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route
           path="/dashboard"
           element={
