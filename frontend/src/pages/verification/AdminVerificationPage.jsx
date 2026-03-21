@@ -4,6 +4,7 @@ import api from '../../api';
 import { Search, MapPin, User, ChevronRight, CheckCircle, XCircle, Clock, FileText, Send, AlertCircle } from 'lucide-react';
 import Loader from '../../components/Loader';
 import toast from 'react-hot-toast';
+import { confirmAction } from '../../utils/notifications';
 
 const STATUS_CFG = {
   submitted:        { bg: 'bg-blue-100 text-blue-700 border-blue-200',   dot: 'bg-blue-400',   label: 'Submitted' },
@@ -74,21 +75,21 @@ export default function AdminVerificationPage() {
                        action === 'reject' ? 'REJECT this verification?' : 
                        'Move this back to submitted for review?';
     
-    if (!window.confirm(confirmMsg)) return;
-
-    setActionLoading(id + action);
-    try {
-      const endpoint = isReview ? 'submit-for-review' : action;
-
-      await api.patch(`/verifications/${id}/${endpoint}`, { remarks: `Admin ${action}d` });
-      toast.success(isReview ? 'Moved to Submitted Successfully' : `Verification ${action === 'approve' ? 'Approved ✅' : 'Rejected ❌'}`);
-      fetchVerifications();
-    } catch (err) {
-      console.error(err);
-      toast.error(`Failed to ${action}`);
-    } finally {
-      setActionLoading(null);
-    }
+    confirmAction(confirmMsg, async () => {
+      setActionLoading(id + action);
+      try {
+        const endpoint = isReview ? 'submit-for-review' : action;
+  
+        await api.patch(`/verifications/${id}/${endpoint}`, { remarks: `Admin ${action}d` });
+        toast.success(isReview ? 'Moved to Submitted Successfully' : `Verification ${action === 'approve' ? 'Approved ✅' : 'Rejected ❌'}`);
+        fetchVerifications();
+      } catch (err) {
+        console.error(err);
+        toast.error(`Failed to ${action}`);
+      } finally {
+        setActionLoading(null);
+      }
+    });
   };
 
 

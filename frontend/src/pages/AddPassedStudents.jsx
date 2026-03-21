@@ -4,6 +4,7 @@ import api from '../api';
 import toast from 'react-hot-toast';
 import * as XLSX from 'xlsx';
 import Loader from '../components/Loader';
+import { confirmAction } from '../utils/notifications';
 
 
 const EMPTY_STUDENT = {
@@ -212,35 +213,36 @@ export default function AddPassedStudents() {
     }
 
     if (firstError) {
-      toast.error(`ALL FIELDS REQUIRED: ${firstError}`, { duration: 5000, position: 'top-center' });
+      toast.error(`Please complete all fields: ${firstError}`);
       return;
     }
 
-    if (!window.confirm("Are you sure you want to add these students? This action will save them to the database.")) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const payload = students.map((s) => ({
-        ...s,
-        scholarshipExamMarks: s.scholarshipExamMarks ? Number(s.scholarshipExamMarks) : 0,
-      }));
-
-      const res = await api.post('/passed-students/manual', { students: payload });
-
-      toast.success(res.data.message);
-      setStudents([{ ...EMPTY_STUDENT }]);
-      navigate('/dashboard');
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to add students.';
-      toast.error(msg);
-      if (err.response?.data?.errors) {
-        err.response.data.errors.forEach(e => toast.error(e));
+    confirmAction(
+      "Add these students to the database?",
+      async () => {
+        setLoading(true);
+        try {
+          const payload = students.map((s) => ({
+            ...s,
+            scholarshipExamMarks: s.scholarshipExamMarks ? Number(s.scholarshipExamMarks) : 0,
+          }));
+    
+          const res = await api.post('/passed-students/manual', { students: payload });
+    
+          toast.success(res.data.message);
+          setStudents([{ ...EMPTY_STUDENT }]);
+          navigate('/dashboard');
+        } catch (err) {
+          const msg = err.response?.data?.message || 'Failed to add students.';
+          toast.error(msg);
+          if (err.response?.data?.errors) {
+            err.response.data.errors.forEach(e => toast.error(e));
+          }
+        } finally {
+          setLoading(false);
+        }
       }
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   // ────────────────────────────── RENDER ──────────────────────────────

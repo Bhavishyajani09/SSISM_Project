@@ -108,22 +108,30 @@ function App() {
       </Routes>
 
       <Toaster
-        position="bottom-center"
+        position="top-center"
         toastOptions={{
-          duration: 1800,
+          duration: 3500,
           style: {
-            background: '#fff',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
             color: '#1e293b',
-            border: '1px solid #f3f4f6',
-            borderRadius: '10px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-            fontFamily: 'Inter, sans-serif',
-            fontSize: '0.75rem',
-            padding: '8px 12px',
-            maxWidth: '280px',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            borderRadius: '18px',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+            fontFamily: '"Outfit", "Inter", sans-serif',
+            fontSize: '14px',
+            fontWeight: '600',
+            padding: '12px 20px',
+            maxWidth: '450px',
           },
-          success: { iconTheme: { primary: '#f97316', secondary: '#fff' } },
-          error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } },
+          success: { 
+            iconTheme: { primary: '#10b981', secondary: '#fff' },
+            style: { borderLeft: '5px solid #10b981' }
+          },
+          error: { 
+            iconTheme: { primary: '#ef4444', secondary: '#fff' },
+            style: { borderLeft: '5px solid #ef4444' }
+          },
         }}
       />
       </Suspense>

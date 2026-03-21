@@ -11,6 +11,7 @@ import ssismLogo from '../../assets/SSISM_Logo.png';
 import Loader from '../../components/Loader';
 import toast from 'react-hot-toast';
 import api from '../../api';
+import { confirmAction } from '../../utils/notifications';
 
 // Helper: Collapsible Card (Accordion)
 const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onToggle }) => {
@@ -442,6 +443,8 @@ const getLoggedInUserName = () => {
   }
 };
 
+// confirmAction utility is now imported from utils/notifications.jsx
+
 const HomeVerificationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -836,16 +839,20 @@ const validateHomeVerification = () => {
   if (!form.motherSignatureUrl) return "Mother Signature is required.";
   if (!form.supervisorSignatureUrl) return "Supervisor Signature is required.";
 
+  // 8. Evaluation & Remarks
+  if (!isVal(form.attendance12)) return "Attendance in 12th is required.";
+  if (!isVal(form.supervisorRemarks)) return "Supervisor Remarks are required.";
+
   return null; // All good
 };
 
 
 const handleSubmit = async (targetStatus = 'submitted') => {
-  // Strict validation only for final submission
-  if (targetStatus === 'submitted') {
+  // Strict validation only for final submission or teacher rejection
+  if (targetStatus === 'submitted' || targetStatus === 'teacher_rejected') {
     const error = validateHomeVerification();
     if (error) {
-      toast.error(`ALL FIELDS REQUIRED: ${error}`, { duration: 5000, position: 'top-center' });
+      toast.error(`Please complete all fields: ${error}`);
       setApiMsg('');
       return;
     }
@@ -1549,13 +1556,14 @@ return (
               onClick={() => {
                 const error = validateHomeVerification();
                 if (error) {
-                  toast.error(`ALL FIELDS REQUIRED: ${error}`, { duration: 5000, position: 'top-center' });
+                  toast.error(`Please complete all fields: ${error}`);
                   setApiMsg('');
                   return;
                 }
-                if (window.confirm("ARE YOU SURE? \n\nOnce you submit, this form will be LOCKED for final admin review. You will not be able to edit it again.")) {
-                  handleSubmit('submitted');
-                }
+                confirmAction(
+                  "Submit for final review?",
+                  () => handleSubmit('submitted')
+                );
               }}
               disabled={isApiLoading}
               className="w-full sm:flex-1 order-first sm:order-none flex items-center justify-center gap-2 py-2.5 sm:py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[11px] sm:text-sm font-black rounded-xl sm:rounded-2xl transition-all shadow-[0_10px_40px_-10px_rgba(249,115,22,0.5)] hover:shadow-[0_15px_50px_-10px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 uppercase tracking-wider"
@@ -1570,9 +1578,10 @@ return (
 
             <button
               onClick={() => {
-                if (window.confirm("Reject this verification?")) {
-                  handleSubmit('teacher_rejected');
-                }
+                confirmAction(
+                  "Reject this verification?",
+                  () => handleSubmit('teacher_rejected')
+                );
               }}
               disabled={isApiLoading}
               className="w-full sm:flex-1 flex items-center justify-center py-2.5 sm:py-3 bg-red-50/30 border border-red-100 text-red-500 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl transition-all duration-300 hover:bg-red-50 hover:border-red-200 hover:shadow-[0_0_20px_rgba(239,68,68,0.1)] active:scale-95 disabled:opacity-50"
