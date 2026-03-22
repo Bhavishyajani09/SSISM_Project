@@ -261,8 +261,8 @@ export default function TeacherDashboard() {
         )}
       </div>
       <div>
-        <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-widest mb-1">{title}</p>
-        <p className={`text-xl sm:text-3xl font-semibold ${color.text} tracking-tight`}>{value}</p>
+        <p className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-[0.12em] mb-1">{title}</p>
+        <p className={`text-xl sm:text-3xl font-bold ${color.text === 'text-brand-600' ? 'text-brand-600' : 'text-slate-900'} tracking-tight`}>{value}</p>
       </div>
     </div>
   );
@@ -285,15 +285,15 @@ export default function TeacherDashboard() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <LayoutDashboard size={20} className="text-brand-500" />
-              <h1 className="text-lg sm:text-2xl font-semibold text-gray-900 tracking-tight">
+              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
                 {userRole === 'admin' ? 'Admin Central' : 'Teacher Insights'}
               </h1>
             </div>
-            <p className="text-gray-500 text-xs sm:text-sm font-medium">Welcome back, <span className="text-brand-600 font-semibold">{user.name || 'User'}</span></p>
+            <p className="text-slate-500 text-xs sm:text-sm font-medium">Welcome back, <span className="text-brand-600 font-bold">{user.name || 'User'}</span></p>
           </div>
           <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-2 shadow-sm">
             <Calendar size={14} className="text-slate-400" />
-            <span className="text-xs font-semibold text-slate-800 tracking-wide">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            <span className="text-xs font-bold text-slate-800 tracking-wide">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           </div>
         </div>
 
@@ -315,7 +315,7 @@ export default function TeacherDashboard() {
 
             {/* Quick Actions Grid */}
             <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h3 className="text-xs font-semibold uppercase text-gray-500 tracking-[0.2em] mb-4">Quick Shortcuts</h3>
+              <h3 className="text-xs font-bold uppercase text-slate-400 tracking-[0.15em] mb-4">Quick Shortcuts</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/add-passed-students')} className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 transition-all group border border-brand-100">
                   <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><Plus size={18} /></div>
@@ -339,7 +339,7 @@ export default function TeacherDashboard() {
             {/* Performance & Charts */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                <h3 className="text-xs font-semibold uppercase text-gray-500 tracking-[0.2em] mb-4">Location Matrix</h3>
+                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-[0.15em] mb-4">Location Matrix</h3>
                 <div className="space-y-3">
                   {getLocationStats().map(([loc, count]) => (
                     <div key={loc} className="space-y-1">
@@ -356,7 +356,7 @@ export default function TeacherDashboard() {
               </div>
 
               <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col items-center justify-center">
-                <h3 className="text-xs font-black uppercase text-gray-400 tracking-[0.2em] mb-4 w-full text-left">Status Distribution</h3>
+                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-[0.15em] mb-4 w-full text-left">Status Distribution</h3>
                 <div className="relative w-32 h-32 flex items-center justify-center">
                   <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
                     <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
@@ -453,7 +453,7 @@ export default function TeacherDashboard() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2 text-rose-600">
                     <AlertCircle size={14} className="animate-pulse" />
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-rose-800">Priority Tasks</span>
+                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-rose-800">Priority Tasks</span>
                   </div>
                   {(stats.rejected > 0 || stats.drafts > 0 || stats.olderThan5Days > 0) && (
                     <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[9px] font-semibold animate-pulse tracking-wide">
@@ -472,7 +472,7 @@ export default function TeacherDashboard() {
                         <AlertCircle size={14} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Rejected Cases</p>
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.12em]">Rejected Cases</p>
                         <p className={`text-sm font-semibold ${stats.rejected > 0 ? 'text-rose-900' : 'text-slate-400'}`}>{stats.rejected} Records</p>
                       </div>
                     </div>
@@ -488,7 +488,7 @@ export default function TeacherDashboard() {
                         <FileEdit size={14} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Incomplete Drafts</p>
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.12em]">Incomplete Drafts</p>
                         <p className={`text-sm font-semibold ${stats.drafts > 0 ? 'text-orange-900' : 'text-slate-400'}`}>{stats.drafts} Records</p>
                       </div>
                     </div>
@@ -504,7 +504,7 @@ export default function TeacherDashboard() {
                         <Clock size={14} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Awaiting &gt; 5 Days</p>
+                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.12em]">Awaiting &gt; 5 Days</p>
                         <p className={`text-sm font-semibold ${stats.olderThan5Days > 0 ? 'text-amber-900' : 'text-slate-400'}`}>{stats.olderThan5Days} Records</p>
                       </div>
                     </div>
@@ -521,7 +521,7 @@ export default function TeacherDashboard() {
         <div className="bg-white rounded-t-2xl border-x border-t border-gray-200 p-4 sticky top-0 z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-semibold text-gray-900 uppercase tracking-[1.5px]">Verification Registry</h2>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 uppercase tracking-[0.15em]">Verification Registry</h2>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-brand-50 text-brand-700">
                 {totalRecords} Records
               </span>

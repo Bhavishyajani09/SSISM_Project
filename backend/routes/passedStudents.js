@@ -193,7 +193,7 @@ router.get('/', auth, async (req, res) => {
                 { rollNumber: { $regex: search, $options: 'i' } },
             ];
         }
-        if (district) {
+        if (district && district !== 'all') {
             matchQuery.district = district;
         }
 
