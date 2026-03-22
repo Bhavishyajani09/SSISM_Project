@@ -5,7 +5,10 @@ const familyMemberSchema = new mongoose.Schema({
   relation: { type: String, trim: true },
   occupation: { type: String, trim: true },
   income: { type: Number, default: 0 },
-  mobile: { type: String, trim: true }
+  mobile: { type: String, trim: true },
+  currentClass: { type: String, trim: true },
+  isWorking: { type: String, trim: true },
+  educationLevel: { type: String, trim: true }
 });
 
 const photoSchema = new mongoose.Schema({
@@ -41,7 +44,7 @@ const homeVerificationSchema = new mongoose.Schema({
   marks11: { type: Number },
   marks12: { type: Number },
   collegeExamMarks: { type: Number },
-  homeVisitMarks: { type: Number },
+  homeVisitMarks: { type: Number, min: 0, max: 50 },
   attendance12: { type: Number },
   totalMarks: { type: Number },
 
@@ -85,14 +88,16 @@ const homeVerificationSchema = new mongoose.Schema({
   numRooms: { type: Number },
   houseBuilder: {
     type: String,
-    enum: ['Self', 'Government Scheme', null, ''],
+    enum: ['Self', 'Government Scheme', 'Personal Loan', 'Other', null, ''],
   },
+  houseBuilderOther: { type: String, trim: true },
   houseSchemeName: { type: String, trim: true },
 
   // --- Household Resources ---
   appliances: [{ type: String }],
   numVehicles: { type: Number, default: 0 },
   vehicleTypes: [{ type: String }],
+  vehicleTypesOther: { type: String, trim: true },
 
   // --- Land & Farming ---
   totalLand: { type: Number },
@@ -100,7 +105,15 @@ const homeVerificationSchema = new mongoose.Schema({
   landOwnership: { type: String },
   landType: { type: String, enum: ['Irrigated', 'Non Irrigated', null, ''] },
   irrigationSource: { type: String },
-  livestock: [{ type: String }],
+  irrigationSourceOther: { type: String, trim: true },
+  livestock: [
+    {
+      name: { type: String },
+      count: { type: Number, default: 0 }
+    }
+  ],
+  livestockOther: { type: String, trim: true },
+  livestockOtherCount: { type: Number, default: 0 },
 
   // --- Photos ---
   photos: [photoSchema],

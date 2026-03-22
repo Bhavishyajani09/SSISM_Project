@@ -465,10 +465,17 @@ const HomeVerificationPage = () => {
     village: '', tehsil: '', district: '', pincode: '', track: '', trackCustom: '', futureGoal: '',
     attendance12: '', hasIllness: 'no', illnessName: '', symptoms: '',
     totalAnnualIncome: '', familyChallenges: '', familyMembers: [],
-    houseType: '', numRooms: '', houseBuilder: '', houseSchemeName: '',
-    appliances: [], numVehicles: '', vehicleTypes: [],
-    totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '',
-    livestock: [], supervisorRemarks: '',
+    houseType: '', numRooms: '', houseBuilder: '', houseBuilderOther: '', houseSchemeName: '',
+    appliances: [], numVehicles: '', vehicleTypes: [], vehicleTypesOther: '',
+    totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '', irrigationSourceOther: '',
+    livestock: [
+      { name: 'Cow', count: '' },
+      { name: 'Buffalo', count: '' },
+      { name: 'Goat', count: '' }
+    ],
+    livestockOther: '',
+    livestockOtherCount: '',
+    supervisorRemarks: '',
     hasAchievements: 'no', achievements: '',
     photos: [],
     studentSignatureUrl: '',
@@ -479,7 +486,7 @@ const HomeVerificationPage = () => {
   });
 
   const [familyMembers, setFamilyMembers] = useState([
-    { name: '', relation: '', occupation: '', income: '', mobile: '' }
+    { name: '', relation: '', occupation: '', income: '', mobile: '', currentClass: '', isWorking: '', educationLevel: '' }
   ]);
   const [status, setStatus] = useState(null);
   const [verificationId, setVerificationId] = useState(null);
@@ -601,7 +608,19 @@ const HomeVerificationPage = () => {
           village: s.villageTown || '',
           district: s.district || '',
           collegeExamMarks: s.scholarshipExamMarks || '',
+          schoolName: s.schoolName12th || '',
+          classFees12: (s.classFees12th !== undefined && s.classFees12th !== null) ? s.classFees12th : '',
+          marks10: (s.marks10 !== undefined && s.marks10 !== null) ? s.marks10 : '',
+          marks11: (s.marks11 !== undefined && s.marks11 !== null) ? s.marks11 : '',
         }));
+
+        const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts', 'Science'];
+        const regStream = (s.stream12th || s.subjectIn12th || '').trim();
+        if (regStream && !streamOptions.includes(regStream)) {
+          setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: regStream }));
+        } else {
+          setForm(prev => ({ ...prev, subject12: regStream, subject12Custom: '' }));
+        }
 
         const trackOptions = ['Khategaon', 'Kannod', 'Satwas', 'Gopalpur', 'Narsullaganj', 'Nemawar', 'Harda', 'Timarni', 'Narmadapuram'];
         const regTrack = (s.busTrack || '').trim();
@@ -611,13 +630,6 @@ const HomeVerificationPage = () => {
           setForm(prev => ({ ...prev, track: regTrack, trackCustom: '' }));
         }
 
-        const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts'];
-        const regStream = (s.subjectIn12th || '').trim();
-        if (regStream && !streamOptions.includes(regStream)) {
-          setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: regStream }));
-        } else {
-          setForm(prev => ({ ...prev, subject12: regStream, subject12Custom: '' }));
-        }
         setApiMsg('');
       }
     } catch (err) {
@@ -644,7 +656,7 @@ const HomeVerificationPage = () => {
 
             if (formData.pincode === -1 || formData.pincode === '-1') formData.pincode = '';
             setForm(prev => ({ ...prev, ...formData }));
-            const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts'];
+            const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts', 'Science'];
             const dbStream = (formData.subject12 || '').trim();
             if (dbStream && !streamOptions.includes(dbStream)) {
               setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: dbStream }));
@@ -699,7 +711,7 @@ const HomeVerificationPage = () => {
     }
   };
 
-  const addFamilyMember = () => setFamilyMembers(prev => [...prev, { name: '', relation: '', occupation: '', income: '', mobile: '' }]);
+  const addFamilyMember = () => setFamilyMembers(prev => [...prev, { name: '', relation: '', occupation: '', income: '', mobile: '', currentClass: '', isWorking: '', educationLevel: '' }]);
   const removeFamilyMember = (i) => setFamilyMembers(prev => prev.filter((_, idx) => idx !== i));
   const updateMember = (i, field, value) => setFamilyMembers(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
 
@@ -1132,10 +1144,10 @@ const HomeVerificationPage = () => {
       autoTable(doc, {
         startY: fcy + 2,
         margin: { left: margin + 10, right: margin + 10, bottom: footerReserved },
-        head: [['Member Name', 'Relation', 'Occupation', 'Annual Income']],
+        head: [['Member Name', 'Relation', 'Occupation', 'Income', 'Class', 'Edu']],
         headStyles: { fillColor: [255, 255, 255], textColor: colors.muted },
-        body: (familyMembers || []).map(m => [m.name, m.relation, m.occupation, `Rs. ${m.income}`]),
-        styles: { fontSize: 10, cellPadding: 6 },
+        body: (familyMembers || []).map(m => [m.name, m.relation, m.occupation, `Rs. ${m.income}`, m.currentClass || '-', m.educationLevel || '-']),
+        styles: { fontSize: 9, cellPadding: 4 },
         alternateRowStyles: { fillColor: [255, 247, 237] }
       });
 
@@ -1147,7 +1159,9 @@ const HomeVerificationPage = () => {
 
       let ly = drawCard(35, 'Land & Farming');
       ly = drawGridRow(ly, 'Total Land:', `${form.totalLand || 0} ${form.landUnit}`, 'Ownership:', form.landOwnership);
-      ly = drawGridRow(ly, 'Irrigation:', form.irrigationSource, 'Livestock:', (form.livestock || []).slice(0, 2).join(', '));
+      const otherStr = form.livestockOther ? `${form.livestockOther}${form.livestockOtherCount ? `(${form.livestockOtherCount})` : ''}` : '';
+      const liveStr = [...(form.livestock || []).filter(l => l.count > 0).map(l => `${l.name}(${l.count})`), otherStr].filter(Boolean).join(', ');
+      ly = drawGridRow(ly, 'Irrigation:', form.irrigationSource === 'Other' ? form.irrigationSourceOther : form.irrigationSource, 'Livestock:', liveStr || 'None');
 
       // 6. Supervisor Remarks (Protected Section)
       const sigH = 60; // Keep space for signatures too
@@ -1481,6 +1495,7 @@ const HomeVerificationPage = () => {
                   <option value="Commerce">Commerce</option>
                   <option value="Biology">Biology</option>
                   <option value="Arts">Arts</option>
+                  <option value="Science">Science</option>
                   <option value="Other">Other</option>
                 </select>
                 {form.subject12 === 'Other' && (
@@ -1621,8 +1636,8 @@ const HomeVerificationPage = () => {
               <table className="w-full text-sm min-w-[600px]">
                 <thead>
                   <tr className="bg-slate-50 text-slate-600">
-                    {['Name', 'Relation', 'Occupation', 'Income (₹)', 'Mobile', ''].map(h => (
-                      <th key={h} className="px-3 py-2.5 text-left font-semibold text-xs">{h}</th>
+                    {['Name', 'Relation', 'Occupation', 'Income (₹)', 'Mobile', 'Student Class', 'Working?', 'Education', ''].map(h => (
+                      <th key={h} className="px-3 py-2.5 text-left font-semibold text-xs whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -1705,6 +1720,24 @@ const HomeVerificationPage = () => {
                           className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
                       </td>
                       <td className="px-2 py-2">
+                        <input value={m.currentClass} onChange={e => updateMember(i, 'currentClass', e.target.value)}
+                          placeholder="Class"
+                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                      </td>
+                      <td className="px-2 py-2">
+                        <select value={m.isWorking} onChange={e => updateMember(i, 'isWorking', e.target.value)}
+                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
+                          <option value="">Select</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                      </td>
+                      <td className="px-2 py-2">
+                        <input value={m.educationLevel} onChange={e => updateMember(i, 'educationLevel', e.target.value)}
+                          placeholder="Edu Level"
+                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                      </td>
+                      <td className="px-2 py-2">
                         <button onClick={() => removeFamilyMember(i)} className="text-red-400 hover:text-red-600">
                           <Trash2 size={15} />
                         </button>
@@ -1778,7 +1811,22 @@ const HomeVerificationPage = () => {
                 <div className="flex flex-wrap gap-x-6 gap-y-2 mb-3">
                   <RadioItem name="houseBuilder" value="Self" label="Self" />
                   <RadioItem name="houseBuilder" value="Government Scheme" label="Government Scheme" />
+                  <RadioItem name="houseBuilder" value="Personal Loan" label="Personal Loan" />
+                  <RadioItem name="houseBuilder" value="Other" label="Other" />
                 </div>
+                {form.houseBuilder === 'Other' && (
+                  <div className="mt-3">
+                    <Field label="Specify Other">
+                      <input
+                        name="houseBuilderOther"
+                        value={form.houseBuilderOther}
+                        onChange={handleChange}
+                        placeholder="Specify who built the house"
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+                )}
                 {form.houseBuilder === 'Government Scheme' && (
                   <div className="mt-3">
                     <Field label="Scheme Name">
@@ -1832,7 +1880,7 @@ const HomeVerificationPage = () => {
               <div>
                 <label className="text-sm font-semibold text-slate-700 block mb-2">Appliances</label>
                 <div className="flex flex-col gap-2">
-                  {['Refrigerator', 'Washing Machine', 'Air Conditioner'].map(a => (
+                  {['Refrigerator', 'Washing Machine'].map(a => (
                     <CheckItem key={a} name="appliances" value={a} label={a} />
                   ))}
                 </div>
@@ -1847,12 +1895,24 @@ const HomeVerificationPage = () => {
                     <CheckItem key={v} name="vehicleTypes" value={v} label={v} />
                   ))}
                 </div>
+                {(form.vehicleTypes || []).includes('Other') && (
+                  <div className="mt-3 animate-fade-in">
+                    <Field label="Specify Other Vehicle">
+                      <input
+                        name="vehicleTypesOther"
+                        value={form.vehicleTypesOther}
+                        onChange={handleChange}
+                        placeholder="e.g. Rickshaw, Truck..."
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+                )}
               </div>
             </div>
           </SectionCard>
 
-          {/* 9. LAND & FARMING DETAILS */}
-          <SectionCard
+              <SectionCard
             icon={Tractor}
             title="Land & Farming Details"
             color="green"
@@ -1895,13 +1955,97 @@ const HomeVerificationPage = () => {
                     <RadioItem key={s} name="irrigationSource" value={s} label={s} />
                   ))}
                 </div>
+                {form.irrigationSource === 'Other' && (
+                  <div className="mt-3 animate-fade-in">
+                    <Field label="Specify Other Source">
+                      <input
+                        name="irrigationSourceOther"
+                        value={form.irrigationSourceOther}
+                        onChange={handleChange}
+                        placeholder="Specify source"
+                        className={inputCls}
+                      />
+                    </Field>
+                  </div>
+                )}
               </div>
-              <div className="sm:col-span-2">
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Livestock</label>
-                <div className="flex flex-wrap gap-5">
-                  {['Cow', 'Buffalo', 'Goat', 'Other'].map(l => (
-                    <CheckItem key={l} name="livestock" value={l} label={l} />
-                  ))}
+
+              <div className="sm:col-span-2 pt-4 border-t border-slate-100">
+                <label className="text-sm font-semibold text-slate-700 block mb-3">Livestock</label>
+                <div className="flex flex-wrap gap-x-8 gap-y-4">
+                  {['Cow', 'Buffalo', 'Goat', 'Other'].map(v => {
+                    const existing = (form.livestock || []).find(l => l.name === v);
+                    const otherSelected = v === 'Other' && (form.livestockOtherCount !== '' && form.livestockOtherCount !== '0');
+                    const isSelected = v === 'Other' ? otherSelected : (!!existing && existing.count > 0);
+                    const currentCount = v === 'Other' ? form.livestockOtherCount : (existing ? existing.count : '');
+                    
+                    return (
+                      <div key={v} className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                if (v === 'Other') {
+                                  setForm(prev => ({ ...prev, livestockOtherCount: '1', livestockOther: '' }));
+                                } else {
+                                  let newList = [...(form.livestock || [])];
+                                  const idx = newList.findIndex(l => l.name === v);
+                                  if (idx >= 0) newList[idx].count = '1';
+                                  else newList.push({ name: v, count: '1' });
+                                  setForm(prev => ({ ...prev, livestock: newList }));
+                                }
+                              } else {
+                                if (v === 'Other') {
+                                  setForm(prev => ({ ...prev, livestockOther: '', livestockOtherCount: '' }));
+                                } else {
+                                  let newList = (form.livestock || []).filter(l => l.name !== v);
+                                  setForm(prev => ({ ...prev, livestock: newList }));
+                                }
+                              }
+                            }}
+                            className="w-4 h-4 accent-orange-600 rounded"
+                          />
+                          {v}
+                        </label>
+                        
+                        {isSelected && (
+                          <div className="flex items-center gap-1.5 animate-fade-in whitespace-nowrap">
+                            <span className="text-slate-400 text-sm">(</span>
+                            {v === 'Other' && (
+                              <input
+                                name="livestockOther"
+                                value={form.livestockOther || ''}
+                                onChange={handleChange}
+                                placeholder="Type"
+                                className="w-16 px-1 py-0.5 rounded border border-slate-200 text-[10px] focus:outline-none focus:border-slate-400 text-slate-700"
+                              />
+                            )}
+                            <input
+                              type="number"
+                              min="1"
+                              value={currentCount || ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (v === 'Other') {
+                                  setForm(prev => ({ ...prev, livestockOtherCount: val }));
+                                } else {
+                                  let newList = (form.livestock || []).map(l => 
+                                    l.name === v ? { ...l, count: val } : l
+                                  );
+                                  setForm(prev => ({ ...prev, livestock: newList }));
+                                }
+                              }}
+                              placeholder="0"
+                              className="w-10 px-1 py-0.5 rounded border border-slate-200 text-[10px] focus:outline-none focus:border-slate-400 text-slate-700 text-center"
+                            />
+                            <span className="text-slate-400 text-sm">)</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
