@@ -168,4 +168,4 @@ homeVerificationSchema.index({ status: 1 });
 homeVerificationSchema.index({ verifierId: 1 });
 homeVerificationSchema.index({ verificationDate: -1 });
 
-module.exports = mongoose.model('HomeVerification', homeVerificationSchema);
+module.exports = mongoose.model('HomeVerification', homeVerificationSchema, 'homeverifications');

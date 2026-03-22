@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api';
 import { Search, MapPin, User, ChevronRight, FileText, CheckCircle, XCircle, Clock, LayoutGrid, Send, AlertCircle, Pencil, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -36,12 +36,15 @@ export default function VerificationListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('pending');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const initialFilter = location.state?.filter || 'pending';
+  
+  const [statusFilter, setStatusFilter] = useState(initialFilter);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const itemsPerPage = 10;
-  const navigate = useNavigate();
 
   // Search Debounce
   useEffect(() => {
