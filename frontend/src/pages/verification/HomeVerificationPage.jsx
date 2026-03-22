@@ -1773,24 +1773,24 @@ const HomeVerificationPage = () => {
               <div className="overflow-x-auto rounded-xl border border-slate-200 thin-scrollbar">
                 <table className="w-full text-sm min-w-[600px]">
                   <thead>
-                    <tr className="bg-slate-50 text-slate-600">
-                      {['Name', 'Relation', 'Occupation', 'Income (₹)', 'Mobile', ''].map(h => (
-                        <th key={h} className="px-3 py-2.5 text-left font-semibold text-xs">{h}</th>
+                    <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider text-[10px]">
+                      {['Name', 'Relation', 'Occupation', 'Education Qualification', 'Income (₹)', 'Mobile', ''].map(h => (
+                        <th key={h} className="px-3 py-2.5 text-left font-bold">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {familyMembers.map((m, i) => (
-                      <tr key={i} className="border-t border-slate-100">
+                      <tr key={i} className="border-t border-slate-100/60 hover:bg-slate-50/50 transition-colors">
                         <td className="px-2 py-2">
                           <input value={m.name} onChange={e => updateMember(i, 'name', e.target.value)}
                             placeholder="Name"
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all font-medium" />
                         </td>
                         <td className="px-2 py-2">
                           {['Father', 'Mother', 'Sister', 'Brother', ''].includes(m.relation) ? (
                             <select value={m.relation} onChange={e => updateMember(i, 'relation', e.target.value)}
-                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
+                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 cursor-pointer font-medium">
                               <option value="">Select Relation</option>
                               <option value="Father">Father</option>
                               <option value="Mother">Mother</option>
@@ -1805,11 +1805,11 @@ const HomeVerificationPage = () => {
                                 onChange={e => updateMember(i, 'relation', e.target.value)}
                                 autoFocus
                                 placeholder="Enter Relation"
-                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none"
+                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none font-bold text-orange-600"
                               />
                               <button
                                 onClick={() => updateMember(i, 'relation', '')}
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 p-0.5"
                                 title="Back to dropdown"
                               >
                                 <X size={12} strokeWidth={3} />
@@ -1820,7 +1820,7 @@ const HomeVerificationPage = () => {
                         <td className="px-2 py-2">
                           {['Labour', 'Farmer', 'Job', 'Student', ''].includes(m.occupation) ? (
                             <select value={m.occupation} onChange={e => updateMember(i, 'occupation', e.target.value)}
-                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
+                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 cursor-pointer font-medium">
                               <option value="">Select Occupation</option>
                               <option value="Labour">Labour</option>
                               <option value="Farmer">Farmer</option>
@@ -1835,17 +1835,22 @@ const HomeVerificationPage = () => {
                                 onChange={e => updateMember(i, 'occupation', e.target.value)}
                                 autoFocus
                                 placeholder="Enter Occupation"
-                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none"
+                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none font-bold text-orange-600"
                               />
                               <button
                                 onClick={() => updateMember(i, 'occupation', '')}
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 p-0.5"
                                 title="Back to dropdown"
                               >
                                 <X size={12} strokeWidth={3} />
                               </button>
                             </div>
                           )}
+                        </td>
+                        <td className="px-2 py-2">
+                          <input value={m.educationLevel || ''} onChange={e => updateMember(i, 'educationLevel', e.target.value)}
+                            placeholder="Qualification"
+                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all font-medium" />
                         </td>
                         <td className="px-2 py-2">
                           <input value={m.income} onChange={e => updateMember(i, 'income', e.target.value)}
@@ -1935,6 +1940,7 @@ const HomeVerificationPage = () => {
                   <div className="flex flex-wrap gap-x-6 gap-y-2 mb-3">
                     <RadioItem name="houseBuilder" value="Self" label="Self" />
                     <RadioItem name="houseBuilder" value="Government Scheme" label="Government Scheme" />
+                    <RadioItem name="houseBuilder" value="Loan" label="Loan" />
                   </div>
                   {form.houseBuilder === 'Government Scheme' && (
                     <div className="mt-3">
@@ -2006,6 +2012,19 @@ const HomeVerificationPage = () => {
                       <CheckItem key={v} name="vehicleTypes" value={v} label={v} />
                     ))}
                   </div>
+                  {(form.vehicleTypes || []).includes('Other') && (
+                    <div className="mt-3 animate-fade-in">
+                      <Field label="Specify Vehicle Name">
+                        <input
+                          name="vehicleTypesOther"
+                          value={form.vehicleTypesOther || ''}
+                          onChange={handleChange}
+                          placeholder="e.g. Bull Cart"
+                          className={`${inputCls} border-orange-400 font-semibold text-orange-700 shadow-[0_0_15px_rgba(251,146,60,0.1)]`}
+                        />
+                      </Field>
+                    </div>
+                  )}
                 </div>
               </div>
             </SectionCard>
@@ -2022,18 +2041,28 @@ const HomeVerificationPage = () => {
               locked={isReadOnly}
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
-                <div className="flex gap-2">
-                  <div className="flex-1">
-                    <Field label="Total Land">
-                      <input name="totalLand" value={form.totalLand} onChange={handleChange} type="number" placeholder="Amount" className={inputCls} />
-                    </Field>
-                  </div>
-                  <div className="w-28 mt-auto">
-                    <select name="landUnit" value={form.landUnit} onChange={handleChange} className={selectCls}>
-                      <option>Acre</option>
-                      <option>Bigha</option>
-                    </select>
-                  </div>
+                <div className="sm:col-span-1 lg:col-span-1">
+                  <Field label="Total Land Area" required>
+                    <div className="flex items-center gap-2">
+                      <input
+                        name="totalLand"
+                        value={form.totalLand}
+                        onChange={handleChange}
+                        type="number"
+                        placeholder="0"
+                        className={`${inputCls} w-24`}
+                      />
+                      <select
+                        name="landUnit"
+                        value={form.landUnit}
+                        onChange={handleChange}
+                        className={`${selectCls} w-24`}
+                      >
+                        <option value="Acre">Acre</option>
+                        <option value="Bigha">Bigha</option>
+                      </select>
+                    </div>
+                  </Field>
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-2">Ownership</label>
@@ -2051,18 +2080,99 @@ const HomeVerificationPage = () => {
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-2">Irrigation Source</label>
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 gap-1 mb-2">
                     {['Tube Well', 'Canal', 'Rain Based', 'Well', 'Other'].map(s => (
                       <RadioItem key={s} name="irrigationSource" value={s} label={s} />
                     ))}
                   </div>
+                  {form.irrigationSource === 'Other' && (
+                    <div className="animate-fade-in">
+                      <Field label="Specify Source">
+                        <input
+                          name="irrigationSourceOther"
+                          value={form.irrigationSourceOther || ''}
+                          onChange={handleChange}
+                          placeholder="e.g. River"
+                          className={`${inputCls} border-orange-400 font-semibold text-orange-700 shadow-[0_0_15px_rgba(251,146,60,0.1)]`}
+                        />
+                      </Field>
+                    </div>
+                  )}
                 </div>
                 <div className="sm:col-span-2 lg:col-span-4">
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Livestock</label>
-                  <div className="flex flex-wrap gap-5">
-                    {['Cow', 'Buffalo', 'Goat', 'Other'].map(l => (
-                      <CheckItem key={l} name="livestock" value={l} label={l} />
-                    ))}
+                  <label className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
+                    <Users size={16} className="text-emerald-500" /> Livestock Details
+                  </label>
+                  <div className="flex flex-wrap items-start gap-x-8 gap-y-6">
+                    {['Cow', 'Buffalo', 'Goat', 'Other'].map(l => {
+                      const isSelected = form.livestock?.some(ls => ls.name === l);
+                      const currentItem = form.livestock?.find(ls => ls.name === l);
+
+                      return (
+                        <div key={l} className="flex flex-col gap-2 min-w-[130px]">
+                          <div className="flex items-center gap-2 group">
+                            <label className="flex items-center gap-2.5 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setForm(prev => {
+                                    const list = prev.livestock ? [...prev.livestock] : [];
+                                    if (checked) {
+                                      return { ...prev, livestock: [...list, { name: l, count: '0' }] };
+                                    } else {
+                                      const updated = list.filter(ls => ls.name !== l);
+                                      const extra = l === 'Other' ? { livestockOther: '', livestockOtherCount: '' } : {};
+                                      return { ...prev, livestock: updated, ...extra };
+                                    }
+                                  });
+                                }}
+                                className="w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500 transition-all cursor-pointer"
+                              />
+                              <span className={`text-sm font-semibold transition-all ${isSelected ? 'text-slate-900 border-b-2 border-slate-900/10' : 'text-slate-600 group-hover:text-slate-900'}`}>{l}</span>
+                            </label>
+
+                            {isSelected && (
+                              <div className="flex items-center animate-fade-in text-[14px] text-slate-400 font-normal">
+                                (
+                                <input
+                                  type="number"
+                                  min="1"
+                                  value={l === 'Other' ? form.livestockOtherCount : (currentItem?.count || '')}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (l === 'Other') {
+                                      setForm(prev => ({ ...prev, livestockOtherCount: val }));
+                                    } else {
+                                      setForm(prev => ({
+                                        ...prev,
+                                        livestock: prev.livestock.map(ls => ls.name === l ? { ...ls, count: val } : ls)
+                                      }));
+                                    }
+                                  }}
+                                  placeholder="0"
+                                  className="w-10 px-1.5 py-0 bg-transparent text-center border-b border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-slate-500 placeholder:text-slate-200"
+                                />
+                                )
+                              </div>
+                            )}
+                          </div>
+
+                          {isSelected && l === 'Other' && (
+                            <div className="animate-fade-in pl-6.5 mt-1">
+                              <input
+                                value={form.livestockOther || ''}
+                                onChange={(e) => setForm(prev => ({ ...prev, livestockOther: e.target.value }))}
+                                placeholder="Specify Name"
+                                className="w-full px-2 py-1.5 rounded-lg border border-orange-100 bg-white text-[10px] font-bold text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400/30 shadow-sm"
+                                autoFocus
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
