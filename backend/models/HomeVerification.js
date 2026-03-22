@@ -89,7 +89,7 @@ const homeVerificationSchema = new mongoose.Schema({
   numRooms: { type: Number },
   houseBuilder: {
     type: String,
-    enum: ['Self', 'Government Scheme', 'Personal Loan', 'Other', null, ''],
+    enum: ['Self', 'Government Scheme', 'Loan', 'Other', null, ''],
   },
   houseBuilderOther: { type: String, trim: true },
   houseSchemeName: { type: String, trim: true },
