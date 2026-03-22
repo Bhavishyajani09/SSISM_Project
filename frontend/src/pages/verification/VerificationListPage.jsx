@@ -14,7 +14,8 @@ const STATUS_CONFIG = {
   submitted: { label: 'Submitted', bg: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-400', Icon: Clock },
   approved: { label: 'Approved', bg: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-400', Icon: CheckCircle },
   rejected: { label: 'Admin Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', Icon: XCircle },
-  teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400', Icon: AlertCircle },
+  teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', Icon: XCircle },
+  student_rejected: { label: 'Student Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', Icon: XCircle },
   hold: { label: 'On Hold', bg: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-400', Icon: Clock },
   pending: { label: 'Pending', bg: 'bg-gray-100 text-gray-500 border-gray-200', dot: 'bg-gray-300', Icon: Clock },
 };
@@ -85,7 +86,8 @@ export default function VerificationListPage() {
     { key: 'draft', label: 'Draft', icon: FileText },
     { key: 'hold', label: 'Hold', icon: Clock },
     { key: 'submitted', label: 'Submitted', icon: Send },
-    { key: 'rejected', label: 'Rejected', icon: XCircle },
+    { key: 'student_rejected', label: 'Student Rejected', icon: XCircle },
+    { key: 'teacher_rejected', label: 'Teacher Rejected', icon: AlertCircle },
     { key: 'approved', label: 'Approved', icon: CheckCircle },
   ];
 

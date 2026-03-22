@@ -34,24 +34,27 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onTo
   };
   const cfg = colorMap[color] || colorMap.indigo;
 
-  // Auto-scroll when opened
+  // User-friendly smart Auto-scroll when opened
   useEffect(() => {
     if (open && cardRef.current) {
       setTimeout(() => {
-        // Offset: 70px for mobile (main header), ~10px for desktop (no top header)
+        // The mobile layout possesses multiple stacked sticky/fixed navigation sections (app header + progress tracker). 
+        // We apply a mathematically guaranteed safe padding offset to prevent aggressive over-scroll jumping.
         const isMobile = window.innerWidth < 1024;
-        const offset = isMobile ? 70 : 20;
+        const safeOffset = isMobile ? 240 : 180; // High safe buffer exactly clears all combined sticky header heights.
 
         const bodyRect = document.body.getBoundingClientRect().top;
         const elementRect = cardRef.current.getBoundingClientRect().top;
         const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
+
+        // Do not jump to negatives. Gently glide into clear view beneath headers.
+        const offsetPosition = Math.max(0, elementPosition - safeOffset);
 
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
         });
-      }, 100);
+      }, 50); // Fast enough to avoid visual delay, slow enough for DOM flush
     }
   }, [open]);
 
@@ -492,6 +495,7 @@ const HomeVerificationPage = () => {
     motherSignatureUrl: '',
     supervisorSignatureUrl: '',
     holdReason: '',
+    rejectReason: '',
   });
 
   const [familyMembers, setFamilyMembers] = useState([
@@ -509,6 +513,11 @@ const HomeVerificationPage = () => {
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
   const [holdReason, setHoldReason] = useState('');
   const [holdReasonError, setHoldReasonError] = useState('');
+
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectType, setRejectType] = useState('teacher_rejected');
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectReasonError, setRejectReasonError] = useState('');
 
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = storedUser.role || 'teacher';
@@ -574,13 +583,15 @@ const HomeVerificationPage = () => {
     }
   };
 
-  // Corrected Scroll to top on step change (Instant)
+  // Ensure the page drops user gently near top if completely reloading standard
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'auto' });
-  }, [currentStep, id, location]);
+    if (location && location.state && location.state.isNew) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
+  }, [id, location]);
 
-  // Form is locked if submitted, teacher_rejected, rejected, or approved
-  const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'rejected' || status === 'approved';
+  // Form is locked if submitted, teacher_rejected, student_rejected, rejected, or approved
+  const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected' || status === 'rejected' || status === 'approved';
 
   const handleReverseGeocode = async (lat, lng) => {
     try {
@@ -807,6 +818,7 @@ const HomeVerificationPage = () => {
       gpsLat: gpsCoords?.lat,
       gpsLng: gpsCoords?.lng,
       gpsAddress: locationAddress,
+      rejectReason: form.rejectReason,
     };
     console.log('Building payload for backend:', payload);
     return payload;
@@ -818,6 +830,7 @@ const HomeVerificationPage = () => {
       draft: 'Draft Saved Successfully',
       submitted: 'Verification Submitted Successfully',
       teacher_rejected: 'Rejection Recorded',
+      student_rejected: 'Student Rejection Recorded',
       hold: 'Verification On Hold'
     };
     toast.success(labels[actionStatus] || 'Success');
@@ -939,8 +952,8 @@ const HomeVerificationPage = () => {
 
 
   const handleSubmit = async (targetStatus = 'submitted') => {
-    // Strict validation only for final submission or teacher rejection
-    if (targetStatus === 'submitted' || targetStatus === 'teacher_rejected') {
+    // Strict validation only for final submission
+    if (targetStatus === 'submitted') {
       const error = validateHomeVerification();
       if (error) {
         toast.error(`Please complete all fields: ${error}`);
@@ -1012,6 +1025,34 @@ const HomeVerificationPage = () => {
     } finally { setIsApiLoading(false); setLoadingAction(null); }
   };
 
+  const handleConfirmReject = async () => {
+    if (!rejectReason.trim()) {
+      setRejectReasonError('Reason is mandatory for rejecting verification.');
+      return;
+    }
+    setIsApiLoading(true); setLoadingAction(rejectType); setApiMsg('');
+
+    setForm(prev => ({ ...prev, rejectReason }));
+    const payload = { ...buildPayload(), status: rejectType, rejectReason };
+
+    try {
+      const path = verificationId ? `/verifications/${verificationId}` : `/verifications`;
+      let res;
+      if (verificationId) {
+        res = await api.put(path, payload);
+      } else {
+        res = await api.post(path, payload);
+      }
+      if (res.data.verification) {
+        setVerificationId(res.data.verification._id);
+        setStatus(rejectType);
+      }
+      showSuccessAndRedirect(rejectType);
+      setIsRejectModalOpen(false);
+    } catch (err) {
+      setApiMsg('Error: ' + err.message);
+    } finally { setIsApiLoading(false); setLoadingAction(null); }
+  };
 
   const handleReject = () => handleSubmit('rejected');
   // NOTE: handleReject kept for potential future use but NOT exposed in teacher form UI.
@@ -1310,14 +1351,23 @@ const HomeVerificationPage = () => {
     <div className="min-h-screen bg-[#f8fbff] bg-gradient-to-br from-[#f8fbff] to-white font-sans">
 
       {/* Main Form Container */}
-      <div className="max-w-4xl mx-auto px-4 pt-5 pb-32">
+      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-5 pb-32 transition-all">
 
         {/* Minimal Sticky Progress Header */}
         <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 -mx-4 px-4 pt-4 pb-2 mb-6">
           <div className="flex items-center justify-between mb-4 px-1">
-            <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
-              Verification Flow
-            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-1.5 -ml-1.5 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 shadow-sm transition-all group flex items-center justify-center cursor-pointer"
+                title="Return to List"
+              >
+                <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mt-[1px]">
+                Verification Flow
+              </span>
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">
                 Step {currentStep + 1}
@@ -1349,7 +1399,6 @@ const HomeVerificationPage = () => {
                 key={step.id}
                 onClick={() => {
                   setCurrentStep(idx);
-                  window.scrollTo({ top: 0, behavior: 'auto' });
                 }}
                 className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300
                   ${idx === currentStep
@@ -1366,17 +1415,7 @@ const HomeVerificationPage = () => {
         </div>
 
         {/* Info & Action Bar */}
-        <div className="flex flex-wrap items-center gap-3 text-xs mb-6">
-          <button
-            onClick={() => navigate('/home-verification')}
-            className="p-2 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-xl border border-slate-200 shadow-sm transition-all group flex items-center justify-center"
-            title="Return to List"
-          >
-            <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
-          </button>
-
-          <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
-
+        <div className="flex flex-wrap items-center gap-3 text-xs mb-6 px-1">
           <button
             onClick={captureGPS}
             disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
@@ -1404,20 +1443,20 @@ const HomeVerificationPage = () => {
             {status && (
               <div className={`px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-1.5 whitespace-nowrap ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
                 status === 'submitted' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
-                  status === 'teacher_rejected' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
+                  status === 'teacher_rejected' || status === 'student_rejected' ? 'bg-red-50 border-red-100 text-red-700' :
                     status === 'rejected' ? 'bg-red-50 border-red-100 text-red-700' :
                       status === 'hold' ? 'bg-orange-50 border-orange-100 text-orange-700' :
                         'bg-slate-50 border-slate-200 text-slate-600'
                 }`}>
                 <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${status === 'approved' ? 'bg-emerald-500' :
                   status === 'submitted' ? 'bg-brand-500' :
-                    status === 'teacher_rejected' ? 'bg-orange-500' :
+                    status === 'teacher_rejected' || status === 'student_rejected' ? 'bg-red-500' :
                       status === 'rejected' ? 'bg-red-500' :
                         status === 'hold' ? 'bg-orange-500' :
                           'bg-slate-400'
                   }`} />
                 <span className="text-[9px] font-black uppercase tracking-wider">
-                  {status === 'teacher_rejected' ? 'Teacher Rejected' : status.replace('_', ' ')}
+                  {status === 'teacher_rejected' ? 'Teacher Rejected' : status === 'student_rejected' ? 'Student Rejected' : status.replace('_', ' ')}
                 </span>
               </div>
             )}
@@ -1441,20 +1480,22 @@ const HomeVerificationPage = () => {
         {!isAdmin && isReadOnly && (
           <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-sm font-semibold mb-6 ${status === 'submitted'
             ? 'bg-blue-50 border-blue-200 text-blue-800'
-            : status === 'rejected'
+            : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected'
               ? 'bg-red-50 border-red-200 text-red-800'
               : 'bg-green-50 border-green-200 text-green-800'
             }`}>
             <span className="text-xl mt-0.5">
-              {status === 'submitted' ? '🔒' : status === 'rejected' ? '🚫' : '✅'}
+              {status === 'submitted' ? '🔒' : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected' ? '🚫' : '✅'}
             </span>
             <div>
               <p className="font-bold">
                 {status === 'submitted' && 'Form Submitted — Awaiting Admin Review'}
                 {status === 'teacher_rejected' && 'Rejected by Teacher'}
+                {status === 'student_rejected' && 'Rejected by Student'}
                 {status === 'rejected' && 'Rejected by Admin'}
                 {status === 'approved' && 'Approved by Admin — Read Only'}
               </p>
+              {form.rejectReason && status.includes('rejected') && <p className="text-xs text-red-700/80 font-medium mt-1">Reason: {form.rejectReason}</p>}
             </div>
           </div>
         )}
@@ -1472,7 +1513,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <Field label="Scholarship Type" required>
                   <select name="scholarshipType" value={form.scholarshipType} onChange={handleChange} className={selectCls}>
                     <option value="">Select Type</option>
@@ -1528,7 +1569,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
                 {[
                   { label: '10th Percentage (Max 100)', name: 'marks10', max: 100 },
                   { label: '11th Percentage (Max 100)', name: 'marks11', max: 100 },
@@ -1553,7 +1594,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <Field label="Father Name" required>
                   <input name="fatherName" value={form.fatherName} onChange={handleChange} placeholder="Father's full name" className={inputCls} />
                 </Field>
@@ -1588,7 +1629,7 @@ const HomeVerificationPage = () => {
                     />
                   )}
                 </Field>
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 lg:col-span-3">
                   <Field label="Full Address" required>
                     <textarea name="address" value={form.address} onChange={handleChange} rows={2} placeholder="House No., Street, Area..." className={textareaCls} />
                   </Field>
@@ -1649,7 +1690,7 @@ const HomeVerificationPage = () => {
                 <Field label="Future Goal">
                   <input name="futureGoal" value={form.futureGoal} onChange={handleChange} placeholder="Career goal" className={inputCls} />
                 </Field>
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 lg:col-span-3">
                   <label className="text-sm font-semibold text-slate-700 block mb-2">
                     <div className="flex items-center gap-1.5"><Trophy size={14} className="text-amber-500" /> Any Special Achievements / Awards?</div>
                   </label>
@@ -1684,7 +1725,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <Field label="Do you have any illness?">
                   <div className="flex gap-6 pt-1">
                     <RadioItem name="hasIllness" value="yes" label="Yes" />
@@ -1829,7 +1870,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <Field label="Total Annual Family Income (₹)" required>
                   <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
                 </Field>
@@ -1846,7 +1887,7 @@ const HomeVerificationPage = () => {
                     <input name="incomeOther" value={form.incomeOther} onChange={handleChange} placeholder="Describe" className={inputCls} />
                   </Field>
                 )}
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 lg:col-span-3">
                   <Field label="Challenges Faced by Family">
                     <textarea name="familyChallenges" value={form.familyChallenges} onChange={handleChange} rows={3} placeholder="Describe any major challenges..." className={textareaCls} />
                   </Field>
@@ -1865,7 +1906,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-2">Type of House</label>
                   <div className="flex flex-wrap gap-4">
@@ -1932,7 +1973,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 xl:gap-6">
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-2">Appliances</label>
                   <div className="flex flex-col gap-2">
@@ -1966,7 +2007,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
                 <div className="flex gap-2">
                   <div className="flex-1">
                     <Field label="Total Land">
@@ -2002,7 +2043,7 @@ const HomeVerificationPage = () => {
                     ))}
                   </div>
                 </div>
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-2 lg:col-span-4">
                   <label className="text-sm font-semibold text-slate-700 block mb-2">Livestock</label>
                   <div className="flex flex-wrap gap-5">
                     {['Cow', 'Buffalo', 'Goat', 'Other'].map(l => (
@@ -2125,18 +2166,17 @@ const HomeVerificationPage = () => {
         </div>{/* end form sections area */}
 
         {/* Persistent Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 px-4 py-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-          <div className="max-w-4xl mx-auto flex gap-3">
+        <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+          <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex gap-2 sm:gap-4 transition-all pb-2">
             {currentStep > 0 && (
               <button
                 onClick={() => {
                   setCurrentStep(prev => prev - 1);
-                  window.scrollTo({ top: 0, behavior: 'auto' });
                 }}
-                className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-2xl hover:bg-slate-200 active:scale-95 transition-all text-sm uppercase tracking-wider"
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl sm:rounded-2xl hover:bg-slate-200 active:scale-95 transition-all text-[9.5px] sm:text-sm uppercase tracking-wider shrink-0 ${currentStep === STEPS.length - 1 ? 'w-14 sm:w-auto px-1 sm:px-6' : 'flex-1'}`}
               >
-                <ArrowLeft size={18} />
-                Back
+                <ArrowLeft size={currentStep === STEPS.length - 1 ? 16 : 18} />
+                <span>Back</span>
               </button>
             )}
 
@@ -2144,7 +2184,6 @@ const HomeVerificationPage = () => {
               <button
                 onClick={() => {
                   setCurrentStep(prev => prev + 1);
-                  window.scrollTo({ top: 0, behavior: 'auto' });
                 }}
                 className="flex-[2] py-3.5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-orange-200 hover:shadow-orange-300 active:scale-95"
               >
@@ -2152,13 +2191,22 @@ const HomeVerificationPage = () => {
                 <ChevronRight size={18} />
               </button>
             ) : (
-              <div className="flex-[2] flex gap-2">
+              <div className="flex-[3] flex gap-2 w-full">
+                <button
+                  onClick={() => setIsRejectModalOpen(true)}
+                  disabled={isApiLoading || isReadOnly}
+                  className="flex-1 py-1.5 sm:py-3 px-1 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl sm:rounded-2xl hover:bg-red-100 active:scale-95 transition-all text-[9px] sm:text-xs uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                >
+                  {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="sm" color="red" /> : <XCircle size={16} />}
+                  <span>Reject</span>
+                </button>
                 <button
                   onClick={handleSave}
                   disabled={isApiLoading || isReadOnly}
-                  className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 active:scale-95 transition-all text-xs uppercase"
+                  className="flex-1 py-1.5 sm:py-3 px-1 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl sm:rounded-2xl hover:bg-slate-50 active:scale-95 transition-all text-[9px] sm:text-xs uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
                 >
-                  {loadingAction === 'draft' ? <Loader size="sm" color="orange" /> : 'Save Draft'}
+                  {loadingAction === 'draft' ? <Loader size="sm" color="orange" /> : <Save size={16} />}
+                  <span>Draft</span>
                 </button>
                 <button
                   onClick={() => {
@@ -2167,12 +2215,13 @@ const HomeVerificationPage = () => {
                     confirmAction("Submit for final review?", () => handleSubmit('submitted'));
                   }}
                   disabled={isApiLoading || isReadOnly}
-                  className={`flex-[2] py-3.5 rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-lg flex items-center justify-center gap-2
+                  className={`flex-[1.5] py-1.5 sm:py-3 px-1 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
                     ${!isReadOnly
                       ? 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
                 >
-                  {loadingAction === 'submitted' ? <Loader size="sm" color="white" /> : 'Submit Report'}
+                  {loadingAction === 'submitted' ? <Loader size="sm" color="white" /> : <CheckCircle size={16} />}
+                  <span>Submit</span>
                 </button>
               </div>
             )}
@@ -2218,6 +2267,68 @@ const HomeVerificationPage = () => {
                   className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black rounded-xl shadow-lg shadow-orange-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isApiLoading && loadingAction === 'hold' ? <Loader size="sm" color="white" /> : 'Confirm Hold'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Reject Reason Modal ── */}
+        {isRejectModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in">
+              <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-red-50/50">
+                <h3 className="font-black text-slate-800 flex items-center gap-2 text-sm">
+                  <XCircle size={18} className="text-red-500" />
+                  Reject Verification
+                </h3>
+                <button onClick={() => setIsRejectModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                  <X size={20} className="text-slate-400" />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-xs text-slate-500 mb-4 font-medium leading-relaxed">
+                  Select who opted to reject/cancel this application and provide a short reason.
+                </p>
+                <div className="flex flex-col gap-3 mb-5">
+                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${rejectType === 'student_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
+                    <input type="radio" value="student_rejected" checked={rejectType === 'student_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-4 h-4 accent-red-500" />
+                    <div className="flex-1">
+                      <span className="text-sm font-bold text-slate-700 block text-left">Rejected by Student</span>
+                      <span className="text-[10px] text-slate-500 font-medium block text-left mt-0.5">Student no longer wants to proceed.</span>
+                    </div>
+                  </label>
+                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${rejectType === 'teacher_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
+                    <input type="radio" value="teacher_rejected" checked={rejectType === 'teacher_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-4 h-4 accent-red-500" />
+                    <div className="flex-1">
+                      <span className="text-sm font-bold text-slate-700 block text-left">Rejected by Teacher</span>
+                      <span className="text-[10px] text-slate-500 font-medium block text-left mt-0.5">Form invalid or unverified conditions.</span>
+                    </div>
+                  </label>
+                </div>
+
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block text-left">Reason for Rejection *</label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => {
+                    setRejectReason(e.target.value);
+                    if (e.target.value.trim()) setRejectReasonError('');
+                  }}
+                  placeholder="Type specific reason here..."
+                  className={`w-full p-4 rounded-2xl border ${rejectReasonError ? 'border-red-300 ring-4 ring-red-50' : 'border-slate-200 focus:border-red-400 focus:ring-4 focus:ring-red-50'} transition-all text-sm min-h-[100px] outline-none font-medium text-slate-700`}
+                />
+                {rejectReasonError && <p className="text-red-500 text-[10px] mt-2 font-bold flex items-center gap-1 justify-start"><AlertCircle size={12} /> {rejectReasonError}</p>}
+              </div>
+              <div className="px-6 py-4 bg-slate-50 flex gap-3 justify-end border-t border-slate-100">
+                <button onClick={() => setIsRejectModalOpen(false)} className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReject}
+                  disabled={isApiLoading}
+                  className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black rounded-xl shadow-lg shadow-red-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {(isApiLoading && (loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected')) ? <Loader size="sm" color="white" /> : 'Confirm Reject'}
                 </button>
               </div>
             </div>
