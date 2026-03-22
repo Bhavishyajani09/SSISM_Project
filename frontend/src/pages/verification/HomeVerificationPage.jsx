@@ -34,24 +34,27 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onTo
   };
   const cfg = colorMap[color] || colorMap.indigo;
 
-  // Auto-scroll when opened
+  // User-friendly smart Auto-scroll when opened
   useEffect(() => {
     if (open && cardRef.current) {
       setTimeout(() => {
-        // Offset: 70px for mobile (main header), ~10px for desktop (no top header)
+        // The mobile layout possesses multiple stacked sticky/fixed navigation sections (app header + progress tracker). 
+        // We apply a mathematically guaranteed safe padding offset to prevent aggressive over-scroll jumping.
         const isMobile = window.innerWidth < 1024;
-        const offset = isMobile ? 70 : 20;
+        const safeOffset = isMobile ? 240 : 180; // High safe buffer exactly clears all combined sticky header heights.
 
         const bodyRect = document.body.getBoundingClientRect().top;
         const elementRect = cardRef.current.getBoundingClientRect().top;
         const elementPosition = elementRect - bodyRect;
-        const offsetPosition = elementPosition - offset;
+
+        // Do not jump to negatives. Gently glide into clear view beneath headers.
+        const offsetPosition = Math.max(0, elementPosition - safeOffset);
 
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
         });
-      }, 100);
+      }, 50); // Fast enough to avoid visual delay, slow enough for DOM flush
     }
   }, [open]);
 
@@ -291,7 +294,7 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId, required, isM
                 className="w-full py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white hover:bg-white/30 flex items-center justify-center transition-all shadow-sm"
                 title="Replace from Gallery"
               >
-                <Image size={18} />
+                <ImageIcon size={18} />
               </button>
             </div>
           </div>
@@ -402,7 +405,7 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
                 className="w-full py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white flex items-center justify-center shadow-sm transition-all"
                 title="Replace from Gallery"
               >
-                <Image size={16} />
+                <ImageIcon size={16} />
               </button>
             </div>
           </div>
@@ -452,6 +455,22 @@ const getLoggedInUserName = () => {
 
 // confirmAction utility is now imported from utils/notifications.jsx
 
+// --- Step Definitions ---
+const STEPS = [
+  { id: 'studentInfo', title: 'Student Info', icon: User, color: 'indigo' },
+  { id: 'academic', title: 'Academic', icon: BookOpen, color: 'sky' },
+  { id: 'personal', title: 'Personal', icon: User, color: 'indigo' },
+  { id: 'health', title: 'Health', icon: Heart, color: 'rose' },
+  { id: 'family', title: 'Family', icon: Users, color: 'emerald' },
+  { id: 'income', title: 'Income', icon: FileText, color: 'orange' },
+  { id: 'housing', title: 'Housing', icon: Home, color: 'amber' },
+  { id: 'resources', title: 'Resources', icon: Home, color: 'blue' },
+  { id: 'land', title: 'Land', icon: Tractor, color: 'green' },
+  { id: 'photos', title: 'Photos', icon: Camera, color: 'violet' },
+  { id: 'declaration', title: 'Declaration', icon: FileText, color: 'slate' },
+  { id: 'remarks', title: 'Remarks', icon: AlertCircle, color: 'sky' },
+];
+
 const HomeVerificationPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -483,6 +502,7 @@ const HomeVerificationPage = () => {
     motherSignatureUrl: '',
     supervisorSignatureUrl: '',
     holdReason: '',
+    rejectReason: '',
   });
 
   const [familyMembers, setFamilyMembers] = useState([
@@ -495,12 +515,17 @@ const HomeVerificationPage = () => {
   const [gpsCoords, setGpsCoords] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationAddress, setLocationAddress] = useState('');
-  const [activeSection, setActiveSection] = useState('studentInfo');
-  const [loadingAction, setLoadingAction] = useState(null); // null | 'draft' | 'submitted' | 'teacher_rejected' | 'hold'
+  const [currentStep, setCurrentStep] = useState(0); // 0-indexed
+  const [loadingAction, setLoadingAction] = useState(null);
   const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
   const [holdReason, setHoldReason] = useState('');
   const [holdReasonError, setHoldReasonError] = useState('');
-  
+
+  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [rejectType, setRejectType] = useState('teacher_rejected');
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectReasonError, setRejectReasonError] = useState('');
+
   const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = storedUser.role || 'teacher';
   const isAdmin = userRole === 'admin';
@@ -517,17 +542,63 @@ const HomeVerificationPage = () => {
   }, [form.track]);
 
 
-  const toggleSection = (sectionName) => {
-    setActiveSection(prev => prev === sectionName ? null : sectionName);
+  // Navigation logic
+  const nextStep = () => {
+    if (currentStep < STEPS.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    }
   };
 
-  // Scroll to top on mount or route change
+  const prevStep = () => {
+    if (currentStep > 0) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  const canGoNext = () => {
+    const isVal = (v) => v !== '' && v !== null && v !== undefined;
+    const stepId = STEPS[currentStep].id;
+
+    switch (stepId) {
+      case 'studentInfo':
+        return isVal(form.scholarshipType) && isVal(form.studentId) && isVal(form.studentName) && isVal(form.mobile) && isVal(form.verifierName) && /^\d{10}$/.test(form.mobile);
+      case 'academic':
+        return isVal(form.marks10) && isVal(form.marks11) && isVal(form.collegeExamMarks) && isVal(form.attendance12);
+      case 'personal':
+        return isVal(form.fatherName) && isVal(form.address) && isVal(form.village) && isVal(form.tehsil) && isVal(form.district) && isVal(form.pincode) && /^\d{6}$/.test(form.pincode) && (form.subject12 !== 'Other' || isVal(form.subject12Custom));
+      case 'health':
+        return true;
+      case 'family':
+        return true;
+      case 'income':
+        return isVal(form.totalAnnualIncome) && form.incomeSources && form.incomeSources.length > 0;
+      case 'housing':
+        return isVal(form.houseType) && isVal(form.numRooms) && isVal(form.houseBuilder);
+      case 'resources':
+        return true;
+      case 'land':
+        return true;
+      case 'photos':
+        const requiredPhotos = ["1. Passport size photo", "2. Photo with supervisor", "3. Photo with family", "4. Photo of House"];
+        return requiredPhotos.every(label => form.photos?.some(p => p.label === label && p.url));
+      case 'declaration':
+        return form.studentSignatureUrl && form.supervisorSignatureUrl && (form.fatherSignatureUrl || form.motherSignatureUrl);
+      case 'remarks':
+        return isVal(form.homeVisitMarks) && isVal(form.supervisorRemarks);
+      default:
+        return true;
+    }
+  };
+
+  // Ensure the page drops user gently near top if completely reloading standard
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (location && location.state && location.state.isNew) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    }
   }, [id, location]);
 
-  // Form is locked if submitted, teacher_rejected, rejected, or approved
-  const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'rejected' || status === 'approved';
+  // Form is locked if submitted, teacher_rejected, student_rejected, rejected, or approved
+  const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected' || status === 'rejected' || status === 'approved';
 
   const handleReverseGeocode = async (lat, lng) => {
     try {
@@ -759,6 +830,7 @@ const HomeVerificationPage = () => {
       gpsLat: gpsCoords?.lat,
       gpsLng: gpsCoords?.lng,
       gpsAddress: locationAddress,
+      rejectReason: form.rejectReason,
     };
     console.log('Building payload for backend:', payload);
     return payload;
@@ -770,6 +842,7 @@ const HomeVerificationPage = () => {
       draft: 'Draft Saved Successfully',
       submitted: 'Verification Submitted Successfully',
       teacher_rejected: 'Rejection Recorded',
+      student_rejected: 'Student Rejection Recorded',
       hold: 'Verification On Hold'
     };
     toast.success(labels[actionStatus] || 'Success');
@@ -891,8 +964,8 @@ const HomeVerificationPage = () => {
 
 
   const handleSubmit = async (targetStatus = 'submitted') => {
-    // Strict validation only for final submission or teacher rejection
-    if (targetStatus === 'submitted' || targetStatus === 'teacher_rejected') {
+    // Strict validation only for final submission
+    if (targetStatus === 'submitted') {
       const error = validateHomeVerification();
       if (error) {
         toast.error(`Please complete all fields: ${error}`);
@@ -964,6 +1037,34 @@ const HomeVerificationPage = () => {
     } finally { setIsApiLoading(false); setLoadingAction(null); }
   };
 
+  const handleConfirmReject = async () => {
+    if (!rejectReason.trim()) {
+      setRejectReasonError('Reason is mandatory for rejecting verification.');
+      return;
+    }
+    setIsApiLoading(true); setLoadingAction(rejectType); setApiMsg('');
+
+    setForm(prev => ({ ...prev, rejectReason }));
+    const payload = { ...buildPayload(), status: rejectType, rejectReason };
+
+    try {
+      const path = verificationId ? `/verifications/${verificationId}` : `/verifications`;
+      let res;
+      if (verificationId) {
+        res = await api.put(path, payload);
+      } else {
+        res = await api.post(path, payload);
+      }
+      if (res.data.verification) {
+        setVerificationId(res.data.verification._id);
+        setStatus(rejectType);
+      }
+      showSuccessAndRedirect(rejectType);
+      setIsRejectModalOpen(false);
+    } catch (err) {
+      setApiMsg('Error: ' + err.message);
+    } finally { setIsApiLoading(false); setLoadingAction(null); }
+  };
 
   const handleReject = () => handleSubmit('rejected');
   // NOTE: handleReject kept for potential future use but NOT exposed in teacher form UI.
@@ -974,11 +1075,11 @@ const HomeVerificationPage = () => {
 
   const generatePDF = async () => {
     toast.loading('Finalizing professional layout...', { id: 'pdf-gen' });
-    
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20; 
+    const margin = 20;
     const footerReserved = 25; // Space for "Generated by..."
     const contentWidth = pageWidth - (margin * 2);
     const contentLimitY = pageHeight - footerReserved;
@@ -1017,16 +1118,16 @@ const HomeVerificationPage = () => {
       doc.setFont('helvetica', 'bold');
       doc.text(String(title).toUpperCase(), margin + 11, y + 11);
 
-      const startY = y + 18; 
+      const startY = y + 18;
       y += h + 15; // Move cursor for NEXT block
-      return startY; 
+      return startY;
     };
 
-    const labelW = 40; 
+    const labelW = 40;
     const drawGridRow = (cy, l1, v1, l2, v2) => {
       const col1X = margin + 10;
       const col2X = margin + (contentWidth / 2) + 5;
-      
+
       doc.setFontSize(10);
       doc.setTextColor(...colors.muted);
       doc.setFont('helvetica', 'normal');
@@ -1176,21 +1277,21 @@ const HomeVerificationPage = () => {
 
       // 7. Signature Block (Strictly Kept Together)
       const sigData = await Promise.all([
-        loadImage(form.studentSignatureUrl), 
-        loadImage(form.fatherSignatureUrl || form.motherSignatureUrl), 
+        loadImage(form.studentSignatureUrl),
+        loadImage(form.fatherSignatureUrl || form.motherSignatureUrl),
         loadImage(form.supervisorSignatureUrl)
       ]);
 
       const [sS, sP, sV] = sigData;
-      const sW = 35; 
+      const sW = 35;
       const sHi = 12;
       const colW = contentWidth / 3;
 
       const dS = (x, lab, img) => {
         const cX = x + (colW / 2);
-        if (img) doc.addImage(img, 'JPEG', cX - (sW/2), y - 25, sW, sHi);
+        if (img) doc.addImage(img, 'JPEG', cX - (sW / 2), y - 25, sW, sHi);
         doc.setDrawColor(...colors.divider);
-        doc.line(cX - (sW/2), y - 10, cX + (sW/2), y - 10);
+        doc.line(cX - (sW / 2), y - 10, cX + (sW / 2), y - 10);
         doc.setFontSize(9); doc.setTextColor(...colors.muted);
         doc.text(lab, cX, y - 4, { align: 'center' });
       };
@@ -1210,15 +1311,15 @@ const HomeVerificationPage = () => {
         let px = margin + 5;
         let py = y;
 
-        const pData = await Promise.all(form.photos.map(p => loadImage(p.url).then(img => ({img, lab: p.label}))));
+        const pData = await Promise.all(form.photos.map(p => loadImage(p.url).then(img => ({ img, lab: p.label }))));
         for (let i = 0; i < pData.length; i++) {
-          const {img, lab} = pData[i];
+          const { img, lab } = pData[i];
           if (!img) continue;
           if (py + pH + 25 > contentLimitY) { doc.addPage(); py = margin + 10; }
           doc.setDrawColor(...colors.border);
           doc.rect(px - 1, py - 1, pW + 2, pH + 10, 'S');
           doc.addImage(img, 'JPEG', px, py, pW, pH);
-          doc.setFontSize(8); doc.text(String(lab).toUpperCase(), px + (pW/2), py + pH + 7, {align: 'center'});
+          doc.setFontSize(8); doc.text(String(lab).toUpperCase(), px + (pW / 2), py + pH + 7, { align: 'center' });
           if (i % 2 === 0) { px = margin + contentWidth / 2 + 5; } else { px = margin + 5; py += pH + 20; }
         }
       }
@@ -1260,29 +1361,75 @@ const HomeVerificationPage = () => {
       {label}
     </label>
   );
-
-
-
   return (
     <div className="min-h-screen bg-[#f8fbff] bg-gradient-to-br from-[#f8fbff] to-white font-sans">
 
+      {/* Main Form Container */}
+      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-5 pb-32 transition-all">
 
+        {/* Minimal Sticky Progress Header */}
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 -mx-4 px-4 pt-4 pb-2 mb-6">
+          <div className="flex items-center justify-between mb-4 px-1">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-1.5 -ml-1.5 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 shadow-sm transition-all group flex items-center justify-center cursor-pointer"
+                title="Return to List"
+              >
+                <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+              </button>
+              <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mt-[1px]">
+                Verification Flow
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">
+                Step {currentStep + 1}
+              </span>
+              <span className="h-3 w-[1px] bg-slate-200" />
+              <span className="text-[10px] font-bold text-slate-400">
+                {Math.round(((currentStep + 1) / STEPS.length) * 100)}%
+              </span>
+            </div>
+          </div>
 
-      {/* Form Sections */}
-      <div className="max-w-4xl mx-auto px-4 py-5 space-y-5 pb-6">
+          {/* Truly Ultra-Thin Modern Progress Line */}
+          <div className="relative h-[1.5px] w-full bg-slate-100/40 rounded-full mb-5 mx-0.5 overflow-hidden">
+            <div
+              className="absolute top-0 left-0 h-full bg-orange-500 transition-all duration-1000 ease-in-out rounded-full shadow-[0_0_8px_rgba(249,115,22,0.3)]"
+              style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
+            />
+          </div>
 
-        {/* Combined Info & Action Bar */}
-        <div className="flex flex-wrap items-center gap-3 text-xs">
-          <button
-            onClick={() => navigate('/home-verification')}
-            className="p-2 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-xl border border-slate-200 shadow-sm transition-all group flex items-center justify-center"
-            title="Return to List"
-          >
-            <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
-          </button>
+          {/* Step Dots Indicator Container with Improved Scrollbar */}
+          <div className="flex justify-between items-center px-1 overflow-x-auto gap-4 pb-4 px-1
+            [&::-webkit-scrollbar]:h-[4px]
+            [&::-webkit-scrollbar-track]:bg-slate-50
+            [&::-webkit-scrollbar-thumb]:bg-slate-200
+            [&::-webkit-scrollbar-thumb]:rounded-full
+          ">
+            {STEPS.map((step, idx) => (
+              <button
+                key={step.id}
+                onClick={() => {
+                  setCurrentStep(idx);
+                }}
+                className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300
+                  ${idx === currentStep
+                    ? 'bg-orange-500 text-white shadow-md shadow-orange-100 scale-110'
+                    : idx < currentStep
+                      ? 'bg-orange-50 text-orange-400 hover:bg-orange-100'
+                      : 'bg-slate-50 text-slate-300 hover:bg-slate-100'}`}
+                title={step.title}
+              >
+                <step.icon size={13} strokeWidth={idx === currentStep ? 3 : 2} />
+              </button>
+            ))}
+          </div>
+        </div>
 
-          <div className="h-6 w-px bg-slate-200 mx-1 hidden sm:block" />
-
+        {/* Info & Action Bar */}
+        <div className="flex flex-wrap items-center gap-3 text-xs mb-6 px-1">
           <button
             onClick={captureGPS}
             disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
@@ -1301,7 +1448,6 @@ const HomeVerificationPage = () => {
             </div>
           )}
 
-          {/* Date & Status Group - Stay on same line on mobile */}
           <div className="flex items-center gap-3 lg:ml-auto">
             <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-500 shadow-sm whitespace-nowrap">
               <Clock size={12} className="text-slate-400" />
@@ -1311,41 +1457,29 @@ const HomeVerificationPage = () => {
             {status && (
               <div className={`px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-1.5 whitespace-nowrap ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
                 status === 'submitted' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
-                  status === 'teacher_rejected' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
+                  status === 'teacher_rejected' || status === 'student_rejected' ? 'bg-red-50 border-red-100 text-red-700' :
                     status === 'rejected' ? 'bg-red-50 border-red-100 text-red-700' :
                       status === 'hold' ? 'bg-orange-50 border-orange-100 text-orange-700' :
                         'bg-slate-50 border-slate-200 text-slate-600'
                 }`}>
                 <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${status === 'approved' ? 'bg-emerald-500' :
                   status === 'submitted' ? 'bg-brand-500' :
-                    status === 'teacher_rejected' ? 'bg-orange-500' :
+                    status === 'teacher_rejected' || status === 'student_rejected' ? 'bg-red-500' :
                       status === 'rejected' ? 'bg-red-500' :
                         status === 'hold' ? 'bg-orange-500' :
                           'bg-slate-400'
                   }`} />
                 <span className="text-[9px] font-black uppercase tracking-wider">
-                  {status === 'teacher_rejected' ? 'Teacher Rejected' : status.replace('_', ' ')}
+                  {status === 'teacher_rejected' ? 'Teacher Rejected' : status === 'student_rejected' ? 'Student Rejected' : status.replace('_', ' ')}
                 </span>
               </div>
             )}
           </div>
-
-          {status && (
-            <div className="w-full mt-2 sm:mt-3 px-1">
-              <button
-                onClick={generatePDF}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-brand-200 rounded-xl text-[11px] font-black uppercase tracking-wider text-brand-600 hover:bg-brand-50 transition-all shadow-sm active:scale-95 group"
-              >
-                <FileText size={15} className="text-brand-500" />
-                Download PDF Report
-              </button>
-            </div>
-          )}
         </div>
 
         {/* ── Hold Reason Banner ── */}
         {status === 'hold' && form.holdReason && (
-          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm animate-fade-in">
+          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm animate-fade-in mb-6">
             <div className="p-2 bg-white rounded-xl text-orange-600 shadow-sm">
               <AlertCircle size={18} />
             </div>
@@ -1356,933 +1490,756 @@ const HomeVerificationPage = () => {
           </div>
         )}
 
-        {/* ── Read-Only Banner (Hidden for Admins) ── */}
+        {/* ── Read-Only Banner ── */}
         {!isAdmin && isReadOnly && (
-          <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-sm font-semibold ${status === 'submitted'
+          <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-sm font-semibold mb-6 ${status === 'submitted'
             ? 'bg-blue-50 border-blue-200 text-blue-800'
-            : status === 'rejected'
+            : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected'
               ? 'bg-red-50 border-red-200 text-red-800'
               : 'bg-green-50 border-green-200 text-green-800'
             }`}>
             <span className="text-xl mt-0.5">
-              {status === 'submitted' ? '🔒' : status === 'rejected' ? '🚫' : '✅'}
+              {status === 'submitted' ? '🔒' : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected' ? '🚫' : '✅'}
             </span>
             <div>
               <p className="font-bold">
                 {status === 'submitted' && 'Form Submitted — Awaiting Admin Review'}
                 {status === 'teacher_rejected' && 'Rejected by Teacher'}
+                {status === 'student_rejected' && 'Rejected by Student'}
                 {status === 'rejected' && 'Rejected by Admin'}
                 {status === 'approved' && 'Approved by Admin — Read Only'}
               </p>
-              <p className="text-xs font-normal mt-0.5 opacity-80">
-                {status === 'submitted' && 'This form has been submitted. You cannot edit it until admin takes action.'}
-                {status === 'teacher_rejected' && 'You have rejected this student. Admin can now review it and take final action.'}
-                {status === 'rejected' && 'An admin has reviewed and rejected this verification. Contact the admin for further information.'}
-                {status === 'approved' && 'This verification has been approved by an admin and is now finalized.'}
-              </p>
+              {form.rejectReason && status.includes('rejected') && <p className="text-xs text-red-700/80 font-medium mt-1">Reason: {form.rejectReason}</p>}
             </div>
           </div>
         )}
 
-        {/* Form fields — accordion headers are clickable, content is locked if read-only */}
-        <div className={isReadOnly ? 'select-none' : ''}>
+        {/* Form Sections Area */}
+        <div className={`animate-fade-in-up ${isReadOnly ? 'select-none' : ''} min-h-[65vh]`}>
 
           {/* 1. STUDENT INFORMATION */}
-          <SectionCard
-            icon={User}
-            title="Student Information"
-            color="indigo"
-            open={activeSection === 'studentInfo'}
-            onToggle={() => toggleSection('studentInfo')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Scholarship Type" required>
-                <select name="scholarshipType" value={form.scholarshipType} onChange={handleChange} className={selectCls}>
-                  <option value="">Select Type</option>
-                  <option value="SNS">SNS – Singaji Nivedita Scholarship</option>
-                  <option value="SVS">SVS – Singaji Vivekananda Scholarship</option>
-                </select>
-              </Field>
-              <Field label="Student ID (Roll Number)" required>
-                <input
-                  name="studentId"
-                  value={form.studentId}
-                  onChange={handleChange}
-                  onBlur={(e) => fetchExistingVerification(e.target.value)}
-                  placeholder="e.g. 21001"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="Student Name" required>
-                <input name="studentName" value={form.studentName} onChange={handleChange} placeholder="Full name" className={inputCls} />
-              </Field>
-              <Field label="Mobile Number" required>
-                <input name="mobile" value={form.mobile} onChange={handleChange} placeholder="10-digit number" className={inputCls} type="tel" />
-              </Field>
-              <Field label="Verification Date" required>
-                <input name="verificationDate" value={form.verificationDate} onChange={handleChange} type="date" className={inputCls} />
-              </Field>
-              <Field label="Verifier Name" required>
-                <div className="relative">
+          {currentStep === 0 && (
+            <SectionCard
+              icon={User}
+              title="Student Information"
+              color="indigo"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
+                <Field label="Scholarship Type" required>
+                  <select name="scholarshipType" value={form.scholarshipType} onChange={handleChange} className={selectCls}>
+                    <option value="">Select Type</option>
+                    <option value="SNS">SNS – Singaji Nivedita Scholarship</option>
+                    <option value="SVS">SVS – Singaji Vivekananda Scholarship</option>
+                  </select>
+                </Field>
+                <Field label="Student ID (Roll Number)" required>
                   <input
-                    name="verifierName"
-                    value={form.verifierName}
-                    readOnly
-                    placeholder="Auto-filled from login"
-                    className={`${inputCls} pr-9 bg-slate-100 cursor-not-allowed text-slate-600`}
-                    title="Auto-filled from your logged-in account"
+                    name="studentId"
+                    value={form.studentId}
+                    onChange={handleChange}
+                    onBlur={(e) => fetchExistingVerification(e.target.value)}
+                    placeholder="e.g. 21001"
+                    className={inputCls}
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" title="Read-only">
-                    <Lock size={16} />
-                  </span>
-                </div>
-              </Field>
-            </div>
-          </SectionCard>
+                </Field>
+                <Field label="Student Name" required>
+                  <input name="studentName" value={form.studentName} onChange={handleChange} placeholder="Full name" className={inputCls} />
+                </Field>
+                <Field label="Mobile Number" required>
+                  <input name="mobile" value={form.mobile} onChange={handleChange} placeholder="10-digit number" className={inputCls} type="tel" />
+                </Field>
+                <Field label="Verification Date" required>
+                  <input name="verificationDate" value={form.verificationDate} onChange={handleChange} type="date" className={inputCls} />
+                </Field>
+                <Field label="Verifier Name" required>
+                  <div className="relative">
+                    <input
+                      name="verifierName"
+                      value={form.verifierName}
+                      readOnly
+                      placeholder="Auto-filled from login"
+                      className={`${inputCls} pr-9 bg-slate-100 cursor-not-allowed text-slate-600`}
+                      title="Auto-filled from your logged-in account"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" title="Read-only">
+                      <Lock size={16} />
+                    </span>
+                  </div>
+                </Field>
+              </div>
+            </SectionCard>
+          )}
 
           {/* 2. ACADEMIC DETAILS */}
-          <SectionCard
-            icon={BookOpen}
-            title="Academic Details"
-            color="sky"
-            open={activeSection === 'academic'}
-            onToggle={() => toggleSection('academic')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
-              {[
-                { label: '10th Percentage (Max 100)', name: 'marks10', max: 100 },
-                { label: '11th Percentage (Max 100)', name: 'marks11', max: 100 },
-                { label: 'College Exam Marks (Max 50)', name: 'collegeExamMarks', max: 50 },
-                { label: 'Attendance in 12th (Max 100 %)', name: 'attendance12', max: 100 },
-              ].map(f => (
-                <Field key={f.name} label={f.label}>
-                  <input name={f.name} value={form[f.name]} onChange={handleChange} type="number" min="0" max={f.max} placeholder="0" className={inputCls} />
-                </Field>
-              ))}
-            </div>
-          </SectionCard>
+          {currentStep === 1 && (
+            <SectionCard
+              icon={BookOpen}
+              title="Academic Details"
+              color="sky"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
+                {[
+                  { label: '10th Percentage (Max 100)', name: 'marks10', max: 100 },
+                  { label: '11th Percentage (Max 100)', name: 'marks11', max: 100 },
+                  { label: 'College Exam Marks (Max 50)', name: 'collegeExamMarks', max: 50 },
+                  { label: 'Attendance in 12th (Max 100 %)', name: 'attendance12', max: 100 },
+                ].map(f => (
+                  <Field key={f.name} label={f.label}>
+                    <input name={f.name} value={form[f.name]} onChange={handleChange} type="number" min="0" max={f.max} placeholder="0" className={inputCls} />
+                  </Field>
+                ))}
+              </div>
+            </SectionCard>
+          )}
 
           {/* 3. PERSONAL INFORMATION */}
-          <SectionCard
-            icon={User}
-            title="Personal Information"
-            color="indigo"
-            open={activeSection === 'personal'}
-            onToggle={() => toggleSection('personal')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Father Name" required>
-                <input name="fatherName" value={form.fatherName} onChange={handleChange} placeholder="Father's full name" className={inputCls} />
-              </Field>
-              <Field label="12th School Name">
-                <input name="schoolName" value={form.schoolName} onChange={handleChange} placeholder="School name" className={inputCls} />
-              </Field>
-              <Field label="12th Class Fees (₹)">
-                <input name="classFees12" value={form.classFees12} onChange={handleChange} type="number" placeholder="Annual fees" className={inputCls} />
-              </Field>
-              <Field label="12th Stream">
-                <select
-                  name="subject12"
-                  value={form.subject12}
-                  onChange={handleChange}
-                  className={`${selectCls} ${form.subject12 === 'Other' ? 'focus:ring-0 focus:border-slate-200 opacity-70' : ''}`}
-                >
-                  <option value="">Select Stream</option>
-                  <option value="Maths">Maths</option>
-                  <option value="Commerce">Commerce</option>
-                  <option value="Biology">Biology</option>
-                  <option value="Arts">Arts</option>
-                  <option value="Science">Science</option>
-                  <option value="Other">Other</option>
-                </select>
-                {form.subject12 === 'Other' && (
-                  <input
-                    ref={subjectRef}
-                    name="subject12Custom"
-                    value={form.subject12Custom || ''}
-                    onChange={handleChange}
-                    placeholder="Enter your stream"
-                    className={`${inputCls} mt-2 border-orange-400 ring-2 ring-orange-400/30 shadow-[0_0_10px_rgba(251,146,60,0.2)]`}
-                  />
-                )}
-              </Field>
-              <div className="sm:col-span-2">
-                <Field label="Full Address" required>
-                  <textarea name="address" value={form.address} onChange={handleChange} rows={2} placeholder="House No., Street, Area..." className={textareaCls} />
+          {currentStep === 2 && (
+            <SectionCard
+              icon={User}
+              title="Personal Information"
+              color="indigo"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
+                <Field label="Father Name" required>
+                  <input name="fatherName" value={form.fatherName} onChange={handleChange} placeholder="Father's full name" className={inputCls} />
                 </Field>
-              </div>
-              <Field label="Village">
-                <input name="village" value={form.village} onChange={handleChange} placeholder="Village name" className={inputCls} />
-              </Field>
-              <Field label="Tehsil">
-                <input name="tehsil" value={form.tehsil} onChange={handleChange} placeholder="Tehsil" className={inputCls} />
-              </Field>
-              <Field label="District">
-                <input name="district" value={form.district} onChange={handleChange} placeholder="District" className={inputCls} />
-              </Field>
-              <Field label="Pincode">
-                <input
-                  name="pincode"
-                  value={form.pincode}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, '').slice(0, 6);
-                    setForm(prev => ({ ...prev, pincode: val }));
-                  }}
-                  placeholder="6-digit pincode"
-                  type="text"
-                  inputMode="numeric"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="Track Name">
-                <select
-                  name="track"
-                  value={form.track}
-                  onChange={handleChange}
-                  className={`${selectCls} ${form.track === 'Other' ? 'focus:ring-0 focus:border-slate-200 opacity-70' : ''}`}
-                >
-                  <option value="">Select Track</option>
-                  <option value="Khategaon">Khategaon</option>
-                  <option value="Kannod">Kannod</option>
-                  <option value="Satwas">Satwas</option>
-                  <option value="Gopalpur">Gopalpur</option>
-                  <option value="Narsullaganj">Narsullaganj</option>
-                  <option value="Nemawar">Nemawar</option>
-                  <option value="Harda">Harda</option>
-                  <option value="Timarni">Timarni</option>
-                  <option value="Narmadapuram">Narmadapuram</option>
-                  <option value="Other">Other</option>
-                </select>
-                {form.track === 'Other' && (
-                  <input
-                    ref={trackRef}
-                    name="trackCustom"
-                    value={form.trackCustom || ''}
+                <Field label="12th School Name">
+                  <input name="schoolName" value={form.schoolName} onChange={handleChange} placeholder="School name" className={inputCls} />
+                </Field>
+                <Field label="12th Class Fees (₹)">
+                  <input name="classFees12" value={form.classFees12} onChange={handleChange} type="number" placeholder="Annual fees" className={inputCls} />
+                </Field>
+                <Field label="12th Stream">
+                  <select
+                    name="subject12"
+                    value={form.subject12}
                     onChange={handleChange}
-                    placeholder="Enter track name"
-                    className={`${inputCls} mt-2 border-orange-400 ring-2 ring-orange-400/30 shadow-[0_0_10px_rgba(251,146,60,0.2)]`}
-                  />
-                )}
-              </Field>
-              <Field label="Future Goal">
-                <input name="futureGoal" value={form.futureGoal} onChange={handleChange} placeholder="Career goal" className={inputCls} />
-              </Field>
-              <div className="sm:col-span-2">
-                <label className="text-sm font-semibold text-slate-700 block mb-2">
-                  <div className="flex items-center gap-1.5"><Trophy size={14} className="text-amber-500" /> Any Special Achievements / Awards?</div>
-                </label>
-                <div className="flex gap-6 mb-3">
-                  <RadioItem name="hasAchievements" value="yes" label="Yes" />
-                  <RadioItem name="hasAchievements" value="no" label="No" />
-                </div>
-                {form.hasAchievements === 'yes' && (
-                  <Field label="Describe Achievements">
-                    <textarea
-                      name="achievements"
-                      value={form.achievements}
+                    className={`${selectCls} ${form.subject12 === 'Other' ? 'focus:ring-0 focus:border-slate-200 opacity-70' : ''}`}
+                  >
+                    <option value="">Select Stream</option>
+                    <option value="Maths">Maths</option>
+                    <option value="Commerce">Commerce</option>
+                    <option value="Biology">Biology</option>
+                    <option value="Arts">Arts</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {form.subject12 === 'Other' && (
+                    <input
+                      ref={subjectRef}
+                      name="subject12Custom"
+                      value={form.subject12Custom || ''}
                       onChange={handleChange}
-                      rows={2}
-                      placeholder="E.g. Sports, Academic awards..."
-                      className={textareaCls}
+                      placeholder="Enter your stream"
+                      className={`${inputCls} mt-2 border-orange-400 ring-2 ring-orange-400/30 shadow-[0_0_10px_rgba(251,146,60,0.2)]`}
                     />
+                  )}
+                </Field>
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <Field label="Full Address" required>
+                    <textarea name="address" value={form.address} onChange={handleChange} rows={2} placeholder="House No., Street, Area..." className={textareaCls} />
                   </Field>
-                )}
+                </div>
+                <Field label="Village">
+                  <input name="village" value={form.village} onChange={handleChange} placeholder="Village name" className={inputCls} />
+                </Field>
+                <Field label="Tehsil">
+                  <input name="tehsil" value={form.tehsil} onChange={handleChange} placeholder="Tehsil" className={inputCls} />
+                </Field>
+                <Field label="District">
+                  <input name="district" value={form.district} onChange={handleChange} placeholder="District" className={inputCls} />
+                </Field>
+                <Field label="Pincode">
+                  <input
+                    name="pincode"
+                    value={form.pincode}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                      setForm(prev => ({ ...prev, pincode: val }));
+                    }}
+                    placeholder="6-digit pincode"
+                    type="text"
+                    inputMode="numeric"
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="Track Name">
+                  <select
+                    name="track"
+                    value={form.track}
+                    onChange={handleChange}
+                    className={`${selectCls} ${form.track === 'Other' ? 'focus:ring-0 focus:border-slate-200 opacity-70' : ''}`}
+                  >
+                    <option value="">Select Track</option>
+                    <option value="Khategaon">Khategaon</option>
+                    <option value="Kannod">Kannod</option>
+                    <option value="Satwas">Satwas</option>
+                    <option value="Gopalpur">Gopalpur</option>
+                    <option value="Narsullaganj">Narsullaganj</option>
+                    <option value="Nemawar">Nemawar</option>
+                    <option value="Harda">Harda</option>
+                    <option value="Timarni">Timarni</option>
+                    <option value="Narmadapuram">Narmadapuram</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  {form.track === 'Other' && (
+                    <input
+                      ref={trackRef}
+                      name="trackCustom"
+                      value={form.trackCustom || ''}
+                      onChange={handleChange}
+                      placeholder="Enter track name"
+                      className={`${inputCls} mt-2 border-orange-400 ring-2 ring-orange-400/30 shadow-[0_0_10px_rgba(251,146,60,0.2)]`}
+                    />
+                  )}
+                </Field>
+                <Field label="Future Goal">
+                  <input name="futureGoal" value={form.futureGoal} onChange={handleChange} placeholder="Career goal" className={inputCls} />
+                </Field>
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">
+                    <div className="flex items-center gap-1.5"><Trophy size={14} className="text-amber-500" /> Any Special Achievements / Awards?</div>
+                  </label>
+                  <div className="flex gap-6 mb-3">
+                    <RadioItem name="hasAchievements" value="yes" label="Yes" />
+                    <RadioItem name="hasAchievements" value="no" label="No" />
+                  </div>
+                  {form.hasAchievements === 'yes' && (
+                    <Field label="Describe Achievements">
+                      <textarea
+                        name="achievements"
+                        value={form.achievements}
+                        onChange={handleChange}
+                        rows={2}
+                        placeholder="E.g. Sports, Academic awards..."
+                        className={textareaCls}
+                      />
+                    </Field>
+                  )}
+                </div>
               </div>
-            </div>
-          </SectionCard>
+            </SectionCard>
+          )}
 
           {/* 4. HEALTH INFORMATION */}
-          <SectionCard
-            icon={Heart}
-            title="Health Information"
-            color="rose"
-            open={activeSection === 'health'}
-            onToggle={() => toggleSection('health')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Do you have any illness?">
-                <div className="flex gap-6 pt-1">
-                  <RadioItem name="hasIllness" value="yes" label="Yes" />
-                  <RadioItem name="hasIllness" value="no" label="No" />
-                </div>
-              </Field>
-              {form.hasIllness === 'yes' && (
-                <>
-                  <Field label="Illness Name">
-                    <input name="illnessName" value={form.illnessName} onChange={handleChange} placeholder="Name of illness" className={inputCls} />
-                  </Field>
-                  <Field label="Symptoms">
-                    <input name="symptoms" value={form.symptoms} onChange={handleChange} placeholder="Describe symptoms" className={inputCls} />
-                  </Field>
-                </>
-              )}
-            </div>
-          </SectionCard>
-
-          {/* 5. FAMILY INFORMATION */}
-          <SectionCard
-            icon={Users}
-            title="Family Members Details"
-            color="emerald"
-            open={activeSection === 'family'}
-            onToggle={() => toggleSection('family')}
-            locked={isReadOnly}
-          >
-            <div className="overflow-x-auto rounded-xl border border-slate-200 thin-scrollbar">
-              <table className="w-full text-sm min-w-[600px]">
-                <thead>
-                  <tr className="bg-slate-50 text-slate-600">
-                    {['Name', 'Relation', 'Occupation', 'Income (₹)', 'Mobile', 'Student Class', 'Working?', 'Education', ''].map(h => (
-                      <th key={h} className="px-3 py-2.5 text-left font-semibold text-xs whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {familyMembers.map((m, i) => (
-                    <tr key={i} className="border-t border-slate-100">
-                      <td className="px-2 py-2">
-                        <input value={m.name} onChange={e => updateMember(i, 'name', e.target.value)}
-                          placeholder="Name"
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
-                      </td>
-                      <td className="px-2 py-2">
-                        {['Father', 'Mother', 'Sister', 'Brother', ''].includes(m.relation) ? (
-                          <select value={m.relation} onChange={e => updateMember(i, 'relation', e.target.value)}
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
-                            <option value="">Select Relation</option>
-                            <option value="Father">Father</option>
-                            <option value="Mother">Mother</option>
-                            <option value="Sister">Sister</option>
-                            <option value="Brother">Brother</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        ) : (
-                          <div className="relative group">
-                            <input
-                              value={m.relation === 'Other' ? '' : m.relation}
-                              onChange={e => updateMember(i, 'relation', e.target.value)}
-                              autoFocus
-                              placeholder="Enter Relation"
-                              className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none"
-                            />
-                            <button
-                              onClick={() => updateMember(i, 'relation', '')}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                              title="Back to dropdown"
-                            >
-                              <X size={12} strokeWidth={3} />
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-2 py-2">
-                        {['Labour', 'Farmer', 'Job', 'Student', ''].includes(m.occupation) ? (
-                          <select value={m.occupation} onChange={e => updateMember(i, 'occupation', e.target.value)}
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
-                            <option value="">Select Occupation</option>
-                            <option value="Labour">Labour</option>
-                            <option value="Farmer">Farmer</option>
-                            <option value="Job">Job</option>
-                            <option value="Student">Student</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        ) : (
-                          <div className="relative group">
-                            <input
-                              value={m.occupation === 'Other' ? '' : m.occupation}
-                              onChange={e => updateMember(i, 'occupation', e.target.value)}
-                              autoFocus
-                              placeholder="Enter Occupation"
-                              className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none"
-                            />
-                            <button
-                              onClick={() => updateMember(i, 'occupation', '')}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                              title="Back to dropdown"
-                            >
-                              <X size={12} strokeWidth={3} />
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-2 py-2">
-                        <input value={m.income} onChange={e => updateMember(i, 'income', e.target.value)}
-                          type="number" placeholder="Income"
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input value={m.mobile} onChange={e => updateMember(i, 'mobile', e.target.value)}
-                          placeholder="Mobile"
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
-                      </td>
-                      <td className="px-2 py-2">
-                        <input value={m.currentClass} onChange={e => updateMember(i, 'currentClass', e.target.value)}
-                          placeholder="Class"
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
-                      </td>
-                      <td className="px-2 py-2">
-                        <select value={m.isWorking} onChange={e => updateMember(i, 'isWorking', e.target.value)}
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
-                          <option value="">Select</option>
-                          <option value="Yes">Yes</option>
-                          <option value="No">No</option>
-                        </select>
-                      </td>
-                      <td className="px-2 py-2">
-                        <input value={m.educationLevel} onChange={e => updateMember(i, 'educationLevel', e.target.value)}
-                          placeholder="Edu Level"
-                          className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
-                      </td>
-                      <td className="px-2 py-2">
-                        <button onClick={() => removeFamilyMember(i)} className="text-red-400 hover:text-red-600">
-                          <Trash2 size={15} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <button onClick={addFamilyMember}
-              className="mt-3 flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-800 bg-brand-50/50 hover:bg-brand-50 px-4 py-2 rounded-xl transition-all border border-brand-100">
-              <Plus size={16} /> Add Family Member
-            </button>
-          </SectionCard>
-
-          {/* 6. FAMILY INCOME */}
-          <SectionCard
-            icon={FileText}
-            title="Family Income"
-            color="orange"
-            open={activeSection === 'income'}
-            onToggle={() => toggleSection('income')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Field label="Total Annual Family Income (₹)" required>
-                <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
-              </Field>
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Income Sources</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Farming', 'Labor Work', 'Job', 'Business', 'Government Pension', 'Other'].map(src => (
-                    <CheckItem key={src} name="incomeSources" value={src} label={src} />
-                  ))}
-                </div>
-              </div>
-              {(form.incomeSources || []).includes('Other') && (
-                <Field label="Specify Other Income Source">
-                  <input name="incomeOther" value={form.incomeOther} onChange={handleChange} placeholder="Describe" className={inputCls} />
+          {currentStep === 3 && (
+            <SectionCard
+              icon={Heart}
+              title="Health Information"
+              color="rose"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
+                <Field label="Do you have any illness?">
+                  <div className="flex gap-6 pt-1">
+                    <RadioItem name="hasIllness" value="yes" label="Yes" />
+                    <RadioItem name="hasIllness" value="no" label="No" />
+                  </div>
                 </Field>
-              )}
-              <div className="sm:col-span-2">
-                <Field label="Challenges Faced by Family">
-                  <textarea name="familyChallenges" value={form.familyChallenges} onChange={handleChange} rows={3} placeholder="Describe any major challenges..." className={textareaCls} />
-                </Field>
-              </div>
-            </div>
-          </SectionCard>
-
-          {/* 7. HOUSING CONDITION */}
-          <SectionCard
-            icon={Home}
-            title="Housing Condition"
-            color="amber"
-            open={activeSection === 'housing'}
-            onToggle={() => toggleSection('housing')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Type of House</label>
-                <div className="flex flex-wrap gap-4">
-                  {['Pucca', 'Kaccha', 'Semi Pucca'].map(t => <RadioItem key={t} name="houseType" value={t} label={t} />)}
-                </div>
-              </div>
-              <Field label="Number of Rooms">
-                <input name="numRooms" value={form.numRooms} onChange={handleChange} type="number" min="1" placeholder="e.g. 3" className={inputCls} />
-              </Field>
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Who Built the House?</label>
-                <div className="flex flex-wrap gap-x-6 gap-y-2 mb-3">
-                  <RadioItem name="houseBuilder" value="Self" label="Self" />
-                  <RadioItem name="houseBuilder" value="Government Scheme" label="Government Scheme" />
-                  <RadioItem name="houseBuilder" value="Personal Loan" label="Personal Loan" />
-                  <RadioItem name="houseBuilder" value="Other" label="Other" />
-                </div>
-                {form.houseBuilder === 'Other' && (
-                  <div className="mt-3">
-                    <Field label="Specify Other">
-                      <input
-                        name="houseBuilderOther"
-                        value={form.houseBuilderOther}
-                        onChange={handleChange}
-                        placeholder="Specify who built the house"
-                        className={inputCls}
-                      />
-                    </Field>
-                  </div>
-                )}
-                {form.houseBuilder === 'Government Scheme' && (
-                  <div className="mt-3">
-                    <Field label="Scheme Name">
-                      {['PM Awas Yojana', ''].includes(form.houseSchemeName) ? (
-                        <select
-                          name="houseSchemeName"
-                          value={form.houseSchemeName}
-                          onChange={handleChange}
-                          className={selectCls}
-                        >
-                          <option value="">Select Scheme</option>
-                          <option value="PM Awas Yojana">PM Awas Yojana</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      ) : (
-                        <div className="relative group">
-                          <input
-                            name="houseSchemeName"
-                            value={form.houseSchemeName === 'Other' ? '' : form.houseSchemeName}
-                            onChange={handleChange}
-                            autoFocus
-                            placeholder="Enter Scheme Name"
-                            className={`${inputCls} pr-8 border-orange-400 font-semibold text-orange-700 shadow-[0_0_15px_rgba(251,146,60,0.1)]`}
-                          />
-                          <button
-                            onClick={() => setForm(prev => ({ ...prev, houseSchemeName: '' }))}
-                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors"
-                            title="Back to options"
-                          >
-                            <X size={14} strokeWidth={3} />
-                          </button>
-                        </div>
-                      )}
-                    </Field>
-                  </div>
-                )}
-              </div>
-            </div>
-          </SectionCard>
-
-          {/* 8. HOUSEHOLD RESOURCES & VEHICLES */}
-          <SectionCard
-            icon={Home}
-            title="Household Resources & Vehicles"
-            color="blue"
-            open={activeSection === 'resources'}
-            onToggle={() => toggleSection('resources')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Appliances</label>
-                <div className="flex flex-col gap-2">
-                  {['Refrigerator', 'Washing Machine'].map(a => (
-                    <CheckItem key={a} name="appliances" value={a} label={a} />
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Field label="Number of Vehicles">
-                  <input name="numVehicles" value={form.numVehicles} onChange={handleChange} type="number" min="0" placeholder="0" className={inputCls} />
-                </Field>
-                <label className="text-sm font-semibold text-slate-700 block mt-3 mb-2">Vehicle Types</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {['Bicycle', 'Bike', 'Car', 'Tractor', 'Other'].map(v => (
-                    <CheckItem key={v} name="vehicleTypes" value={v} label={v} />
-                  ))}
-                </div>
-                {(form.vehicleTypes || []).includes('Other') && (
-                  <div className="mt-3 animate-fade-in">
-                    <Field label="Specify Other Vehicle">
-                      <input
-                        name="vehicleTypesOther"
-                        value={form.vehicleTypesOther}
-                        onChange={handleChange}
-                        placeholder="e.g. Rickshaw, Truck..."
-                        className={inputCls}
-                      />
-                    </Field>
-                  </div>
-                )}
-              </div>
-            </div>
-          </SectionCard>
-
-              <SectionCard
-            icon={Tractor}
-            title="Land & Farming Details"
-            color="green"
-            open={activeSection === 'land'}
-            onToggle={() => toggleSection('land')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Field label="Total Land">
-                    <input name="totalLand" value={form.totalLand} onChange={handleChange} type="number" placeholder="Amount" className={inputCls} />
-                  </Field>
-                </div>
-                <div className="w-28 mt-auto">
-                  <select name="landUnit" value={form.landUnit} onChange={handleChange} className={selectCls}>
-                    <option>Acre</option>
-                    <option>Bigha</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Ownership</label>
-                <div className="flex gap-5">
-                  <RadioItem name="landOwnership" value="Personal Land" label="Personal" />
-                  <RadioItem name="landOwnership" value="Family Land" label="Family" />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Land Type</label>
-                <div className="flex gap-5">
-                  <RadioItem name="landType" value="Irrigated" label="Irrigated" />
-                  <RadioItem name="landType" value="Non Irrigated" label="Non Irrigated" />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-semibold text-slate-700 block mb-2">Irrigation Source</label>
-                <div className="grid grid-cols-2 gap-1">
-                  {['Tube Well', 'Canal', 'Rain Based', 'Well', 'Other'].map(s => (
-                    <RadioItem key={s} name="irrigationSource" value={s} label={s} />
-                  ))}
-                </div>
-                {form.irrigationSource === 'Other' && (
-                  <div className="mt-3 animate-fade-in">
-                    <Field label="Specify Other Source">
-                      <input
-                        name="irrigationSourceOther"
-                        value={form.irrigationSourceOther}
-                        onChange={handleChange}
-                        placeholder="Specify source"
-                        className={inputCls}
-                      />
-                    </Field>
-                  </div>
-                )}
-              </div>
-
-              <div className="sm:col-span-2 pt-4 border-t border-slate-100">
-                <label className="text-sm font-semibold text-slate-700 block mb-3">Livestock</label>
-                <div className="flex flex-wrap gap-x-8 gap-y-4">
-                  {['Cow', 'Buffalo', 'Goat', 'Other'].map(v => {
-                    const existing = (form.livestock || []).find(l => l.name === v);
-                    const otherSelected = v === 'Other' && (form.livestockOtherCount !== '' && form.livestockOtherCount !== '0');
-                    const isSelected = v === 'Other' ? otherSelected : (!!existing && existing.count > 0);
-                    const currentCount = v === 'Other' ? form.livestockOtherCount : (existing ? existing.count : '');
-                    
-                    return (
-                      <div key={v} className="flex items-center gap-2">
-                        <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                if (v === 'Other') {
-                                  setForm(prev => ({ ...prev, livestockOtherCount: '1', livestockOther: '' }));
-                                } else {
-                                  let newList = [...(form.livestock || [])];
-                                  const idx = newList.findIndex(l => l.name === v);
-                                  if (idx >= 0) newList[idx].count = '1';
-                                  else newList.push({ name: v, count: '1' });
-                                  setForm(prev => ({ ...prev, livestock: newList }));
-                                }
-                              } else {
-                                if (v === 'Other') {
-                                  setForm(prev => ({ ...prev, livestockOther: '', livestockOtherCount: '' }));
-                                } else {
-                                  let newList = (form.livestock || []).filter(l => l.name !== v);
-                                  setForm(prev => ({ ...prev, livestock: newList }));
-                                }
-                              }
-                            }}
-                            className="w-4 h-4 accent-orange-600 rounded"
-                          />
-                          {v}
-                        </label>
-                        
-                        {isSelected && (
-                          <div className="flex items-center gap-1.5 animate-fade-in whitespace-nowrap">
-                            <span className="text-slate-400 text-sm">(</span>
-                            {v === 'Other' && (
-                              <input
-                                name="livestockOther"
-                                value={form.livestockOther || ''}
-                                onChange={handleChange}
-                                placeholder="Type"
-                                className="w-16 px-1 py-0.5 rounded border border-slate-200 text-[10px] focus:outline-none focus:border-slate-400 text-slate-700"
-                              />
-                            )}
-                            <input
-                              type="number"
-                              min="1"
-                              value={currentCount || ''}
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (v === 'Other') {
-                                  setForm(prev => ({ ...prev, livestockOtherCount: val }));
-                                } else {
-                                  let newList = (form.livestock || []).map(l => 
-                                    l.name === v ? { ...l, count: val } : l
-                                  );
-                                  setForm(prev => ({ ...prev, livestock: newList }));
-                                }
-                              }}
-                              placeholder="0"
-                              className="w-10 px-1 py-0.5 rounded border border-slate-200 text-[10px] focus:outline-none focus:border-slate-400 text-slate-700 text-center"
-                            />
-                            <span className="text-slate-400 text-sm">)</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard
-            icon={Camera}
-            title="Photo Documentation"
-            color="violet"
-            open={activeSection === 'photos'}
-            onToggle={() => toggleSection('photos')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
-              <PhotoUpload studentId={form.studentId} id="photo1" label="1. Passport size photo" onUpload={(url) => handlePhotoUpload("1. Passport size photo", url)} previewUrl={getPhotoPreview("1. Passport size photo")} />
-              <PhotoUpload studentId={form.studentId} id="photo2" label="2. Photo with supervisor" onUpload={(url) => handlePhotoUpload("2. Photo with supervisor", url)} previewUrl={getPhotoPreview("2. Photo with supervisor")} />
-              <PhotoUpload studentId={form.studentId} id="photo3" label="3. Photo with family" onUpload={(url) => handlePhotoUpload("3. Photo with family", url)} previewUrl={getPhotoPreview("3. Photo with family")} />
-              <PhotoUpload
-                studentId={form.studentId}
-                id="photo4"
-                label="4. Photo of House"
-                required={true}
-                isMissing={!getPhotoPreview("4. Photo of House")}
-                onUpload={(url) => handlePhotoUpload("4. Photo of House", url)}
-                previewUrl={getPhotoPreview("4. Photo of House")}
-              />
-              <PhotoUpload studentId={form.studentId} id="photo-add-more" label="5. Other photos" onUpload={(url) => handlePhotoUpload("Other photos", url)} previewUrl={null} />
-            </div>
-
-            {/* Display list of uploaded "Other photos" */}
-            {(form.photos || []).filter(p => p.label.includes("Other")).length > 0 && (
-              <div className="mt-6 border-t border-slate-100 pt-6">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1 block mb-3">Uploaded Other Photos</span>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                  {(form.photos || []).filter(p => p.label.includes("Other")).map((p, idx) => (
-                    <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm bg-slate-50">
-                      <img src={p.url} alt="Other document" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removePhoto(p.url)}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600 active:scale-95"
-                        title="Delete Photo"
-                      >
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-          </SectionCard>
-
-          {/* 11. DECLARATION */}
-          <SectionCard
-            icon={FileText}
-            title="Declaration"
-            color="slate"
-            open={activeSection === 'declaration'}
-            onToggle={() => toggleSection('declaration')}
-            locked={isReadOnly}
-          >
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 leading-relaxed italic mb-4">
-              "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <SignatureField studentId={form.studentId} label="Student Signature" onUpload={url => handleChange({ target: { name: 'studentSignatureUrl', value: url } })} previewUrl={form.studentSignatureUrl} />
-              <SignatureField studentId={form.studentId} label="Father Signature" onUpload={url => handleChange({ target: { name: 'fatherSignatureUrl', value: url } })} previewUrl={form.fatherSignatureUrl} />
-              <SignatureField studentId={form.studentId} label="Mother Signature" onUpload={url => handleChange({ target: { name: 'motherSignatureUrl', value: url } })} previewUrl={form.motherSignatureUrl} />
-              <SignatureField studentId={form.studentId} label="Supervisor Signature" onUpload={url => handleChange({ target: { name: 'supervisorSignatureUrl', value: url } })} previewUrl={form.supervisorSignatureUrl} />
-            </div>
-          </SectionCard>
-
-          {/* 12. SUPERVISOR REMARKS */}
-          <SectionCard
-            icon={AlertCircle}
-            title="Evaluation & Remarks"
-            color="sky"
-            open={activeSection === 'remarks'}
-            onToggle={() => toggleSection('remarks')}
-            locked={isReadOnly}
-          >
-            <div className="grid grid-cols-1 gap-5">
-              <Field label="Home Visit Marks (Max 50)">
-                <div className="flex items-center gap-3">
-                  <input
-                    name="homeVisitMarks"
-                    value={form.homeVisitMarks}
-                    onChange={handleChange}
-                    type="number"
-                    min="0"
-                    max="50"
-                    placeholder="0"
-                    className={`${inputCls} max-w-[120px] font-bold text-brand-600 text-lg`}
-                  />
-                  <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">/ 50 Points</span>
-                </div>
-              </Field>
-
-              <Field label="Supervisor Remarks">
-                <textarea name="supervisorRemarks" value={form.supervisorRemarks} onChange={handleChange}
-                  rows={4} placeholder="e.g. Home verification accepted. Family conditions verified..." className={textareaCls} />
-              </Field>
-            </div>
-          </SectionCard>
-
-        </div>{/* end form fields wrapper */}
-
-        {/* Action Buttons — at end of form */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 sm:p-5 space-y-3">
-          <h3 className="text-sm font-bold text-slate-700">Form Actions</h3>
-
-
-          {apiMsg && (
-            <p className={`text-xs font-semibold text-center py-2 px-3 rounded-xl ${apiMsg.startsWith('Error') ? 'text-red-600 bg-red-50 border border-red-100' : 'text-green-700 bg-green-50 border border-green-100'
-              }`}>{apiMsg}</p>
-          )}
-
-          {/* Action buttons — only when form is editable (new or draft) */}
-          {!isReadOnly ? (
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <button
-                onClick={handleSave}
-                disabled={isApiLoading}
-                className="w-full sm:flex-1 flex items-center justify-center py-2.5 sm:py-3 bg-slate-50/50 backdrop-blur-md border border-slate-200 text-slate-600 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl hover:bg-white hover:border-slate-300 hover:shadow-lg active:scale-95 transition-all duration-300 disabled:opacity-50"
-              >
-                {loadingAction === 'draft' ? <Loader size="sm" color="orange" /> : 'Draft'}
-              </button>
-
-              <button
-                onClick={() => setIsHoldModalOpen(true)}
-                disabled={isApiLoading}
-                className="w-full sm:flex-1 flex items-center justify-center py-2.5 sm:py-3 bg-orange-50/30 border border-orange-100 text-orange-600 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl transition-all duration-300 hover:bg-orange-50 hover:border-orange-200 hover:shadow-[0_0_20px_rgba(249,115,22,0.1)] active:scale-95 disabled:opacity-50"
-              >
-                {loadingAction === 'hold' ? <Loader size="sm" color="orange" /> : 'Hold'}
-              </button>
-
-              <button
-                onClick={() => {
-                  const error = validateHomeVerification();
-                  if (error) {
-                    toast.error(`Please complete all fields: ${error}`);
-                    setApiMsg('');
-                    return;
-                  }
-                  confirmAction(
-                    "Submit for final review?",
-                    () => handleSubmit('submitted')
-                  );
-                }}
-                disabled={isApiLoading}
-                className="w-full sm:flex-1 order-first sm:order-none flex items-center justify-center gap-2 py-2.5 sm:py-3 bg-gradient-to-r from-orange-500 to-rose-500 text-white text-[11px] sm:text-sm font-black rounded-xl sm:rounded-2xl transition-all shadow-[0_10px_40px_-10px_rgba(249,115,22,0.5)] hover:shadow-[0_15px_50px_-10px_rgba(249,115,22,0.6)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 uppercase tracking-wider"
-              >
-                {loadingAction === 'submitted' ? <Loader size="sm" color="white" /> : (
+                {form.hasIllness === 'yes' && (
                   <>
-                    <Send size={16} className="sm:size-18 transform -rotate-12 group-hover:rotate-0 transition-transform" />
-                    Submit
+                    <Field label="Illness Name">
+                      <input name="illnessName" value={form.illnessName} onChange={handleChange} placeholder="Name of illness" className={inputCls} />
+                    </Field>
+                    <Field label="Symptoms">
+                      <input name="symptoms" value={form.symptoms} onChange={handleChange} placeholder="Describe symptoms" className={inputCls} />
+                    </Field>
                   </>
                 )}
-              </button>
+              </div>
+            </SectionCard>
+          )}
 
+          {/* 5. FAMILY INFORMATION */}
+          {currentStep === 4 && (
+            <SectionCard
+              icon={Users}
+              title="Family Members Details"
+              color="emerald"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="overflow-x-auto rounded-xl border border-slate-200 thin-scrollbar">
+                <table className="w-full text-sm min-w-[600px]">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-600">
+                      {['Name', 'Relation', 'Occupation', 'Income (₹)', 'Mobile', ''].map(h => (
+                        <th key={h} className="px-3 py-2.5 text-left font-semibold text-xs">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {familyMembers.map((m, i) => (
+                      <tr key={i} className="border-t border-slate-100">
+                        <td className="px-2 py-2">
+                          <input value={m.name} onChange={e => updateMember(i, 'name', e.target.value)}
+                            placeholder="Name"
+                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                        </td>
+                        <td className="px-2 py-2">
+                          {['Father', 'Mother', 'Sister', 'Brother', ''].includes(m.relation) ? (
+                            <select value={m.relation} onChange={e => updateMember(i, 'relation', e.target.value)}
+                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
+                              <option value="">Select Relation</option>
+                              <option value="Father">Father</option>
+                              <option value="Mother">Mother</option>
+                              <option value="Sister">Sister</option>
+                              <option value="Brother">Brother</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          ) : (
+                            <div className="relative group">
+                              <input
+                                value={m.relation === 'Other' ? '' : m.relation}
+                                onChange={e => updateMember(i, 'relation', e.target.value)}
+                                autoFocus
+                                placeholder="Enter Relation"
+                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none"
+                              />
+                              <button
+                                onClick={() => updateMember(i, 'relation', '')}
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                                title="Back to dropdown"
+                              >
+                                <X size={12} strokeWidth={3} />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-2 py-2">
+                          {['Labour', 'Farmer', 'Job', 'Student', ''].includes(m.occupation) ? (
+                            <select value={m.occupation} onChange={e => updateMember(i, 'occupation', e.target.value)}
+                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400 cursor-pointer">
+                              <option value="">Select Occupation</option>
+                              <option value="Labour">Labour</option>
+                              <option value="Farmer">Farmer</option>
+                              <option value="Job">Job</option>
+                              <option value="Student">Student</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          ) : (
+                            <div className="relative group">
+                              <input
+                                value={m.occupation === 'Other' ? '' : m.occupation}
+                                onChange={e => updateMember(i, 'occupation', e.target.value)}
+                                autoFocus
+                                placeholder="Enter Occupation"
+                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none"
+                              />
+                              <button
+                                onClick={() => updateMember(i, 'occupation', '')}
+                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                                title="Back to dropdown"
+                              >
+                                <X size={12} strokeWidth={3} />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                        <td className="px-2 py-2">
+                          <input value={m.income} onChange={e => updateMember(i, 'income', e.target.value)}
+                            type="number" placeholder="Income"
+                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                        </td>
+                        <td className="px-2 py-2">
+                          <input value={m.mobile} onChange={e => updateMember(i, 'mobile', e.target.value)}
+                            placeholder="Mobile"
+                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                        </td>
+                        <td className="px-2 py-2">
+                          <button onClick={() => removeFamilyMember(i)} className="text-red-400 hover:text-red-600">
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <button onClick={addFamilyMember}
+                className="mt-3 flex items-center gap-2 text-sm font-semibold text-brand-600 hover:text-brand-800 bg-brand-50/50 hover:bg-brand-50 px-4 py-2 rounded-xl transition-all border border-brand-100">
+                <Plus size={16} /> Add Family Member
+              </button>
+            </SectionCard>
+          )}
+
+          {/* 6. FAMILY INCOME */}
+          {currentStep === 5 && (
+            <SectionCard
+              icon={FileText}
+              title="Family Income"
+              color="orange"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
+                <Field label="Total Annual Family Income (₹)" required>
+                  <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
+                </Field>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Income Sources</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Farming', 'Labor Work', 'Job', 'Business', 'Government Pension', 'Other'].map(src => (
+                      <CheckItem key={src} name="incomeSources" value={src} label={src} />
+                    ))}
+                  </div>
+                </div>
+                {(form.incomeSources || []).includes('Other') && (
+                  <Field label="Specify Other Income Source">
+                    <input name="incomeOther" value={form.incomeOther} onChange={handleChange} placeholder="Describe" className={inputCls} />
+                  </Field>
+                )}
+                <div className="sm:col-span-2 lg:col-span-3">
+                  <Field label="Challenges Faced by Family">
+                    <textarea name="familyChallenges" value={form.familyChallenges} onChange={handleChange} rows={3} placeholder="Describe any major challenges..." className={textareaCls} />
+                  </Field>
+                </div>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* 7. HOUSING CONDITION */}
+          {currentStep === 6 && (
+            <SectionCard
+              icon={Home}
+              title="Housing Condition"
+              color="amber"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Type of House</label>
+                  <div className="flex flex-wrap gap-4">
+                    {['Pucca', 'Kaccha', 'Semi Pucca'].map(t => <RadioItem key={t} name="houseType" value={t} label={t} />)}
+                  </div>
+                </div>
+                <Field label="Number of Rooms">
+                  <input name="numRooms" value={form.numRooms} onChange={handleChange} type="number" min="1" placeholder="e.g. 3" className={inputCls} />
+                </Field>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Who Built the House?</label>
+                  <div className="flex flex-wrap gap-x-6 gap-y-2 mb-3">
+                    <RadioItem name="houseBuilder" value="Self" label="Self" />
+                    <RadioItem name="houseBuilder" value="Government Scheme" label="Government Scheme" />
+                  </div>
+                  {form.houseBuilder === 'Government Scheme' && (
+                    <div className="mt-3">
+                      <Field label="Scheme Name">
+                        {['PM Awas Yojana', ''].includes(form.houseSchemeName) ? (
+                          <select
+                            name="houseSchemeName"
+                            value={form.houseSchemeName}
+                            onChange={handleChange}
+                            className={selectCls}
+                          >
+                            <option value="">Select Scheme</option>
+                            <option value="PM Awas Yojana">PM Awas Yojana</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        ) : (
+                          <div className="relative group">
+                            <input
+                              name="houseSchemeName"
+                              value={form.houseSchemeName === 'Other' ? '' : form.houseSchemeName}
+                              onChange={handleChange}
+                              autoFocus
+                              placeholder="Enter Scheme Name"
+                              className={`${inputCls} pr-8 border-orange-400 font-semibold text-orange-700 shadow-[0_0_15px_rgba(251,146,60,0.1)]`}
+                            />
+                            <button
+                              onClick={() => setForm(prev => ({ ...prev, houseSchemeName: '' }))}
+                              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 transition-colors"
+                              title="Back to options"
+                            >
+                              <X size={14} strokeWidth={3} />
+                            </button>
+                          </div>
+                        )}
+                      </Field>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* 8. HOUSEHOLD RESOURCES & VEHICLES */}
+          {currentStep === 7 && (
+            <SectionCard
+              icon={Home}
+              title="Household Resources & Vehicles"
+              color="blue"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 xl:gap-6">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Appliances</label>
+                  <div className="flex flex-col gap-2">
+                    {['Refrigerator', 'Washing Machine', 'Air Conditioner'].map(a => (
+                      <CheckItem key={a} name="appliances" value={a} label={a} />
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Field label="Number of Vehicles">
+                    <input name="numVehicles" value={form.numVehicles} onChange={handleChange} type="number" min="0" placeholder="0" className={inputCls} />
+                  </Field>
+                  <label className="text-sm font-semibold text-slate-700 block mt-3 mb-2">Vehicle Types</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Bicycle', 'Bike', 'Car', 'Tractor', 'Other'].map(v => (
+                      <CheckItem key={v} name="vehicleTypes" value={v} label={v} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* 9. LAND & FARMING DETAILS */}
+          {currentStep === 8 && (
+            <SectionCard
+              icon={Tractor}
+              title="Land & Farming Details"
+              color="green"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 xl:gap-6">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Field label="Total Land">
+                      <input name="totalLand" value={form.totalLand} onChange={handleChange} type="number" placeholder="Amount" className={inputCls} />
+                    </Field>
+                  </div>
+                  <div className="w-28 mt-auto">
+                    <select name="landUnit" value={form.landUnit} onChange={handleChange} className={selectCls}>
+                      <option>Acre</option>
+                      <option>Bigha</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Ownership</label>
+                  <div className="flex gap-5">
+                    <RadioItem name="landOwnership" value="Personal Land" label="Personal" />
+                    <RadioItem name="landOwnership" value="Family Land" label="Family" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Land Type</label>
+                  <div className="flex gap-5">
+                    <RadioItem name="landType" value="Irrigated" label="Irrigated" />
+                    <RadioItem name="landType" value="Non Irrigated" label="Non Irrigated" />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Irrigation Source</label>
+                  <div className="grid grid-cols-2 gap-1">
+                    {['Tube Well', 'Canal', 'Rain Based', 'Well', 'Other'].map(s => (
+                      <RadioItem key={s} name="irrigationSource" value={s} label={s} />
+                    ))}
+                  </div>
+                </div>
+                <div className="sm:col-span-2 lg:col-span-4">
+                  <label className="text-sm font-semibold text-slate-700 block mb-2">Livestock</label>
+                  <div className="flex flex-wrap gap-5">
+                    {['Cow', 'Buffalo', 'Goat', 'Other'].map(l => (
+                      <CheckItem key={l} name="livestock" value={l} label={l} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+          )}
+
+          {/* 10. PHOTO DOCUMENTATION */}
+          {currentStep === 9 && (
+            <SectionCard
+              icon={Camera}
+              title="Photo Documentation"
+              color="violet"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 sm:gap-6">
+                <PhotoUpload studentId={form.studentId} id="photo1" label="1. Passport size photo" onUpload={(url) => handlePhotoUpload("1. Passport size photo", url)} previewUrl={getPhotoPreview("1. Passport size photo")} />
+                <PhotoUpload studentId={form.studentId} id="photo2" label="2. Photo with supervisor" onUpload={(url) => handlePhotoUpload("2. Photo with supervisor", url)} previewUrl={getPhotoPreview("2. Photo with supervisor")} />
+                <PhotoUpload studentId={form.studentId} id="photo3" label="3. Photo with family" onUpload={(url) => handlePhotoUpload("3. Photo with family", url)} previewUrl={getPhotoPreview("3. Photo with family")} />
+                <PhotoUpload
+                  studentId={form.studentId}
+                  id="photo4"
+                  label="4. Photo of House"
+                  required={true}
+                  isMissing={!getPhotoPreview("4. Photo of House")}
+                  onUpload={(url) => handlePhotoUpload("4. Photo of House", url)}
+                  previewUrl={getPhotoPreview("4. Photo of House")}
+                />
+                <PhotoUpload studentId={form.studentId} id="photo-add-more" label="5. Other photos" onUpload={(url) => handlePhotoUpload("Other photos", url)} previewUrl={null} />
+              </div>
+
+              {/* Display list of uploaded "Other photos" */}
+              {(form.photos || []).filter(p => p.label.includes("Other")).length > 0 && (
+                <div className="mt-6 border-t border-slate-100 pt-6">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1 block mb-3">Uploaded Other Photos</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                    {(form.photos || []).filter(p => p.label.includes("Other")).map((p, idx) => (
+                      <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm bg-slate-50">
+                        <img src={p.url} alt="Other document" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(p.url)}
+                          className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600 active:scale-95"
+                          title="Delete Photo"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+            </SectionCard>
+          )}
+
+          {/* 11. DECLARATION */}
+          {currentStep === 10 && (
+            <SectionCard
+              icon={FileText}
+              title="Declaration"
+              color="slate"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 leading-relaxed italic mb-4">
+                "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <SignatureField studentId={form.studentId} label="Student Signature" onUpload={url => handleChange({ target: { name: 'studentSignatureUrl', value: url } })} previewUrl={form.studentSignatureUrl} />
+                <SignatureField studentId={form.studentId} label="Father Signature" onUpload={url => handleChange({ target: { name: 'fatherSignatureUrl', value: url } })} previewUrl={form.fatherSignatureUrl} />
+                <SignatureField studentId={form.studentId} label="Mother Signature" onUpload={url => handleChange({ target: { name: 'motherSignatureUrl', value: url } })} previewUrl={form.motherSignatureUrl} />
+                <SignatureField studentId={form.studentId} label="Supervisor Signature" onUpload={url => handleChange({ target: { name: 'supervisorSignatureUrl', value: url } })} previewUrl={form.supervisorSignatureUrl} />
+              </div>
+            </SectionCard>
+          )}
+
+          {/* 12. EVALUATION & REMARKS */}
+          {currentStep === 11 && (
+            <SectionCard
+              icon={AlertCircle}
+              title="Evaluation & Remarks"
+              color="sky"
+              open={true}
+              onToggle={() => { }}
+              locked={isReadOnly}
+            >
+              <div className="grid grid-cols-1 gap-5">
+                <Field label="Home Visit Marks (Max 50)">
+                  <div className="flex items-center gap-3">
+                    <input
+                      name="homeVisitMarks"
+                      value={form.homeVisitMarks}
+                      onChange={handleChange}
+                      type="number"
+                      min="0"
+                      max="50"
+                      placeholder="0"
+                      className={`${inputCls} max-w-[120px] font-bold text-brand-600 text-lg`}
+                    />
+                    <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">/ 50 Points</span>
+                  </div>
+                </Field>
+
+                <Field label="Supervisor Remarks">
+                  <textarea name="supervisorRemarks" value={form.supervisorRemarks} onChange={handleChange}
+                    rows={4} placeholder="e.g. Home verification accepted. Family conditions verified..." className={textareaCls} />
+                </Field>
+              </div>
+            </SectionCard>
+          )}
+
+        </div>{/* end form sections area */}
+
+        {/* Persistent Bottom Navigation */}
+        <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+          <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex gap-2 sm:gap-4 transition-all pb-2">
+            {currentStep > 0 && (
               <button
                 onClick={() => {
-                  confirmAction(
-                    "Reject this verification?",
-                    () => handleSubmit('teacher_rejected')
-                  );
+                  setCurrentStep(prev => prev - 1);
                 }}
-                disabled={isApiLoading}
-                className="w-full sm:flex-1 flex items-center justify-center py-2.5 sm:py-3 bg-red-50/30 border border-red-100 text-red-500 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl transition-all duration-300 hover:bg-red-50 hover:border-red-200 hover:shadow-[0_0_20px_rgba(239,68,68,0.1)] active:scale-95 disabled:opacity-50"
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl sm:rounded-2xl hover:bg-slate-200 active:scale-95 transition-all text-[9.5px] sm:text-sm uppercase tracking-wider shrink-0 ${currentStep === STEPS.length - 1 ? 'w-14 sm:w-auto px-1 sm:px-6' : 'flex-1'}`}
               >
-                {loadingAction === 'teacher_rejected' ? <Loader size="sm" color="red" /> : 'Reject'}
+                <ArrowLeft size={currentStep === STEPS.length - 1 ? 16 : 18} />
+                <span>Back</span>
               </button>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {/* Locked state notice (Hidden for Admins) */}
-              {!isAdmin && (
-                <div className={`flex flex-col items-center justify-center gap-3 py-6 px-4 rounded-3xl text-sm font-bold border-2 animate-fade-in ${status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-800' :
-                  status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-50 border-red-100 text-red-800' :
-                    'bg-green-50 border-green-100 text-green-800'
-                  }`}>
-                  <div className={`p-3 rounded-2xl ${status === 'submitted' ? 'bg-blue-100 text-blue-600' :
-                    status === 'teacher_rejected' || status === 'rejected' ? 'bg-red-100 text-red-600' :
-                      'bg-green-100 text-green-600'
-                    }`}>
-                    {status === 'submitted' ? <Clock size={24} className="animate-pulse" /> : status === 'approved' ? <CheckCircle size={24} /> : <XCircle size={24} />}
-                  </div>
-                  <div className="text-center">
-                    <p className="uppercase tracking-widest text-[10px] opacity-60 mb-1">Current Record Status</p>
-                    <p className="text-lg tracking-tight">{
-                      status === 'submitted' ? 'Awaiting Admin Review' :
-                        status === 'teacher_rejected' ? 'Rejected by Teacher' :
-                          status === 'rejected' ? 'Rejected by Administrator' :
-                            'Approved & Finalized'
-                    }</p>
-                    <p className="text-xs font-medium opacity-60 mt-1">{
-                      status === 'submitted' ? 'Form is locked for editing during review.' :
-                        status === 'approved' ? 'Record is authorized and completed.' :
-                          'This student has been rejected for scholarship.'
-                    }</p>
-                  </div>
-                </div>
-              )}
+            )}
 
-              {/* ── Admin Action Buttons (Visible only to Admins on Submitted/Teacher Rejected records) ── */}
-              {isAdmin && (status === 'submitted' || status === 'teacher_rejected') && (
-                <div className="flex flex-col sm:flex-row gap-3 pt-2 animate-fade-in">
-                  <button
-                    onClick={() => confirmAction("Reject this verification?", () => handleSubmit('rejected'))}
-                    disabled={isApiLoading}
-                    className="w-full sm:flex-1 flex items-center justify-center py-3 bg-white text-red-600 border border-red-200 rounded-2xl font-bold hover:bg-red-50 hover:border-red-300 shadow-sm transition-all active:scale-[0.98] disabled:opacity-50"
-                  >
-                    {loadingAction === 'rejected' ? <Loader size="sm" color="red" /> : (
-                      <>
-                        <XCircle size={18} className="mr-2" />
-                        Reject Verification
-                      </>
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => confirmAction("Approve this verification?", () => handleSubmit('approved'))}
-                    disabled={isApiLoading}
-                    className="w-full sm:flex-1 flex items-center justify-center py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl font-black shadow-lg shadow-emerald-200 hover:shadow-emerald-300 hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-50 uppercase tracking-wider"
-                  >
-                    {loadingAction === 'approved' ? <Loader size="sm" color="white" /> : (
-                      <>
-                        <CheckCircle size={18} className="mr-2" />
-                        Approve & Finalize
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+            {currentStep < STEPS.length - 1 ? (
+              <button
+                onClick={() => {
+                  setCurrentStep(prev => prev + 1);
+                }}
+                className="flex-[2] py-3.5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-orange-200 hover:shadow-orange-300 active:scale-95"
+              >
+                Next Step
+                <ChevronRight size={18} />
+              </button>
+            ) : (
+              <div className="flex-[3] flex gap-2 w-full">
+                <button
+                  onClick={() => setIsRejectModalOpen(true)}
+                  disabled={isApiLoading || isReadOnly}
+                  className="flex-1 py-1.5 sm:py-3 px-1 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl sm:rounded-2xl hover:bg-red-100 active:scale-95 transition-all text-[9px] sm:text-xs uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                >
+                  {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="sm" color="red" /> : <XCircle size={16} />}
+                  <span>Reject</span>
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={isApiLoading || isReadOnly}
+                  className="flex-1 py-1.5 sm:py-3 px-1 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl sm:rounded-2xl hover:bg-slate-50 active:scale-95 transition-all text-[9px] sm:text-xs uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                >
+                  {loadingAction === 'draft' ? <Loader size="sm" color="orange" /> : <Save size={16} />}
+                  <span>Draft</span>
+                </button>
+                <button
+                  onClick={() => {
+                    const error = validateHomeVerification();
+                    if (error) { toast.error(error); return; }
+                    confirmAction("Submit for final review?", () => handleSubmit('submitted'));
+                  }}
+                  disabled={isApiLoading || isReadOnly}
+                  className={`flex-[1.5] py-1.5 sm:py-3 px-1 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
+                    ${!isReadOnly
+                      ? 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
+                >
+                  {loadingAction === 'submitted' ? <Loader size="sm" color="white" /> : <CheckCircle size={16} />}
+                  <span>Submit</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ── Hold Reason Modal ── */}
@@ -2329,6 +2286,69 @@ const HomeVerificationPage = () => {
             </div>
           </div>
         )}
+
+        {/* ── Reject Reason Modal ── */}
+        {isRejectModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in">
+              <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-red-50/50">
+                <h3 className="font-black text-slate-800 flex items-center gap-2 text-sm">
+                  <XCircle size={18} className="text-red-500" />
+                  Reject Verification
+                </h3>
+                <button onClick={() => setIsRejectModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                  <X size={20} className="text-slate-400" />
+                </button>
+              </div>
+              <div className="p-6">
+                <p className="text-xs text-slate-500 mb-4 font-medium leading-relaxed">
+                  Select who opted to reject/cancel this application and provide a short reason.
+                </p>
+                <div className="flex flex-col gap-3 mb-5">
+                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${rejectType === 'student_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
+                    <input type="radio" value="student_rejected" checked={rejectType === 'student_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-4 h-4 accent-red-500" />
+                    <div className="flex-1">
+                      <span className="text-sm font-bold text-slate-700 block text-left">Rejected by Student</span>
+                      <span className="text-[10px] text-slate-500 font-medium block text-left mt-0.5">Student no longer wants to proceed.</span>
+                    </div>
+                  </label>
+                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${rejectType === 'teacher_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
+                    <input type="radio" value="teacher_rejected" checked={rejectType === 'teacher_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-4 h-4 accent-red-500" />
+                    <div className="flex-1">
+                      <span className="text-sm font-bold text-slate-700 block text-left">Rejected by Teacher</span>
+                      <span className="text-[10px] text-slate-500 font-medium block text-left mt-0.5">Form invalid or unverified conditions.</span>
+                    </div>
+                  </label>
+                </div>
+
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block text-left">Reason for Rejection *</label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => {
+                    setRejectReason(e.target.value);
+                    if (e.target.value.trim()) setRejectReasonError('');
+                  }}
+                  placeholder="Type specific reason here..."
+                  className={`w-full p-4 rounded-2xl border ${rejectReasonError ? 'border-red-300 ring-4 ring-red-50' : 'border-slate-200 focus:border-red-400 focus:ring-4 focus:ring-red-50'} transition-all text-sm min-h-[100px] outline-none font-medium text-slate-700`}
+                />
+                {rejectReasonError && <p className="text-red-500 text-[10px] mt-2 font-bold flex items-center gap-1 justify-start"><AlertCircle size={12} /> {rejectReasonError}</p>}
+              </div>
+              <div className="px-6 py-4 bg-slate-50 flex gap-3 justify-end border-t border-slate-100">
+                <button onClick={() => setIsRejectModalOpen(false)} className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmReject}
+                  disabled={isApiLoading}
+                  className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white text-xs font-black rounded-xl shadow-lg shadow-red-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {(isApiLoading && (loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected')) ? <Loader size="sm" color="white" /> : 'Confirm Reject'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

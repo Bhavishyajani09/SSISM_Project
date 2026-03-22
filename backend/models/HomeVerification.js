@@ -24,13 +24,14 @@ const homeVerificationSchema = new mongoose.Schema({
   verificationDate: { type: Date, default: Date.now },
   status: {
     type: String,
-    enum: ['draft', 'teacher_rejected', 'submitted', 'approved', 'rejected', 'hold'],
+    enum: ['draft', 'teacher_rejected', 'student_rejected', 'submitted', 'approved', 'rejected', 'hold'],
     default: 'draft'
   },
   gpsLat: { type: Number },
   gpsLng: { type: Number },
   gpsAddress: { type: String, trim: true },
   holdReason: { type: String, trim: true },
+  rejectReason: { type: String, trim: true },
 
   // --- Verification Info ---
   scholarshipType: {

@@ -60,7 +60,8 @@ export default function TeacherDashboard() {
     submitted:        { label: 'Submitted',        bg: 'bg-blue-100 text-blue-700 border-blue-200',        dot: 'bg-blue-400' },
     approved:         { label: 'Approved',         bg: 'bg-green-100 text-green-700 border-green-200',     dot: 'bg-green-400' },
     rejected:         { label: 'Admin Rejected',   bg: 'bg-red-100 text-red-700 border-red-200',           dot: 'bg-red-400' },
-    teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-orange-100 text-orange-700 border-orange-200', dot: 'bg-orange-400' },
+    teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-red-100 text-red-700 border-red-200',     dot: 'bg-red-400' },
+    student_rejected: { label: 'Student Rejected', bg: 'bg-red-100 text-red-700 border-red-200',     dot: 'bg-red-400' },
   };
 
   function StatusBadge({ status }) {

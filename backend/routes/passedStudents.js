@@ -107,7 +107,7 @@ router.get('/', auth, async (req, res) => {
         // Filter by Status if not 'all'
         if (status !== 'all') {
             if (status === 'rejected') {
-                pipeline.push({ $match: { currentStatus: { $in: ['rejected', 'teacher_rejected'] } } });
+                pipeline.push({ $match: { currentStatus: { $in: ['rejected', 'teacher_rejected', 'student_rejected'] } } });
             } else {
                 pipeline.push({ $match: { currentStatus: status } });
             }
