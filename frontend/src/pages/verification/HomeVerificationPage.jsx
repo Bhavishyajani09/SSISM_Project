@@ -484,10 +484,17 @@ const HomeVerificationPage = () => {
     village: '', tehsil: '', district: '', pincode: '', track: '', trackCustom: '', futureGoal: '',
     attendance12: '', hasIllness: 'no', illnessName: '', symptoms: '',
     totalAnnualIncome: '', familyChallenges: '', familyMembers: [],
-    houseType: '', numRooms: '', houseBuilder: '', houseSchemeName: '',
-    appliances: [], numVehicles: '', vehicleTypes: [],
-    totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '',
-    livestock: [], supervisorRemarks: '',
+    houseType: '', numRooms: '', houseBuilder: '', houseBuilderOther: '', houseSchemeName: '',
+    appliances: [], numVehicles: '', vehicleTypes: [], vehicleTypesOther: '',
+    totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '', irrigationSourceOther: '',
+    livestock: [
+      { name: 'Cow', count: '' },
+      { name: 'Buffalo', count: '' },
+      { name: 'Goat', count: '' }
+    ],
+    livestockOther: '',
+    livestockOtherCount: '',
+    supervisorRemarks: '',
     hasAchievements: 'no', achievements: '',
     photos: [],
     studentSignatureUrl: '',
@@ -499,7 +506,7 @@ const HomeVerificationPage = () => {
   });
 
   const [familyMembers, setFamilyMembers] = useState([
-    { name: '', relation: '', occupation: '', income: '', mobile: '' }
+    { name: '', relation: '', occupation: '', income: '', mobile: '', currentClass: '', isWorking: '', educationLevel: '' }
   ]);
   const [status, setStatus] = useState(null);
   const [verificationId, setVerificationId] = useState(null);
@@ -672,7 +679,19 @@ const HomeVerificationPage = () => {
           village: s.villageTown || '',
           district: s.district || '',
           collegeExamMarks: s.scholarshipExamMarks || '',
+          schoolName: s.schoolName12th || '',
+          classFees12: (s.classFees12th !== undefined && s.classFees12th !== null) ? s.classFees12th : '',
+          marks10: (s.marks10 !== undefined && s.marks10 !== null) ? s.marks10 : '',
+          marks11: (s.marks11 !== undefined && s.marks11 !== null) ? s.marks11 : '',
         }));
+
+        const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts', 'Science'];
+        const regStream = (s.stream12th || s.subjectIn12th || '').trim();
+        if (regStream && !streamOptions.includes(regStream)) {
+          setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: regStream }));
+        } else {
+          setForm(prev => ({ ...prev, subject12: regStream, subject12Custom: '' }));
+        }
 
         const trackOptions = ['Khategaon', 'Kannod', 'Satwas', 'Gopalpur', 'Narsullaganj', 'Nemawar', 'Harda', 'Timarni', 'Narmadapuram'];
         const regTrack = (s.busTrack || '').trim();
@@ -682,13 +701,6 @@ const HomeVerificationPage = () => {
           setForm(prev => ({ ...prev, track: regTrack, trackCustom: '' }));
         }
 
-        const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts'];
-        const regStream = (s.subjectIn12th || '').trim();
-        if (regStream && !streamOptions.includes(regStream)) {
-          setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: regStream }));
-        } else {
-          setForm(prev => ({ ...prev, subject12: regStream, subject12Custom: '' }));
-        }
         setApiMsg('');
       }
     } catch (err) {
@@ -715,7 +727,7 @@ const HomeVerificationPage = () => {
 
             if (formData.pincode === -1 || formData.pincode === '-1') formData.pincode = '';
             setForm(prev => ({ ...prev, ...formData }));
-            const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts'];
+            const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts', 'Science'];
             const dbStream = (formData.subject12 || '').trim();
             if (dbStream && !streamOptions.includes(dbStream)) {
               setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: dbStream }));
@@ -770,7 +782,7 @@ const HomeVerificationPage = () => {
     }
   };
 
-  const addFamilyMember = () => setFamilyMembers(prev => [...prev, { name: '', relation: '', occupation: '', income: '', mobile: '' }]);
+  const addFamilyMember = () => setFamilyMembers(prev => [...prev, { name: '', relation: '', occupation: '', income: '', mobile: '', currentClass: '', isWorking: '', educationLevel: '' }]);
   const removeFamilyMember = (i) => setFamilyMembers(prev => prev.filter((_, idx) => idx !== i));
   const updateMember = (i, field, value) => setFamilyMembers(prev => prev.map((m, idx) => idx === i ? { ...m, [field]: value } : m));
 
@@ -1234,10 +1246,10 @@ const HomeVerificationPage = () => {
       autoTable(doc, {
         startY: fcy + 2,
         margin: { left: margin + 10, right: margin + 10, bottom: footerReserved },
-        head: [['Member Name', 'Relation', 'Occupation', 'Annual Income']],
+        head: [['Member Name', 'Relation', 'Occupation', 'Income', 'Class', 'Edu']],
         headStyles: { fillColor: [255, 255, 255], textColor: colors.muted },
-        body: (familyMembers || []).map(m => [m.name, m.relation, m.occupation, `Rs. ${m.income}`]),
-        styles: { fontSize: 10, cellPadding: 6 },
+        body: (familyMembers || []).map(m => [m.name, m.relation, m.occupation, `Rs. ${m.income}`, m.currentClass || '-', m.educationLevel || '-']),
+        styles: { fontSize: 9, cellPadding: 4 },
         alternateRowStyles: { fillColor: [255, 247, 237] }
       });
 
@@ -1249,7 +1261,9 @@ const HomeVerificationPage = () => {
 
       let ly = drawCard(35, 'Land & Farming');
       ly = drawGridRow(ly, 'Total Land:', `${form.totalLand || 0} ${form.landUnit}`, 'Ownership:', form.landOwnership);
-      ly = drawGridRow(ly, 'Irrigation:', form.irrigationSource, 'Livestock:', (form.livestock || []).slice(0, 2).join(', '));
+      const otherStr = form.livestockOther ? `${form.livestockOther}${form.livestockOtherCount ? `(${form.livestockOtherCount})` : ''}` : '';
+      const liveStr = [...(form.livestock || []).filter(l => l.count > 0).map(l => `${l.name}(${l.count})`), otherStr].filter(Boolean).join(', ');
+      ly = drawGridRow(ly, 'Irrigation:', form.irrigationSource === 'Other' ? form.irrigationSourceOther : form.irrigationSource, 'Livestock:', liveStr || 'None');
 
       // 6. Supervisor Remarks (Protected Section)
       const sigH = 60; // Keep space for signatures too

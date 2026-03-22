@@ -37,6 +37,28 @@ const passedStudentSchema = new mongoose.Schema({
         trim: true,
         default: '',
     },
+    schoolName12th: {
+        type: String,
+        trim: true,
+        default: '',
+    },
+    stream12th: {
+        type: String,
+        trim: true,
+        default: '',
+    },
+    classFees12th: {
+        type: Number,
+        default: 0,
+    },
+    marks10: {
+        type: Number,
+        default: 0,
+    },
+    marks11: {
+        type: Number,
+        default: 0,
+    },
     villageTown: {
         type: String,
         trim: true,
