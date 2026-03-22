@@ -11,7 +11,12 @@ exports.saveVerification = async (req, res) => {
     }
 
     const existing = await HomeVerification.findOne({ studentId });
-    const data = { ...req.body, status: req.body.status || 'draft' };
+    const data = { 
+      ...req.body, 
+      status: req.body.status || 'draft',
+      verifierId: req.user.id,
+      verifierName: req.user.name || req.user.email?.split('@')[0] || 'Unknown'
+    };
 
     // Strict Location Handling: Prevent overwriting existing GPS data
     if (existing && (existing.gpsLat || existing.gpsLng)) {
@@ -69,7 +74,12 @@ exports.submitVerification = async (req, res) => {
     const { id } = req.params;
     const existing = await HomeVerification.findById(id);
     const targetStatus = req.body.status || 'submitted';
-    const updateData = { ...req.body, status: targetStatus };
+    const updateData = { 
+      ...req.body, 
+      status: targetStatus,
+      verifierId: req.user.id,
+      verifierName: req.user.name || req.user.email?.split('@')[0] || 'Unknown' 
+    };
 
     // Strict Location Handling: Prevent overwriting existing GPS data
     if (existing && (existing.gpsLat || existing.gpsLng)) {

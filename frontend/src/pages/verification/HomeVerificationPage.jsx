@@ -819,6 +819,7 @@ const HomeVerificationPage = () => {
       gpsLng: gpsCoords?.lng,
       gpsAddress: locationAddress,
       rejectReason: form.rejectReason,
+      verifierId: (JSON.parse(localStorage.getItem('user') || '{}')).id,
     };
     console.log('Building payload for backend:', payload);
     return payload;

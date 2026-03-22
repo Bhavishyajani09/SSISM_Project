@@ -42,6 +42,113 @@ const COLUMN_MAP = {
 
 const { auth, adminOnly } = require('../middleware/auth');
 
+// ─── GET dashboard stats ──────────────────────────────────────────────────
+router.get('/stats', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const userRole = req.user.role;
+
+        // 1. Total Students
+        const total = await PassedStudent.countDocuments();
+        console.log(`[Stats Debug] User: ${userId}, Role: ${userRole}, Total Students DB: ${total}`);
+
+        // 2. Status counts (Aggregation)
+        const statusAggregation = await PassedStudent.aggregate([
+            {
+                $lookup: {
+                    from: 'homeverifications',
+                    localField: 'rollNumber',
+                    foreignField: 'studentId',
+                    as: 'verification'
+                }
+            },
+            { $addFields: { verification: { $arrayElemAt: ['$verification', 0] } } },
+            { $addFields: { currentStatus: { $ifNull: ['$verification.status', 'pending'] } } },
+            { $group: { _id: '$currentStatus', count: { $sum: 1 } } }
+        ]);
+
+        const statusCounts = {};
+        statusAggregation.forEach(item => { statusCounts[item._id] = item.count; });
+
+        // 3. Submitted By Me (for teachers)
+        let submittedByMe = 0;
+        if (userRole === 'teacher') {
+            submittedByMe = await HomeVerification.countDocuments({
+                verifierId: userId,
+                status: 'submitted'
+            });
+        } else {
+            submittedByMe = statusCounts['submitted'] || 0;
+        }
+
+        // 4. District stats (top 5 for charts)
+        const locationStats = await PassedStudent.aggregate([
+            { $group: { _id: '$district', count: { $sum: 1 } } },
+            { $match: { _id: { $ne: null, $ne: '' } } },
+            { $sort: { count: -1 } },
+            { $limit: 8 }
+        ]);
+
+        // 5. Recent Activity (last 10 updates)
+        const recentActivity = await HomeVerification.find()
+            .sort({ updatedAt: -1 })
+            .limit(10)
+            .select('studentName status updatedAt studentId');
+
+        // 6. Attention Needed metrics
+        const fiveDaysAgo = new Date();
+        fiveDaysAgo.setDate(fiveDaysAgo.getDate() - 5);
+
+        const drafts = statusCounts['draft'] || 0;
+        const rejected = (statusCounts['rejected'] || 0) + (statusCounts['teacher_rejected'] || 0) + (statusCounts['student_rejected'] || 0);
+
+        // Calculate pending older than 5 days (no verification record + older than 5 days)
+        // Note: addedAt is the field in PassedStudent
+        const olderThan5DaysRes = await PassedStudent.aggregate([
+            {
+                $lookup: {
+                    from: 'homeverifications',
+                    localField: 'rollNumber',
+                    foreignField: 'studentId',
+                    as: 'verification'
+                }
+            },
+            { $match: { verification: { $size: 0 }, addedAt: { $lt: fiveDaysAgo } } },
+            { $count: 'count' }
+        ]);
+
+        const approvedCount = statusCounts['approved'] || 0;
+        const submittedCount = statusCounts['submitted'] || 0;
+        const pendingCount = statusCounts['pending'] || 0;
+
+        console.log(`[Stats Debug] Returning stats - Total: ${total}, Approved: ${approvedCount}, Pending: ${pendingCount}`);
+
+        res.json({
+            success: true,
+            stats: {
+                total,
+                submittedByMe,
+                approved: approvedCount,
+                pending: pendingCount,
+                rejected,
+                drafts,
+                olderThan5Days: (olderThan5DaysRes[0]?.count || 0),
+                completionRate: total ? Math.round(((total - pendingCount - drafts) / total) * 100) : 0,
+                approvalRate: (submittedCount + approvedCount) > 0 
+                  ? Math.round((approvedCount / (submittedCount + approvedCount)) * 100) 
+                  : 0
+            },
+            locationStats: locationStats.map(loc => [loc._id, loc.count]),
+            recentActivity
+        });
+
+    } catch (error) {
+        console.error('Dashboard stats error:', error);
+        res.status(500).json({ success: false, message: 'Server error fetching dashboard metrics.' });
+    }
+});
+
+
 // ─── GET all passed students ────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
     try {

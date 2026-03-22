@@ -70,4 +70,4 @@ passedStudentSchema.index({ serialNumber: 1 });
 passedStudentSchema.index({ studentName: 1 });
 passedStudentSchema.index({ district: 1 });
 
-module.exports = mongoose.model('PassedStudent', passedStudentSchema);
+module.exports = mongoose.model('PassedStudent', passedStudentSchema, 'passedstudents');
