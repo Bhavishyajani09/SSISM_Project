@@ -689,19 +689,28 @@ const HomeVerificationPage = () => {
         }));
 
         const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts', 'Science'];
-        const regStream = (s.stream12th || s.subjectIn12th || '').trim();
-        if (regStream && !streamOptions.includes(regStream)) {
-          setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: regStream }));
+        const trackOptions = ['Khategaon', 'Kannod', 'Satwas', 'Gopalpur', 'Narsullaganj', 'Nemawar', 'Harda', 'Timarni', 'Narmadapuram'];
+
+        const rawStream = (s.stream12th || s.subjectIn12th || '').trim();
+        const streamMatch = streamOptions.find(opt => opt.toLowerCase() === rawStream.toLowerCase());
+        if (streamMatch) {
+          setForm(prev => ({ ...prev, subject12: streamMatch, subject12Custom: '' }));
+        } else if (rawStream) {
+          setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: rawStream }));
         } else {
-          setForm(prev => ({ ...prev, subject12: regStream, subject12Custom: '' }));
+          setForm(prev => ({ ...prev, subject12: '', subject12Custom: '' }));
         }
 
-        const trackOptions = ['Khategaon', 'Kannod', 'Satwas', 'Gopalpur', 'Narsullaganj', 'Nemawar', 'Harda', 'Timarni', 'Narmadapuram'];
-        const regTrack = (s.busTrack || '').trim();
-        if (regTrack && !trackOptions.includes(regTrack)) {
-          setForm(prev => ({ ...prev, track: 'Other', trackCustom: regTrack }));
+        const rawTrack = (s.busTrack || '').trim();
+        const trackCorrections = { 'khategoar': 'Khategaon', 'khategoan': 'Khategaon' };
+        const currentTrack = trackCorrections[rawTrack.toLowerCase()] || rawTrack;
+        const trackMatch = trackOptions.find(opt => opt.toLowerCase() === currentTrack.toLowerCase());
+        if (trackMatch) {
+          setForm(prev => ({ ...prev, track: trackMatch, trackCustom: '' }));
+        } else if (rawTrack) {
+          setForm(prev => ({ ...prev, track: 'Other', trackCustom: rawTrack }));
         } else {
-          setForm(prev => ({ ...prev, track: regTrack, trackCustom: '' }));
+          setForm(prev => ({ ...prev, track: '', trackCustom: '' }));
         }
 
         setApiMsg('');
@@ -731,19 +740,23 @@ const HomeVerificationPage = () => {
             if (formData.pincode === -1 || formData.pincode === '-1') formData.pincode = '';
             setForm(prev => ({ ...prev, ...formData }));
             const streamOptions = ['Maths', 'Commerce', 'Biology', 'Arts', 'Science'];
-            const dbStream = (formData.subject12 || '').trim();
-            if (dbStream && !streamOptions.includes(dbStream)) {
-              setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: dbStream }));
-            } else {
-              setForm(prev => ({ ...prev, subject12: dbStream, subject12Custom: '' }));
+            const rawStream = (formData.subject12 || '').trim();
+            const streamMatch = streamOptions.find(opt => opt.toLowerCase() === rawStream.toLowerCase());
+            if (streamMatch) {
+              setForm(prev => ({ ...prev, subject12: streamMatch, subject12Custom: '' }));
+            } else if (rawStream) {
+              setForm(prev => ({ ...prev, subject12: 'Other', subject12Custom: rawStream }));
             }
 
             const trackOptions = ['Khategaon', 'Kannod', 'Satwas', 'Gopalpur', 'Narsullaganj', 'Nemawar', 'Harda', 'Timarni', 'Narmadapuram'];
-            const dbTrack = (formData.track || '').trim();
-            if (dbTrack && !trackOptions.includes(dbTrack)) {
-              setForm(prev => ({ ...prev, track: 'Other', trackCustom: dbTrack }));
-            } else {
-              setForm(prev => ({ ...prev, track: dbTrack, trackCustom: '' }));
+            const rawTrack = (formData.track || '').trim();
+            const trackCorrections = { 'khategoar': 'Khategaon', 'khategoan': 'Khategaon' };
+            const currentTrack = trackCorrections[rawTrack.toLowerCase()] || rawTrack;
+            const trackMatch = trackOptions.find(opt => opt.toLowerCase() === currentTrack.toLowerCase());
+            if (trackMatch) {
+              setForm(prev => ({ ...prev, track: trackMatch, trackCustom: '' }));
+            } else if (rawTrack) {
+              setForm(prev => ({ ...prev, track: 'Other', trackCustom: rawTrack }));
             }
             if (fm) setFamilyMembers(fm);
             setStatus(data.verification.status);
@@ -1643,6 +1656,7 @@ const HomeVerificationPage = () => {
                     <option value="Commerce">Commerce</option>
                     <option value="Biology">Biology</option>
                     <option value="Arts">Arts</option>
+                    <option value="Science">Science</option>
                     <option value="Other">Other</option>
                   </select>
                   {form.subject12 === 'Other' && (
