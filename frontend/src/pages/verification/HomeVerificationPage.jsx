@@ -187,7 +187,10 @@ const HomeVerificationPage = () => {
   }, [id, location]);
 
   // Form is locked if submitted, teacher_rejected, student_rejected, rejected, or approved
-  const isReadOnly = status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected' || status === 'rejected' || status === 'approved';
+  // Admin can edit in 'submitted' state
+  const isReadOnly = isAdmin 
+    ? (status === 'approved' || status === 'rejected')
+    : (status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected' || status === 'rejected' || status === 'approved');
 
   const handleReverseGeocode = useCallback(async (lat, lng) => {
     try {
@@ -1229,37 +1232,55 @@ const HomeVerificationPage = () => {
               </button>
             ) : (
               <div className="flex-[3] flex gap-2 w-full">
-                <button
-                  onClick={() => setIsRejectModalOpen(true)}
-                  disabled={isApiLoading || isReadOnly}
-                  className="flex-1 py-1 sm:py-2 px-0.5 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
-                >
-                  {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="xs" color="red" /> : <XCircle size={12} sm:size={14} />}
-                  <span>Reject</span>
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isApiLoading || isReadOnly}
-                  className="flex-1 py-1 sm:py-2 px-0.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
-                >
-                  {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : <Save size={12} sm:size={14} />}
-                  <span>Draft</span>
-                </button>
-                <button
-                  onClick={() => {
-                    const error = validateHomeVerification();
-                    if (error) { toast.error(error); return; }
-                    confirmAction("Submit for final review?", () => handleSubmit('submitted'));
-                  }}
-                  disabled={isApiLoading || isReadOnly}
-                  className={`flex-[1.5] py-1 sm:py-2 px-0.5 rounded-xl font-black text-[8px] sm:text-[10px] uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
-                    ${!isReadOnly
-                      ? 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
-                      : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
-                >
-                  {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : <CheckCircle size={12} sm:size={14} />}
-                  <span>Submit</span>
-                </button>
+                {(isAdmin && (status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected')) ? (
+                  <button
+                    onClick={() => {
+                      const error = validateHomeVerification();
+                      if (error) { toast.error(error); return; }
+                      const label = status === 'submitted' ? "Save changes and keep as Submitted?" : "Resubmit this record to 'Submitted' status?";
+                      confirmAction(label, () => handleSubmit('submitted'));
+                    }}
+                    disabled={isApiLoading}
+                    className="flex-1 py-1 sm:py-2 px-0.5 bg-brand-500 text-white font-black rounded-xl hover:bg-brand-600 active:scale-95 transition-all text-[8px] sm:text-[10px] uppercase tracking-wider shadow-md flex flex-col sm:flex-row items-center justify-center gap-1"
+                  >
+                    {isApiLoading ? <Loader size="xs" color="white" /> : <Save size={12} sm:size={14} />}
+                    <span>{status === 'submitted' ? 'Update Record' : 'Shift to Submitted'}</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsRejectModalOpen(true)}
+                      disabled={isApiLoading || isReadOnly}
+                      className="flex-1 py-1 sm:py-2 px-0.5 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                    >
+                      {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="xs" color="red" /> : <XCircle size={12} sm:size={14} />}
+                      <span>Reject</span>
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={isApiLoading || isReadOnly}
+                      className="flex-1 py-1 sm:py-2 px-0.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                    >
+                      {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : <Save size={12} sm:size={14} />}
+                      <span>Draft</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const error = validateHomeVerification();
+                        if (error) { toast.error(error); return; }
+                        confirmAction("Submit for final review?", () => handleSubmit('submitted'));
+                      }}
+                      disabled={isApiLoading || isReadOnly}
+                      className={`flex-[1.5] py-1 sm:py-2 px-0.5 rounded-xl font-black text-[8px] sm:text-[10px] uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
+                        ${!isReadOnly
+                          ? 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
+                          : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
+                    >
+                      {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : <CheckCircle size={12} sm:size={14} />}
+                      <span>Submit</span>
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>
