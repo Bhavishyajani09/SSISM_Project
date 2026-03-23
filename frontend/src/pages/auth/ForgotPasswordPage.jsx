@@ -79,7 +79,7 @@ const ForgotPasswordPage = () => {
              Scholarship <br /> Verification Portal
            </h1>
            <h2 className="text-xl lg:text-2xl font-semibold text-orange-50 mb-8 border-b border-orange-300 pb-4 inline-block drop-shadow-sm">
-             Sant Singaji Institute, Sandalpur
+             Sant Singaji Educational Society, Sandalpur
            </h2>
            <p className="text-base lg:text-lg text-orange-50/90 max-w-lg mx-auto leading-relaxed font-normal tracking-wide bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm shadow-sm">
              {step === 1 ? 'Ensuring help reaches the right hands. Reset your password to continue your vital work.' : 'Verify your identity using the OTP sent to your registered email.'}
@@ -93,7 +93,7 @@ const ForgotPasswordPage = () => {
             <div className="w-20 h-20 rounded-full flex items-center justify-center overflow-hidden shadow-lg mb-3 border-4 border-white bg-white">
                <img src={ssismLogo} alt="Institute Logo" className="w-full h-full object-cover" />
             </div>
-            <h2 className="text-xl font-bold text-slate-800">Sant Singaji Institute</h2>
+            <h2 className="text-xl font-bold text-slate-800">Sant Singaji Educational Society</h2>
         </div>
 
         <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10 z-10 mt-16 lg:mt-0 border border-slate-100">
