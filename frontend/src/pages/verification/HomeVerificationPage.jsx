@@ -604,9 +604,9 @@ const HomeVerificationPage = () => {
         return isVal(form.scholarshipType) && isVal(form.studentId) && isVal(form.studentName) && isVal(form.mobile) && isVal(form.verifierName) && /^\d{10}$/.test(form.mobile);
       case 'academic':
         return isVal(form.marks10) && parseFloat(form.marks10) <= 100 &&
-               isVal(form.marks11) && parseFloat(form.marks11) <= 100 &&
-               isVal(form.collegeExamMarks) && parseFloat(form.collegeExamMarks) <= 50 &&
-               isVal(form.attendance12) && parseFloat(form.attendance12) <= 100;
+          isVal(form.marks11) && parseFloat(form.marks11) <= 100 &&
+          isVal(form.collegeExamMarks) && parseFloat(form.collegeExamMarks) <= 50 &&
+          isVal(form.attendance12) && parseFloat(form.attendance12) <= 100;
       case 'personal':
         return isVal(form.fatherName) && isVal(form.address) && isVal(form.village) && isVal(form.tehsil) && isVal(form.district) && isVal(form.pincode) && /^\d{6}$/.test(form.pincode) && (form.subject12 !== 'Other' || isVal(form.subject12Custom));
       case 'health':
@@ -839,7 +839,7 @@ const HomeVerificationPage = () => {
         const num = parseFloat(val);
         const minVal = parseFloat(min);
         const maxVal = parseFloat(max);
-        
+
         if (!isNaN(minVal) && num < minVal) val = min;
         if (!isNaN(maxVal) && num > maxVal) val = max;
       }
