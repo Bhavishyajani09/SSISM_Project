@@ -139,7 +139,7 @@ export default function VerificationListPage() {
               : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
               }`}
           >
-            <Icon size={14} className={statusFilter === key ? 'text-brand-500' : 'text-slate-400'} />
+            <Icon size={14} strokeWidth={1.5} className={statusFilter === key ? 'text-brand-500' : 'text-slate-400'} />
             {label}
           </button>
         ))}
@@ -147,7 +147,7 @@ export default function VerificationListPage() {
 
       <div className="flex flex-col sm:flex-row gap-4 mb-8">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} strokeWidth={1.5} />
           <input
             type="text"
             placeholder="Search students..."
@@ -239,7 +239,7 @@ export default function VerificationListPage() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center gap-2.5">
                     <div className="w-10 h-10 rounded-lg bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-600 group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                      <User size={20} />
+                      <User size={20} strokeWidth={1.5} />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900 group-hover:text-brand-600 transition-colors text-xs">
@@ -252,7 +252,7 @@ export default function VerificationListPage() {
                 </div>
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
-                    <MapPin size={11} className="text-gray-400" />
+                    <MapPin size={11} strokeWidth={1.5} className="text-gray-400" />
                     <span className="truncate">{student.villageTown || '—'}, {student.district || '—'}</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -267,7 +267,7 @@ export default function VerificationListPage() {
                   </div>
                   <div className="flex items-center justify-end">
                     <span className="text-[10px] font-bold text-brand-500 flex items-center gap-0.5">
-                      Verify <ChevronRight size={12} />
+                      Verify <ChevronRight size={12} strokeWidth={1.5} />
                     </span>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export default function VerificationListPage() {
                     </td>
                     <td className="px-3 py-3 text-slate-600">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <MapPin size={10} className="text-slate-400 shrink-0" />
+                        <MapPin size={10} strokeWidth={1.5} className="text-slate-400 shrink-0" />
                         <span className="truncate">{s.villageTown || '—'}, {s.district || '—'}</span>
                       </div>
                     </td>
@@ -320,7 +320,7 @@ export default function VerificationListPage() {
                     <td className="px-3 py-3 text-right">
                       <div className="flex items-center justify-end">
                         <span className="text-[10px] font-bold text-brand-500 flex items-center gap-0.5">
-                          {s.currentStatus === 'pending' ? 'Verify' : 'Open'} <ChevronRight size={14} />
+                          {s.currentStatus === 'pending' ? 'Verify' : 'Open'} <ChevronRight size={14} strokeWidth={1.5} />
                         </span>
                       </div>
                     </td>

@@ -257,7 +257,7 @@ export default function TeacherDashboard() {
     >
       <div className="flex items-start justify-between mb-4">
         <div className={`p-2 rounded-lg ${color.bg} ${color.text}`}>
-          <Icon size={20} />
+          <Icon size={20} strokeWidth={1.5} />
         </div>
         {subValue && (
           <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${color.bg} ${color.text}`}>
@@ -289,7 +289,7 @@ export default function TeacherDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <LayoutDashboard size={20} className="text-brand-500" />
+              <LayoutDashboard size={20} strokeWidth={1.5} className="text-brand-500" />
               <h1 className="text-2xl font-bold text-slate-900">
                 {userRole === 'admin' ? 'Admin Portal' : 'Teacher Dashboard'}
               </h1>
@@ -297,7 +297,7 @@ export default function TeacherDashboard() {
             <p className="text-slate-500 text-sm font-medium">Welcome back, <span className="text-brand-600">{user.name || 'User'}</span></p>
           </div>
           <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2 shadow-sm">
-            <Calendar size={14} className="text-slate-400" />
+            <Calendar size={14} strokeWidth={1.5} className="text-slate-400" />
             <span className="text-xs font-semibold text-slate-800">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           </div>
         </div>
@@ -451,13 +451,13 @@ export default function TeacherDashboard() {
                 className="p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
                 title="Refresh Data"
               >
-                <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
+                <RefreshCcw size={16} strokeWidth={1.5} className={loading ? 'animate-spin' : ''} />
               </button>
             </div>
 
             <div className={`flex flex-wrap items-center ${userRole === 'admin' ? 'justify-end' : 'gap-3'}`}>
               <div className="relative flex-1 min-w-[240px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} strokeWidth={1.5} />
                 <input
                   type="text"
                   placeholder="Search students..."
@@ -481,7 +481,7 @@ export default function TeacherDashboard() {
                     <option value="rejected">Rejected</option>
                   </select>
                   <button className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-brand-600 transition-colors border border-gray-100">
-                    <Filter size={16} />
+                    <Filter size={16} strokeWidth={1.5} />
                   </button>
                 </div>
               )}
