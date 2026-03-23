@@ -16,7 +16,6 @@ const STATUS_CONFIG = {
   rejected: { label: 'Admin Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', Icon: XCircle },
   teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', Icon: XCircle },
   student_rejected: { label: 'Student Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', Icon: XCircle },
-  hold: { label: 'On Hold', bg: 'bg-amber-100 text-amber-700 border-amber-200', dot: 'bg-amber-400', Icon: Clock },
   pending: { label: 'Pending', bg: 'bg-gray-100 text-gray-500 border-gray-200', dot: 'bg-gray-300', Icon: Clock },
 };
 
@@ -87,7 +86,6 @@ export default function VerificationListPage() {
     { key: 'all', label: 'All', icon: LayoutGrid },
     { key: 'pending', label: 'Pending', icon: Clock },
     { key: 'draft', label: 'Draft', icon: FileText },
-    { key: 'hold', label: 'Hold', icon: Clock },
     { key: 'submitted', label: 'Submitted', icon: Send },
     { key: 'student_rejected', label: 'Student Rejected', icon: XCircle },
     { key: 'teacher_rejected', label: 'Teacher Rejected', icon: AlertCircle },

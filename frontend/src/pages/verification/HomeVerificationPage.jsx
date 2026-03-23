@@ -527,11 +527,7 @@ const HomeVerificationPage = () => {
     houseType: '', numRooms: '', houseBuilder: '', houseBuilderOther: '', houseSchemeName: '',
     appliances: [], numVehicles: '', vehicleTypes: [], vehicleTypesOther: '',
     totalLand: '', landUnit: 'Acre', landOwnership: '', landType: '', irrigationSource: '', irrigationSourceOther: '',
-    livestock: [
-      { name: 'Cow', count: '' },
-      { name: 'Buffalo', count: '' },
-      { name: 'Goat', count: '' }
-    ],
+    livestock: [],
     livestockOther: '',
     livestockOtherCount: '',
     supervisorRemarks: '',
@@ -541,7 +537,6 @@ const HomeVerificationPage = () => {
     fatherSignatureUrl: '',
     motherSignatureUrl: '',
     supervisorSignatureUrl: '',
-    holdReason: '',
     rejectReason: '',
   });
 
@@ -557,9 +552,6 @@ const HomeVerificationPage = () => {
   const [locationAddress, setLocationAddress] = useState('');
   const [currentStep, setCurrentStep] = useState(0); // 0-indexed
   const [loadingAction, setLoadingAction] = useState(null);
-  const [isHoldModalOpen, setIsHoldModalOpen] = useState(false);
-  const [holdReason, setHoldReason] = useState('');
-  const [holdReasonError, setHoldReasonError] = useState('');
 
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [rejectType, setRejectType] = useState('teacher_rejected');
@@ -911,7 +903,6 @@ const HomeVerificationPage = () => {
       submitted: 'Verification Submitted Successfully',
       teacher_rejected: 'Rejection Recorded',
       student_rejected: 'Student Rejection Recorded',
-      hold: 'Verification On Hold'
     };
     toast.success(labels[actionStatus] || 'Success');
     setTimeout(() => navigate('/home-verification'), 1000);
@@ -1074,33 +1065,6 @@ const HomeVerificationPage = () => {
       showSuccessAndRedirect(targetStatus);
     } catch (err) {
       console.error('Submit Error:', err);
-      setApiMsg('Error: ' + err.message);
-    } finally { setIsApiLoading(false); setLoadingAction(null); }
-  };
-
-  const handleHold = async () => {
-    if (!holdReason.trim()) {
-      setHoldReasonError('Reason is mandatory for putting verification on hold.');
-      return;
-    }
-    setIsApiLoading(true); setLoadingAction('hold'); setApiMsg('');
-
-    // Update the main form state so it's included in buildPayload() and future saves
-    setForm(prev => ({ ...prev, holdReason }));
-    const payload = { ...buildPayload(), status: 'hold', holdReason };
-
-    try {
-      const path = verificationId ? `/verifications/${verificationId}` : `/verifications`;
-      if (verificationId) {
-        await api.put(path, payload);
-      } else {
-        const res = await api.post(path, payload);
-        if (res.data.verification) setVerificationId(res.data.verification._id);
-      }
-      toast.success('Verification put on Hold');
-      setIsHoldModalOpen(false);
-      setTimeout(() => navigate('/home-verification'), 1000);
-    } catch (err) {
       setApiMsg('Error: ' + err.message);
     } finally { setIsApiLoading(false); setLoadingAction(null); }
   };
@@ -2394,51 +2358,6 @@ const HomeVerificationPage = () => {
             )}
           </div>
         </div>
-
-        {/* ── Hold Reason Modal ── */}
-        {isHoldModalOpen && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-in">
-              <div className="px-4 py-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 className="font-black text-slate-800 flex items-center gap-2 text-xs">
-                  <Clock size={16} className="text-orange-500" />
-                  Put Verification on Hold
-                </h3>
-                <button onClick={() => setIsHoldModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-full transition-colors">
-                  <X size={18} className="text-slate-400" />
-                </button>
-              </div>
-              <div className="p-4">
-                <p className="text-[11px] text-slate-500 mb-3 font-medium leading-relaxed">
-                  Please provide a reason for putting this student's verification on hold.
-                </p>
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Reason for Hold</label>
-                <textarea
-                  value={holdReason}
-                  onChange={(e) => {
-                    setHoldReason(e.target.value);
-                    if (e.target.value.trim()) setHoldReasonError('');
-                  }}
-                  placeholder="E.g. Missing documents..."
-                  className={`w-full p-3 rounded-xl border ${holdReasonError ? 'border-red-300 ring-4 ring-red-50' : 'border-slate-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-50'} transition-all text-xs min-h-[80px] outline-none font-medium text-slate-700`}
-                />
-                {holdReasonError && <p className="text-red-500 text-[9px] mt-1.5 font-bold flex items-center gap-1"><AlertCircle size={12} /> {holdReasonError}</p>}
-              </div>
-              <div className="px-4 py-3 bg-slate-50 flex gap-2.5 justify-end border-t border-slate-100">
-                <button onClick={() => setIsHoldModalOpen(false)} className="px-4 py-2 text-[11px] font-bold text-slate-500 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200">
-                  Cancel
-                </button>
-                <button
-                  onClick={handleHold}
-                  disabled={isApiLoading}
-                  className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-black rounded-xl shadow-lg shadow-orange-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isApiLoading && loadingAction === 'hold' ? <Loader size="xs" color="white" /> : 'Confirm Hold'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* ── Reject Reason Modal ── */}
         {isRejectModalOpen && (
