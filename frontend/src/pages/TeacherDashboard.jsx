@@ -202,7 +202,7 @@ export default function TeacherDashboard() {
   function StatusBadge({ status }) {
     const cfg = STATUS_CFG[status] || STATUS_CFG.pending;
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-bold border ${cfg.bg}`}>
+      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${cfg.bg}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
         {cfg.label}
       </span>
@@ -248,21 +248,21 @@ export default function TeacherDashboard() {
   const KPICard = ({ title, value, icon: Icon, color, subValue, onClick }) => (
     <div
       onClick={onClick}
-      className={`bg-white rounded-2xl border border-gray-100 p-4 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between ${onClick ? 'cursor-pointer hover:border-brand-200 hover:bg-slate-50/50 group/kpi' : ''}`}
+      className={`bg-white rounded-xl border border-gray-100 p-6 shadow-sm transition-all flex flex-col justify-between ${onClick ? 'cursor-pointer hover:border-brand-100 hover:bg-slate-50/50' : ''}`}
     >
-      <div className="flex items-start justify-between mb-3">
-        <div className={`p-2.5 rounded-xl ${color.bg} ${color.text} shadow-sm transition-transform ${onClick ? 'group-hover/kpi:scale-110' : ''}`}>
-          <Icon size={18} className="sm:w-5 sm:h-5" />
+      <div className="flex items-start justify-between mb-4">
+        <div className={`p-2 rounded-lg ${color.bg} ${color.text}`}>
+          <Icon size={20} />
         </div>
         {subValue && (
-          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${color.bg} ${color.text} tracking-wider`}>
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${color.bg} ${color.text}`}>
             {subValue}
           </span>
         )}
       </div>
       <div>
-        <p className="text-[10px] sm:text-xs font-semibold text-slate-500 uppercase tracking-[0.12em] mb-1">{title}</p>
-        <p className={`text-xl sm:text-3xl font-bold ${color.text === 'text-brand-600' ? 'text-brand-600' : 'text-slate-900'} tracking-tight`}>{value}</p>
+        <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
+        <p className={`text-2xl font-bold ${color.text === 'text-brand-600' ? 'text-brand-600' : 'text-slate-900'}`}>{value}</p>
       </div>
     </div>
   );
@@ -281,19 +281,19 @@ export default function TeacherDashboard() {
       <div className="max-w-7xl mx-auto px-3 sm:px-8 lg:px-10 py-4 sm:py-8 animate-fade-in-up">
 
         {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <LayoutDashboard size={20} className="text-brand-500" />
-              <h1 className="text-lg sm:text-2xl font-bold text-slate-900 tracking-tight">
-                {userRole === 'admin' ? 'Admin Central' : 'Teacher Insights'}
+              <h1 className="text-2xl font-bold text-slate-900">
+                {userRole === 'admin' ? 'Admin Portal' : 'Teacher Dashboard'}
               </h1>
             </div>
-            <p className="text-slate-500 text-xs sm:text-sm font-medium">Welcome back, <span className="text-brand-600 font-bold">{user.name || 'User'}</span></p>
+            <p className="text-slate-500 text-sm font-medium">Welcome back, <span className="text-brand-600">{user.name || 'User'}</span></p>
           </div>
-          <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-2xl px-4 py-2 shadow-sm">
+          <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-xl px-4 py-2 shadow-sm">
             <Calendar size={14} className="text-slate-400" />
-            <span className="text-xs font-bold text-slate-800 tracking-wide">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            <span className="text-xs font-semibold text-slate-800">{new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           </div>
         </div>
 
@@ -314,49 +314,49 @@ export default function TeacherDashboard() {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Quick Actions Grid */}
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h3 className="text-xs font-bold uppercase text-slate-400 tracking-[0.15em] mb-4">Quick Shortcuts</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/add-passed-students')} className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 transition-all group border border-brand-100">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><Plus size={18} /></div>
-                  <span className="text-[10px] font-medium uppercase tracking-wider">{userRole === 'admin' ? 'Add Teacher' : 'Add Student'}</span>
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 mb-5">Quick Actions</h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/add-passed-students')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 transition-all border border-brand-100 group">
+                  <Plus size={20} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-semibold">{userRole === 'admin' ? 'Add Teacher' : 'Add Student'}</span>
                 </button>
-                <button onClick={() => navigate(userRole === 'admin' ? '/teachers' : '/home-verification')} className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-all group border border-emerald-100">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><Users size={18} /></div>
-                  <span className="text-[10px] font-medium uppercase tracking-wider">{userRole === 'admin' ? 'View Teachers' : 'Start Verified'}</span>
+                <button onClick={() => navigate(userRole === 'admin' ? '/teachers' : '/home-verification')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-all border border-emerald-100 group">
+                  <Users size={20} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-semibold">{userRole === 'admin' ? 'View Teachers' : 'Verification'}</span>
                 </button>
-                <button onClick={() => navigate('/home-verification', { state: { filter: 'draft' } })} className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-all group border border-orange-100">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><FileEdit size={18} /></div>
-                  <span className="text-[10px] font-medium uppercase tracking-wider">Drafts</span>
+                <button onClick={() => navigate('/home-verification', { state: { filter: 'draft' } })} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-all border border-orange-100 group">
+                  <FileEdit size={20} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-semibold">Drafts</span>
                 </button>
-                <button onClick={() => navigate('/home-verification', { state: { filter: 'pending' } })} className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition-all group border border-slate-100">
-                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform"><RefreshCcw size={18} /></div>
-                  <span className="text-[10px] font-medium uppercase tracking-wider">Pending</span>
+                <button onClick={() => navigate('/home-verification', { state: { filter: 'pending' } })} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-gray-50 hover:bg-gray-100 text-slate-700 transition-all border border-gray-100 group">
+                  <RefreshCcw size={20} className="group-hover:scale-110 transition-transform" />
+                  <span className="text-xs font-semibold">Pending</span>
                 </button>
               </div>
             </div>
 
             {/* Performance & Charts */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-[0.15em] mb-4">Location Matrix</h3>
-                <div className="space-y-3">
+              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+                <h3 className="text-sm font-bold text-slate-800 mb-5">Location Statistics</h3>
+                <div className="space-y-4">
                   {getLocationStats().map(([loc, count]) => (
-                    <div key={loc} className="space-y-1">
-                      <div className="flex justify-between text-[11px] font-medium">
+                    <div key={loc} className="space-y-1.5">
+                      <div className="flex justify-between text-xs font-medium">
                         <span className="text-gray-600">{loc}</span>
-                        <span className="text-brand-600">{count} Records</span>
+                        <span className="text-slate-900">{count} Records</span>
                       </div>
-                      <div className="h-1.5 w-full bg-slate-50 rounded-full overflow-hidden">
-                        <div className="h-full bg-brand-400" style={{ width: `${(count / stats.total) * 100}%` }} />
+                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-brand-500 rounded-full" style={{ width: `${(count / stats.total) * 100}%` }} />
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm flex flex-col items-center justify-center">
-                <h3 className="text-xs font-bold uppercase text-slate-400 tracking-[0.15em] mb-4 w-full text-left">Status Distribution</h3>
+              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col items-center justify-center text-center">
+                <h3 className="text-sm font-bold text-slate-800 mb-5 w-full text-left">Status Distribution</h3>
                 <div className="relative w-32 h-32 flex items-center justify-center">
                   <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
                     <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
@@ -370,53 +370,53 @@ export default function TeacherDashboard() {
                       strokeDashoffset={stats.total ? -((stats.approved + stats.rejected) / stats.total) * 100 : 0} />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-lg font-black text-slate-800">{stats.completionRate}%</span>
-                    <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Done</span>
+                    <span className="text-2xl font-bold text-slate-900">{stats.completionRate}%</span>
+                    <span className="text-[10px] font-medium text-slate-500 uppercase">Complete</span>
                   </div>
                 </div>
-                <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-4">
-                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[9px] font-bold text-slate-500">Approved</span></div>
-                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[9px] font-bold text-slate-500">Rejected</span></div>
-                  <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /><span className="text-[9px] font-bold text-slate-500">Pending</span></div>
+                <div className="grid grid-cols-3 gap-4 mt-6 w-full">
+                  <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-medium text-slate-600">Approved</span></div>
+                  <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[10px] font-medium text-slate-600">Rejected</span></div>
+                  <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /><span className="text-[10px] font-medium text-slate-600">Pending</span></div>
                 </div>
               </div>
             </div>
             {/* Performance & Charts - Moved to Main for better 50/50 split */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm h-full">
-                <h3 className="text-xs font-black uppercase text-gray-400 tracking-[0.2em] mb-4">Performance Metrics</h3>
+              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full">
+                <h3 className="text-sm font-bold text-slate-800 mb-5">Quick Metrics</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Approval Rate</p>
-                    <p className="text-lg font-black text-slate-800">{stats.approvalRate}%</p>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Approval Rate</p>
+                    <p className="text-lg font-bold text-slate-900">{stats.approvalRate}%</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Today's Forms</p>
-                    <p className="text-lg font-black text-slate-800">{getTodayVisits()}</p>
+                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Today's Forms</p>
+                    <p className="text-lg font-bold text-slate-900">{getTodayVisits()}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm h-full flex flex-col">
-                <h3 className="text-xs font-black uppercase text-gray-400 tracking-[0.2em] mb-4">Recent Activity</h3>
+              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full flex flex-col">
+                <h3 className="text-sm font-bold text-slate-800 mb-5">Recent Activity</h3>
                 <div className="space-y-4 flex-1">
                   {getRecentActivity().length > 0 ? getRecentActivity().map((activity, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold shadow-sm ${STATUS_CFG[activity.currentStatus]?.bg || 'bg-slate-50 text-slate-400'}`}>
+                    <div key={idx} className="flex items-start gap-4">
+                      <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${STATUS_CFG[activity.currentStatus]?.bg || 'bg-slate-50 text-slate-400'}`}>
                         {activity.studentName.charAt(0)}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex justify-between items-start gap-2">
-                          <p className="text-[11px] font-bold text-slate-800 truncate">{activity.studentName}</p>
-                          <span className="text-[9px] font-medium text-slate-400 shrink-0">{formatTimeAgo(activity.verification?.updatedAt)}</span>
+                          <p className="text-xs font-bold text-slate-900 truncate">{activity.studentName}</p>
+                          <span className="text-[10px] font-medium text-slate-400 shrink-0">{formatTimeAgo(activity.verification?.updatedAt)}</span>
                         </div>
-                        <p className="text-[9px] text-slate-400 mt-0.5 truncate uppercase font-bold tracking-tighter">
+                        <p className="text-[10px] text-slate-500 mt-0.5 truncate font-medium">
                           {activity.currentStatus === 'submitted' ? 'Sent for review' : (activity.currentStatus || 'pending').replace('_', ' ')}
                         </p>
                       </div>
                     </div>
                   )) : (
-                    <p className="text-center text-[11px] text-slate-400 py-4 font-bold uppercase tracking-widest italic">No activity</p>
+                    <p className="text-center text-xs text-slate-400 py-6 italic">No recent activity</p>
                   )}
                 </div>
               </div>
@@ -425,90 +425,87 @@ export default function TeacherDashboard() {
 
           {/* Activity & Insights - Right (1/3) */}
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
-              <h3 className="text-xs font-black uppercase text-gray-400 tracking-[0.2em] mb-4">Location Insights</h3>
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-                    <MapPin size={18} />
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 mb-5">Insights</h3>
+              <div className="space-y-5">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                    <MapPin size={20} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Last Visited</p>
-                    <p className="text-sm font-black text-slate-800">{getLastVisited()}</p>
+                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Last Visited</p>
+                    <p className="text-sm font-bold text-slate-900">{getLastVisited()}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <TrendingUp size={18} />
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <TrendingUp size={20} />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Today's Goals</p>
-                    <p className="text-sm font-black text-slate-800">{getTodayVisits()} Records</p>
+                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Today's Target</p>
+                    <p className="text-sm font-bold text-slate-900">{getTodayVisits()} Records</p>
                   </div>
                 </div>
               </div>
 
               {/* Priority Tasks here */}
-              <div className="mt-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2 text-rose-600">
-                    <AlertCircle size={14} className="animate-pulse" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-rose-800">Priority Tasks</span>
-                  </div>
+              <div className="mt-8 pt-8 border-t border-gray-50">
+                <div className="flex items-center justify-between mb-5">
+                  <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Priority Actions</h4>
                   {(stats.rejected > 0 || stats.drafts > 0 || stats.olderThan5Days > 0) && (
-                    <span className="px-1.5 py-0.5 rounded-full bg-rose-100 text-rose-800 text-[9px] font-semibold animate-pulse tracking-wide">
-                      ACTION REQUIRED
+                    <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-bold">
+                      REQUIRED
                     </span>
                   )}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <div
                     onClick={() => stats.rejected > 0 && navigate('/home-verification', { state: { filter: 'rejected' } })}
-                    className={`p-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.rejected > 0 ? 'bg-rose-50 border-rose-100 hover:bg-rose-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}
+                    className={`p-4 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.rejected > 0 ? 'bg-white border-red-100 hover:border-red-200' : 'bg-slate-50 border-transparent opacity-60'}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${stats.rejected > 0 ? 'bg-white text-rose-600 shadow-sm' : 'bg-slate-100 text-slate-400'}`}>
-                        <AlertCircle size={14} />
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.rejected > 0 ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-400'}`}>
+                        <AlertCircle size={18} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.12em]">Rejected Cases</p>
-                        <p className={`text-sm font-semibold ${stats.rejected > 0 ? 'text-rose-900' : 'text-slate-400'}`}>{stats.rejected} Records</p>
+                        <p className="text-[10px] font-medium text-slate-500 uppercase">Rejected</p>
+                        <p className={`text-sm font-bold ${stats.rejected > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{stats.rejected} Records</p>
                       </div>
                     </div>
-                    {stats.rejected > 0 && <ChevronRight size={14} className="text-rose-400 group-hover:translate-x-1 transition-transform" />}
+                    {stats.rejected > 0 && <ChevronRight size={16} className="text-slate-300 group-hover:text-red-500 transition-colors" />}
                   </div>
 
                   <div
                     onClick={() => stats.drafts > 0 && navigate('/home-verification', { state: { filter: 'draft' } })}
-                    className={`p-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.drafts > 0 ? 'bg-orange-50 border-orange-100 hover:bg-orange-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}
+                    className={`p-4 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.drafts > 0 ? 'bg-white border-orange-100 hover:border-orange-200' : 'bg-slate-50 border-transparent opacity-60'}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${stats.drafts > 0 ? 'bg-white text-orange-600 shadow-sm' : 'bg-slate-100 text-slate-400'}`}>
-                        <FileEdit size={14} />
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.drafts > 0 ? 'bg-orange-50 text-orange-600' : 'bg-slate-100 text-slate-400'}`}>
+                        <FileEdit size={18} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.12em]">Incomplete Drafts</p>
-                        <p className={`text-sm font-semibold ${stats.drafts > 0 ? 'text-orange-900' : 'text-slate-400'}`}>{stats.drafts} Records</p>
+                        <p className="text-[10px] font-medium text-slate-500 uppercase">Incomplete</p>
+                        <p className={`text-sm font-bold ${stats.drafts > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{stats.drafts} Records</p>
                       </div>
                     </div>
-                    {stats.drafts > 0 && <ChevronRight size={14} className="text-orange-400 group-hover:translate-x-1 transition-transform" />}
+                    {stats.drafts > 0 && <ChevronRight size={16} className="text-slate-300 group-hover:text-orange-500 transition-colors" />}
                   </div>
 
                   <div
                     onClick={() => stats.olderThan5Days > 0 && navigate('/home-verification', { state: { filter: 'pending' } })}
-                    className={`p-3 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.olderThan5Days > 0 ? 'bg-amber-50 border-amber-100 hover:bg-amber-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}
+                    className={`p-4 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.olderThan5Days > 0 ? 'bg-white border-amber-100 hover:border-amber-200' : 'bg-slate-50 border-transparent opacity-60'}`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${stats.olderThan5Days > 0 ? 'bg-white text-amber-600 shadow-sm' : 'bg-slate-100 text-slate-400'}`}>
-                        <Clock size={14} />
+                    <div className="flex items-center gap-4">
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.olderThan5Days > 0 ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-400'}`}>
+                        <Clock size={18} />
                       </div>
                       <div>
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-[0.12em]">Awaiting &gt; 5 Days</p>
-                        <p className={`text-sm font-semibold ${stats.olderThan5Days > 0 ? 'text-amber-900' : 'text-slate-400'}`}>{stats.olderThan5Days} Records</p>
+                        <p className="text-[10px] font-medium text-slate-500 uppercase">Stale Cases</p>
+                        <p className={`text-sm font-bold ${stats.olderThan5Days > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{stats.olderThan5Days} Records</p>
                       </div>
                     </div>
-                    {stats.olderThan5Days > 0 && <ChevronRight size={14} className="text-amber-400 group-hover:translate-x-1 transition-transform" />}
+                    {stats.olderThan5Days > 0 && <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition-colors" />}
                   </div>
                 </div>
               </div>
@@ -518,54 +515,36 @@ export default function TeacherDashboard() {
 
 
         {/* Filters & Table Header */}
-        <div className="bg-white rounded-t-2xl border-x border-t border-gray-200 p-4 sticky top-0 z-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-slate-900 uppercase tracking-[0.15em]">Verification Registry</h2>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-brand-50 text-brand-700">
+        <div className="bg-white rounded-t-xl border-x border-t border-gray-100 p-6 sticky top-0 z-10">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <h2 className="text-base font-bold text-slate-900">Verification Registry</h2>
+              <span className="px-3 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700">
                 {totalRecords} Records
               </span>
               <button
                 onClick={fetchDashboardData}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-brand-500 hover:bg-brand-50 transition-all"
+                className="p-2 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-all"
                 title="Refresh Data"
               >
-                <RefreshCcw size={14} className={loading ? 'animate-spin' : ''} />
+                <RefreshCcw size={16} className={loading ? 'animate-spin' : ''} />
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative flex-1 min-w-[240px]">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
                   type="text"
-                  placeholder="Search name or roll number..."
+                  placeholder="Search students..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 text-xs border border-gray-100 rounded-xl bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500/10 focus:border-brand-300 outline-none transition-all font-medium"
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-100 rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500/10 focus:border-brand-300 outline-none transition-all"
                 />
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <select
-                  className="px-3 py-2 text-[11px] font-semibold border border-gray-100 rounded-xl bg-slate-50/50 outline-none focus:ring-2 focus:ring-brand-500/10 transition-all cursor-pointer text-slate-700"
-                  value={locationFilter}
-                  onChange={(e) => setLocationFilter(e.target.value)}
-                >
-                  <option value="all">Everywhere</option>
-                  {getDistricts().map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                <select
-                  className="px-3 py-2 text-[11px] font-semibold border border-gray-100 rounded-xl bg-slate-50/50 outline-none focus:ring-2 focus:ring-brand-500/10 transition-all cursor-pointer text-slate-700"
-                  value={dateFilter}
-                  onChange={(e) => setDateFilter(e.target.value)}
-                >
-                  <option value="all">All Time</option>
-                  <option value="today">Today</option>
-                  <option value="week">This Week</option>
-                  <option value="month">This Month</option>
-                </select>
-                <select
-                  className="px-3 py-2 text-[11px] font-semibold border border-gray-100 rounded-xl bg-slate-50/50 outline-none focus:ring-2 focus:ring-brand-500/10 transition-all cursor-pointer text-slate-700"
+                  className="px-3 py-2 text-xs font-semibold border border-gray-100 rounded-lg bg-slate-50 outline-none focus:ring-2 focus:ring-brand-500/10 transition-all cursor-pointer text-slate-700"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -576,8 +555,8 @@ export default function TeacherDashboard() {
                   <option value="approved">Approved</option>
                   <option value="rejected">Rejected</option>
                 </select>
-                <button className="p-2 rounded-xl bg-slate-100 text-slate-400 hover:text-brand-500 transition-colors">
-                  <Filter size={14} />
+                <button className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-brand-600 transition-colors border border-gray-100">
+                  <Filter size={16} />
                 </button>
               </div>
             </div>
@@ -686,46 +665,46 @@ export default function TeacherDashboard() {
             )}
 
             {/* Registry List */}
-            <div className={`${userRole === 'admin' ? 'block' : 'hidden sm:block'} bg-white rounded-b-2xl border-x border-b border-gray-200 overflow-hidden shadow-sm`}>
+            <div className={`${userRole === 'admin' ? 'block' : 'hidden sm:block'} bg-white rounded-b-xl border-x border-b border-gray-100 overflow-hidden shadow-sm`}>
               <table className="w-full text-sm">
-                <thead className="bg-gray-50/50 border-b border-gray-100">
+                <thead className="bg-slate-50 border-b border-gray-100">
                   <tr>
-                    {['S.No', 'Student Name', 'Father Name', 'Roll No', 'Village/District', 'Marks', 'Status', 'Actions'].map(h => (
-                      <th key={h} className="px-5 py-3.5 text-left text-[11px] font-medium text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                    {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Marks', 'Status', 'Actions'].map(h => (
+                      <th key={h} className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
                   {paginated.map((s, i) => (
-                    <tr key={s._id} onClick={() => handleVerify(s)} className="hover:bg-brand-50/30 transition-all cursor-pointer group">
-                      <td className="px-5 py-4 text-slate-400 text-[11px] font-medium">{(page - 1) * PAGE_SIZE + i + 1}</td>
-                      <td className="px-5 py-4">
-                        <p className="font-semibold text-gray-950 group-hover:text-brand-700 transition-colors uppercase tracking-tight text-xs">{s.studentName}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">Updated {formatTimeAgo(s.verification?.updatedAt || s.updatedAt)}</p>
+                    <tr key={s._id} onClick={() => handleVerify(s)} className="hover:bg-slate-50/50 transition-all cursor-pointer group">
+                      <td className="px-6 py-4 text-slate-400 text-xs">{(page - 1) * PAGE_SIZE + i + 1}</td>
+                      <td className="px-6 py-4">
+                        <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors text-sm">{s.studentName}</p>
+                        <p className="text-[10px] text-slate-500 font-medium mt-0.5">Updated {formatTimeAgo(s.verification?.updatedAt || s.updatedAt)}</p>
                       </td>
-                      <td className="px-5 py-4 text-slate-700 text-xs font-medium">{s.fatherName}</td>
-                      <td className="px-5 py-4">
-                        <span className="px-2 py-1 rounded-lg text-[10px] font-semibold bg-slate-50 text-slate-900 border border-slate-200">{s.rollNumber}</span>
+                      <td className="px-6 py-4 text-slate-600 text-xs font-medium">{s.fatherName}</td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">{s.rollNumber}</span>
                       </td>
-                      <td className="px-5 py-4 min-w-[140px]">
-                        <p className="text-xs font-semibold text-slate-800 truncate">{s.villageTown || '—'}</p>
-                        <p className="text-[10px] font-medium text-brand-500 tracking-tight uppercase">{s.district || '—'}</p>
+                      <td className="px-6 py-4">
+                        <p className="text-xs font-bold text-slate-800">{s.villageTown || '—'}</p>
+                        <p className="text-[10px] font-medium text-slate-500 uppercase mt-0.5">{s.district || '—'}</p>
                       </td>
-                      <td className="px-5 py-4">
-                        <span className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-100 mb-1">{s.scholarshipExamMarks ?? 0}/50</span>
+                      <td className="px-6 py-4">
+                        <span className="px-2.5 py-1 rounded-md text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">{s.scholarshipExamMarks ?? 0}</span>
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-6 py-4">
                         <StatusBadge status={getStatus(s.rollNumber)} />
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-6 py-4">
                         <div className="flex gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); handleVerify(s); }} className="p-2 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 hover:border-emerald-200 transition-all shadow-sm" title="View Details">
+                          <button onClick={(e) => { e.stopPropagation(); handleVerify(s); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all shadow-sm">
                             <TrendingUp size={14} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-2 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-brand-500 hover:bg-brand-50 hover:border-brand-200 transition-all shadow-sm" title="Edit Registry">
+                          <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-brand-600 hover:bg-brand-50 hover:border-brand-100 transition-all shadow-sm">
                             <Pencil size={14} />
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-2 rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-red-500 hover:bg-red-50 hover:border-red-200 transition-all shadow-sm" title="Delete Student">
+                          <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all shadow-sm">
                             <Trash2 size={14} />
                           </button>
                         </div>

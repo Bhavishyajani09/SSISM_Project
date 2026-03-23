@@ -59,29 +59,29 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onTo
   }, [open]);
 
   return (
-    <div ref={cardRef} className={`bg-white rounded-2xl shadow-sm border ${open ? 'border-slate-200' : 'border-slate-100'} overflow-hidden transition-all duration-300`}>
+    <div ref={cardRef} className={`bg-white rounded-xl border ${open ? 'border-slate-200 shadow-sm' : 'border-slate-100'} overflow-hidden transition-all duration-300`}>
       <button
         type="button"
         onClick={onToggle}
-        className={`group w-full flex items-center justify-between p-3.5 sm:p-4 text-left transition-all duration-300 ${open ? 'bg-white border-b shadow-sm' : 'bg-slate-50/30 hover:bg-white'}`}
+        className={`group w-full flex items-center justify-between p-4 sm:p-5 text-left transition-all duration-300 ${open ? 'bg-white border-b' : 'bg-slate-50/30 hover:bg-white'}`}
       >
-        <div className="flex items-center gap-2.5 sm:gap-4">
-          <div className={`p-2.5 rounded-2xl ${cfg.iconBg} ${cfg.iconText} border border-white transition-all shadow-sm`}>
-            <Icon size={18} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className={`p-2.5 rounded-lg ${cfg.iconBg} ${cfg.iconText} transition-all`}>
+            <Icon size={20} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
           </div>
-          <h2 className={`font-bold text-sm sm:text-[15px] leading-tight tracking-tight ${open ? 'text-slate-900' : 'text-slate-700'}`}>{title}</h2>
+          <h2 className={`font-bold text-sm sm:text-base tracking-tight ${open ? 'text-slate-900' : 'text-slate-700'}`}>{title}</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {!open && (
-            <span className="hidden sm:inline-block px-2.5 py-1 rounded-full bg-slate-50 border border-slate-100/50 text-[8px] font-black text-slate-400 uppercase tracking-[0.15em] group-hover:text-orange-500 group-hover:bg-amber-50 group-hover:border-amber-100 transition-all duration-300">
-              Details
+            <span className="hidden sm:inline-block px-2 py-1 rounded-md bg-slate-50 border border-slate-100/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-brand-600 group-hover:bg-brand-50 transition-all">
+              Manage
             </span>
           )}
-          {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          {open ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
         </div>
       </button>
       {open && (
-        <div className={`p-4 sm:p-5 space-y-4 md:space-y-6 animate-fade-in-up ${locked ? 'pointer-events-none opacity-80' : ''}`}>
+        <div className={`p-5 sm:p-6 space-y-6 animate-fade-in-up ${locked ? 'pointer-events-none opacity-80' : ''}`}>
           {children}
         </div>
       )}
@@ -99,9 +99,9 @@ const Field = ({ label, children, required }) => (
   </div>
 );
 
-const inputCls = "w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400/30 focus:border-orange-400 transition-all";
-const selectCls = inputCls;
-const textareaCls = inputCls + " resize-none";
+const inputCls = "w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all placeholder:text-slate-400";
+const selectCls = inputCls + " cursor-pointer";
+const textareaCls = inputCls + " resize-none min-h-[100px]";
 
 const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
   const videoRef = useRef(null);
@@ -1367,111 +1367,109 @@ const HomeVerificationPage = () => {
 
       {/* Main Form Container */}
       <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-5 pb-32 transition-all">
-
         {/* Minimal Sticky Progress Header */}
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 -mx-4 px-4 pt-4 pb-2 mb-6">
-          <div className="flex items-center justify-between mb-4 px-1">
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 -mx-4 px-6 pt-5 pb-3 mb-8">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate(-1)}
-                className="p-1.5 -ml-1.5 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 shadow-sm transition-all group flex items-center justify-center cursor-pointer"
+                className="p-2 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 transition-all group"
                 title="Return to List"
               >
-                <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform" />
+                <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
               </button>
-              <span className="text-[10px] font-black uppercase text-slate-400 tracking-[0.2em] mt-[1px]">
-                Verification Flow
-              </span>
+              <div>
+                <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em]">Verification Panel</p>
+                <h2 className="text-sm font-bold text-slate-900">{form.studentName || 'Student Registry'}</h2>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">
-                Step {currentStep + 1}
-              </span>
-              <span className="h-3 w-[1px] bg-slate-200" />
-              <span className="text-[10px] font-bold text-slate-400">
-                {Math.round(((currentStep + 1) / STEPS.length) * 100)}%
-              </span>
+            <div className="flex items-center gap-3">
+              <div className="text-right hidden sm:block">
+                <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest">Step {currentStep + 1} of {STEPS.length}</p>
+                <p className="text-[10px] font-bold text-slate-400">{Math.round(((currentStep + 1) / STEPS.length) * 100)}% Complete</p>
+              </div>
+              <div className="h-8 w-[1px] bg-slate-100 hidden sm:block" />
+              <div className="w-10 h-10 rounded-full border-2 border-brand-500/20 flex items-center justify-center p-0.5">
+                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-xs">
+                  {currentStep + 1}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Truly Ultra-Thin Modern Progress Line */}
-          <div className="relative h-[1.5px] w-full bg-slate-100/40 rounded-full mb-5 mx-0.5 overflow-hidden">
+          <div className="relative h-1 w-full bg-slate-100 rounded-full mb-6 overflow-hidden">
             <div
-              className="absolute top-0 left-0 h-full bg-orange-500 transition-all duration-1000 ease-in-out rounded-full shadow-[0_0_8px_rgba(249,115,22,0.3)]"
+              className="absolute top-0 left-0 h-full bg-brand-500 transition-all duration-500 ease-out rounded-full"
               style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
             />
           </div>
 
-          {/* Step Dots Indicator Container with Improved Scrollbar */}
-          <div className="flex justify-between items-center px-1 overflow-x-auto gap-4 pb-4 px-1
-            [&::-webkit-scrollbar]:h-[4px]
-            [&::-webkit-scrollbar-track]:bg-slate-50
-            [&::-webkit-scrollbar-thumb]:bg-slate-200
-            [&::-webkit-scrollbar-thumb]:rounded-full
-          ">
+          {/* Step Dots Indicator */}
+          <div className="flex items-center gap-3 overflow-x-auto pb-2 -mx-2 px-2 thin-scrollbar">
             {STEPS.map((step, idx) => (
               <button
                 key={step.id}
-                onClick={() => {
-                  setCurrentStep(idx);
-                }}
-                className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-300
-                  ${idx === currentStep
-                    ? 'bg-orange-500 text-white shadow-md shadow-orange-100 scale-110'
+                onClick={() => setCurrentStep(idx)}
+                className={`flex-shrink-0 flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 border ${
+                  idx === currentStep
+                    ? 'bg-brand-50 border-brand-100 text-brand-600 shadow-sm'
                     : idx < currentStep
-                      ? 'bg-orange-50 text-orange-400 hover:bg-orange-100'
-                      : 'bg-slate-50 text-slate-300 hover:bg-slate-100'}`}
-                title={step.title}
+                      ? 'bg-slate-50 border-transparent text-slate-400'
+                      : 'bg-white border-transparent text-slate-300 hover:text-slate-500 hover:bg-slate-50'
+                }`}
               >
-                <step.icon size={13} strokeWidth={idx === currentStep ? 3 : 2} />
+                <step.icon size={14} strokeWidth={idx === currentStep ? 2.5 : 2} />
+                <span className={`text-[11px] font-bold whitespace-nowrap ${idx === currentStep ? 'block' : 'hidden md:block'}`}>
+                  {step.title}
+                </span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Info & Action Bar */}
-        <div className="flex flex-wrap items-center gap-3 text-xs mb-6 px-1">
+        <div className="flex flex-wrap items-center gap-4 text-xs mb-8 px-1">
           <button
             onClick={captureGPS}
             disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
-            className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 hover:bg-brand-50 hover:text-brand-600 hover:border-brand-200 transition-all font-semibold text-slate-600 disabled:opacity-60 shadow-sm group disabled:cursor-not-allowed"
-            title={(gpsCoords && (verificationId || id)) ? "Location is locked for this record" : "Capture Location"}
+            className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-lg px-4 py-2 hover:bg-slate-50 hover:text-brand-600 transition-all font-bold text-slate-600 disabled:opacity-50 shadow-sm disabled:cursor-not-allowed"
           >
-            <MapPin size={12} className={`text-brand-500 ${isLocating ? 'animate-bounce' : 'group-hover:scale-110'}`} />
-            <span>{isLocating ? 'Locating...' : (gpsCoords ? `${Number(gpsCoords.lat).toFixed(4)}, ${Number(gpsCoords.lng).toFixed(4)}` : 'Capture GPS')}</span>
-            {(gpsCoords && (verificationId || id)) && <Lock size={10} className="text-slate-400 opacity-50 ml-1" />}
+            <MapPin size={14} className={isLocating ? 'animate-pulse text-brand-500' : 'text-slate-400'} />
+            <span>{isLocating ? 'Capturing Location...' : (gpsCoords ? `Location Locked` : 'Lock GPS Location')}</span>
+            {(gpsCoords && (verificationId || id)) && <Lock size={12} className="text-slate-300 ml-1" />}
           </button>
 
           {locationAddress && !isLocating && (
-            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-1.5 text-emerald-700 font-medium shadow-sm animate-fade-in">
-              <Home size={12} />
-              <span className="truncate max-w-[140px] sm:max-w-[200px]">{locationAddress}</span>
+            <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-lg px-4 py-2 text-slate-600 font-bold shadow-sm">
+              <Home size={14} className="text-slate-400" />
+              <span className="truncate max-w-[200px]">{locationAddress}</span>
             </div>
           )}
 
-          <div className="flex items-center gap-3 lg:ml-auto">
-            <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-3 py-1.5 font-semibold text-slate-500 shadow-sm whitespace-nowrap">
-              <Clock size={12} className="text-slate-400" />
-              {new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+          <div className="flex items-center gap-4 ml-auto">
+            <div className="hidden lg:flex items-center gap-2 text-slate-400 font-medium">
+              <Clock size={14} />
+              {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
             </div>
 
             {status && (
-              <div className={`px-3 py-1.5 rounded-xl border shadow-sm flex items-center gap-1.5 whitespace-nowrap ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                status === 'submitted' ? 'bg-[#f8fbff] border-blue-100 text-brand-600' :
-                  status === 'teacher_rejected' || status === 'student_rejected' ? 'bg-red-50 border-red-100 text-red-700' :
-                    status === 'rejected' ? 'bg-red-50 border-red-100 text-red-700' :
-                      status === 'hold' ? 'bg-orange-50 border-orange-100 text-orange-700' :
-                        'bg-slate-50 border-slate-200 text-slate-600'
-                }`}>
-                <div className={`w-1.5 h-1.5 rounded-full animate-pulse ${status === 'approved' ? 'bg-emerald-500' :
-                  status === 'submitted' ? 'bg-brand-500' :
-                    status === 'teacher_rejected' || status === 'student_rejected' ? 'bg-red-500' :
-                      status === 'rejected' ? 'bg-red-500' :
-                        status === 'hold' ? 'bg-orange-500' :
-                          'bg-slate-400'
-                  }`} />
-                <span className="text-[9px] font-black uppercase tracking-wider">
-                  {status === 'teacher_rejected' ? 'Teacher Rejected' : status === 'student_rejected' ? 'Student Rejected' : status.replace('_', ' ')}
+              <div className={`px-4 py-2 rounded-lg border shadow-sm flex items-center gap-2 ${
+                status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-700' :
+                status.includes('rejected') ? 'bg-red-50 border-red-100 text-red-700' :
+                status === 'hold' ? 'bg-amber-50 border-amber-100 text-amber-700' :
+                'bg-slate-50 border-slate-100 text-slate-600'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${
+                  status === 'approved' ? 'bg-emerald-500' :
+                  status === 'submitted' ? 'bg-blue-500' :
+                  status.includes('rejected') ? 'bg-red-500' :
+                  status === 'hold' ? 'bg-amber-500' :
+                  'bg-slate-400'
+                }`} />
+                <span className="text-[10px] font-black uppercase tracking-wider">
+                  {status.replace('_', ' ')}
                 </span>
               </div>
             )}

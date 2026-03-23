@@ -82,23 +82,23 @@ export default function Navbar() {
   return (
     <>
       {/* ─── Global Slim Header (Mobile) ─── */}
-      <div className="lg:hidden flex items-center justify-between bg-white border-b border-orange-100 px-4 py-2.5 sticky top-0 z-30 shadow-sm">
+      <div className="lg:hidden flex items-center justify-between bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-30">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center overflow-hidden border-2 border-orange-400 shrink-0 shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center overflow-hidden border border-brand-400 shrink-0">
             <img src={ssismLogo} alt="SSISM" className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="font-bold text-gray-900 text-[13px] leading-tight tracking-tight uppercase">
+            <p className="font-bold text-slate-900 text-xs leading-tight tracking-tight">
               {getPageTitle()}
             </p>
-            <p className="text-[10px] text-orange-400 font-medium uppercase tracking-widest leading-tight mt-0.5">
-              SSISM SCHOLARSHIP portal
+            <p className="text-[9px] text-slate-400 font-medium uppercase tracking-widest leading-tight mt-0.5">
+              SSISM Portal
             </p>
           </div>
         </div>
         <button 
           onClick={() => setIsMobileOpen(true)} 
-          className="p-1.5 text-gray-400 hover:text-brand-600 focus:outline-none rounded-lg hover:bg-orange-50 transition-colors"
+          className="p-1.5 text-slate-400 hover:text-brand-600 focus:outline-none rounded-lg hover:bg-slate-50 transition-colors"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -109,32 +109,32 @@ export default function Navbar() {
       {/* ─── Mobile Backdrop ─── */}
       {isMobileOpen && (
         <div 
-          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
       {/* ─── Sidebar (Desktop Always, Mobile Drawer) ─── */}
       <aside 
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col shadow-2xl lg:shadow-none transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-gray-100 flex flex-col transition-transform duration-300 ease-in-out ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}
       >
         {/* Sidebar Header */}
-        <div className="h-[72px] shrink-0 flex items-center px-6 border-b border-gray-50 relative bg-orange-50/20">
+        <div className="h-[72px] shrink-0 flex items-center px-6 border-b border-gray-50 bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center overflow-hidden border-2 border-orange-400 shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center overflow-hidden border border-brand-400 shadow-sm">
               <img src={ssismLogo} alt="SSISM" className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-gray-900 font-bold text-[14px] leading-tight tracking-tight">SSISM PORTAL</p>
-              <p className="text-orange-400 font-medium text-[9px] uppercase tracking-widest mt-1">Scholarship System</p>
+              <p className="text-slate-900 font-bold text-sm tracking-tight">SSISM Portal</p>
+              <p className="text-slate-400 font-medium text-[10px] uppercase tracking-wider mt-0.5">Scholarship System</p>
             </div>
           </div>
           {/* Mobile Close Button */}
           <button 
             onClick={() => setIsMobileOpen(false)} 
-            className="absolute right-4 top-1/2 -translate-y-1/2 lg:hidden p-1.5 text-gray-400 hover:text-gray-700 bg-white hover:bg-gray-100 rounded-lg transition-colors border shadow-sm"
+            className="absolute right-4 top-1/2 -translate-y-1/2 lg:hidden p-1.5 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-gray-100"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -143,10 +143,9 @@ export default function Navbar() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2.5">
-          <div className="px-2 mb-5">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Main Menu</p>
-            <div className="h-0.5 w-8 bg-orange-400 rounded-full" />
+        <nav className="flex-1 overflow-y-auto px-4 py-8 space-y-1">
+          <div className="px-3 mb-6">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Main Menu</p>
           </div>
           {navLinks.map((link) => (
             <NavLink
@@ -155,10 +154,10 @@ export default function Navbar() {
               end={link.to === '/dashboard'}
               onClick={() => setIsMobileOpen(false)}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-3 rounded-xl text-[13px] font-semibold transition-all duration-200 border ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
                   isActive 
-                    ? 'bg-orange-50 border-orange-100 text-orange-600 shadow-[0_2px_10px_-3px_rgba(249,115,22,0.1)]' 
-                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50 border-transparent'
+                    ? 'bg-brand-50 text-brand-600' 
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
                 }`
               }
             >
@@ -169,10 +168,10 @@ export default function Navbar() {
         </nav>
 
         {/* Bottom Profile & Logout area */}
-        <div className="p-4 border-t border-gray-100 m-4 mt-0 bg-gray-50 rounded-2xl border">
+        <div className="p-4 mt-auto">
           <button
             onClick={handleLogout}
-            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-xl text-sm font-semibold text-gray-600 hover:text-white hover:bg-red-500 hover:shadow-md hover:shadow-red-200 transition-all duration-300"
+            className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
             title="Log out of panel"
           >
             <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
