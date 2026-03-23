@@ -952,8 +952,8 @@ const HomeVerificationPage = () => {
                 <p className="text-[10px] font-bold text-slate-400">{Math.round(((currentStep + 1) / STEPS.length) * 100)}% Complete</p>
               </div>
               <div className="h-8 w-[1px] bg-slate-100 hidden sm:block" />
-              <div className="w-10 h-10 rounded-full border-2 border-brand-500/20 flex items-center justify-center p-0.5">
-                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-xs">
+              <div className="w-8 h-8 rounded-full border-2 border-brand-500/20 flex items-center justify-center p-0.5">
+                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-[10px]">
                   {currentStep + 1}
                 </div>
               </div>
@@ -1206,81 +1206,84 @@ const HomeVerificationPage = () => {
         </div>{/* end form sections area */}
 
         {/* Persistent Bottom Navigation */}
-        <div className="fixed bottom-0 right-0 left-0 lg:left-64 sm:left-20 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 sm:p-5 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-          <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex-1 flex justify-start">
+        <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 p-2 sm:p-3 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+          <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex gap-1.5 sm:gap-3 transition-all pb-1.5">
             {currentStep > 0 && (
               <button
                 onClick={() => {
                   setCurrentStep(prev => prev - 1);
                 }}
-                className="flex items-center justify-center h-8 sm:h-9 px-4 sm:px-6 bg-white border border-slate-200 text-slate-500 font-bold rounded-lg hover:bg-slate-50 active:scale-95 transition-all text-xs tracking-tight shadow-sm whitespace-nowrap"
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-0.5 sm:py-1.5 bg-slate-100/80 text-slate-500 font-bold rounded-xl hover:bg-slate-200 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase tracking-wider shrink-0 ${currentStep === STEPS.length - 1 ? 'w-10 sm:w-auto px-1 sm:px-4' : 'flex-1'}`}
               >
-                Back
+                <ArrowLeft size={12} sm:size={14} />
+                <span>Back</span>
               </button>
             )}
             </div>
 
-            <div className="flex-1 flex justify-end">
-              {currentStep < STEPS.length - 1 ? (
-                <button
-                  onClick={() => {
-                    setCurrentStep(prev => prev + 1);
-                  }}
-                  className="h-8 px-8 rounded-lg font-bold text-xs tracking-tight transition-all flex items-center justify-center bg-brand-600 text-white hover:bg-brand-700 active:scale-95 shadow-sm"
-                >
-                  Next Step
-                </button>
-              ) : (
-                <div className="flex items-center gap-2">
-                  {(isAdmin && (status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected')) ? (
+            {currentStep < STEPS.length - 1 ? (
+              <button
+                onClick={() => {
+                  setCurrentStep(prev => prev + 1);
+                }}
+                className="flex-1 py-1.5 sm:py-2 rounded-xl font-black text-[9px] sm:text-[11px] uppercase tracking-[0.2em] transition-all shadow-md flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-orange-200 hover:shadow-orange-300 active:scale-95"
+              >
+                Next Step
+                <ChevronRight size={12} sm:size={14} />
+              </button>
+            ) : (
+              <div className="flex-[3] flex gap-2 w-full">
+                {(isAdmin && (status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected')) ? (
+                  <button
+                    onClick={() => {
+                      const error = validateHomeVerification();
+                      if (error) { toast.error(error); return; }
+                      const label = status === 'submitted' ? "Save changes and keep as Submitted?" : "Resubmit this record to 'Submitted' status?";
+                      confirmAction(label, () => handleSubmit('submitted'));
+                    }}
+                    disabled={isApiLoading}
+                    className="flex-1 py-0.5 sm:py-1.5 px-0.5 bg-brand-500 text-white font-black rounded-xl hover:bg-brand-600 active:scale-95 transition-all text-[8px] sm:text-[10px] uppercase tracking-wider shadow-md flex flex-col sm:flex-row items-center justify-center gap-1"
+                  >
+                    {isApiLoading ? <Loader size="xs" color="white" /> : <Save size={10} sm:size={12} />}
+                    <span>{status === 'submitted' ? 'Update Record' : 'Shift to Submitted'}</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setIsRejectModalOpen(true)}
+                      disabled={isApiLoading || isReadOnly}
+                      className="flex-1 py-0.5 sm:py-1.5 px-0.5 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                    >
+                      {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="xs" color="red" /> : <XCircle size={10} sm:size={12} />}
+                      <span>Reject</span>
+                    </button>
+                    <button
+                      onClick={handleSave}
+                      disabled={isApiLoading || isReadOnly}
+                      className="flex-1 py-0.5 sm:py-1.5 px-0.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                    >
+                      {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : <Save size={10} sm:size={12} />}
+                      <span>Draft</span>
+                    </button>
                     <button
                       onClick={() => {
                         const error = validateHomeVerification();
                         if (error) { toast.error(error); return; }
-                        const label = status === 'submitted' ? "Save changes and keep as Submitted?" : "Resubmit this record to 'Submitted' status?";
-                        confirmAction(label, () => handleSubmit('submitted'));
+                        confirmAction("Submit for final review?", () => handleSubmit('submitted'));
                       }}
-                      disabled={isApiLoading}
-                      className="h-8 px-6 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 active:scale-95 transition-all text-xs tracking-tight flex items-center justify-center shadow-sm"
+                      disabled={isApiLoading || isReadOnly}
+                      className={`flex-[1.5] py-0.5 sm:py-1.5 px-0.5 rounded-xl font-black text-[8px] sm:text-[10px] uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
+                        ${!isReadOnly
+                          ? 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
+                          : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
                     >
-                      {isApiLoading ? <Loader size="xs" color="white" /> : (status === 'submitted' ? 'Update Record' : 'Shift to Submitted')}
+                      {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : <CheckCircle size={10} sm:size={12} />}
+                      <span>Submit</span>
                     </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => setIsRejectModalOpen(true)}
-                        disabled={isApiLoading || isReadOnly}
-                        className="h-8 px-4 bg-red-50 border border-red-100 text-red-600 font-bold rounded-lg hover:bg-red-100 active:scale-95 transition-all text-xs flex items-center justify-center"
-                      >
-                        {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="xs" color="red" /> : 'Reject'}
-                      </button>
-                      <button
-                        onClick={handleSave}
-                        disabled={isApiLoading || isReadOnly}
-                        className="h-8 px-4 bg-white border border-slate-200 text-slate-500 font-bold rounded-lg hover:bg-slate-50 active:scale-95 transition-all text-xs flex items-center justify-center"
-                      >
-                        {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : 'Draft'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          const error = validateHomeVerification();
-                          if (error) { toast.error(error); return; }
-                          confirmAction("Submit for final review?", () => handleSubmit('submitted'));
-                        }}
-                        disabled={isApiLoading || isReadOnly}
-                        className={`h-8 px-6 rounded-lg font-bold text-xs tracking-tight transition-all flex items-center justify-center shadow-sm
-                          ${!isReadOnly
-                            ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
-                            : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'}`}
-                      >
-                        {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : 'Submit'}
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
