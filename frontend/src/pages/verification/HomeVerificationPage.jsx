@@ -563,7 +563,10 @@ const HomeVerificationPage = () => {
       case 'studentInfo':
         return isVal(form.scholarshipType) && isVal(form.studentId) && isVal(form.studentName) && isVal(form.mobile) && isVal(form.verifierName) && /^\d{10}$/.test(form.mobile);
       case 'academic':
-        return isVal(form.marks10) && isVal(form.marks11) && isVal(form.collegeExamMarks) && isVal(form.attendance12);
+        return isVal(form.marks10) && parseFloat(form.marks10) <= 100 &&
+               isVal(form.marks11) && parseFloat(form.marks11) <= 100 &&
+               isVal(form.collegeExamMarks) && parseFloat(form.collegeExamMarks) <= 50 &&
+               isVal(form.attendance12) && parseFloat(form.attendance12) <= 100;
       case 'personal':
         return isVal(form.fatherName) && isVal(form.address) && isVal(form.village) && isVal(form.tehsil) && isVal(form.district) && isVal(form.pincode) && /^\d{6}$/.test(form.pincode) && (form.subject12 !== 'Other' || isVal(form.subject12Custom));
       case 'health':
@@ -584,7 +587,7 @@ const HomeVerificationPage = () => {
       case 'declaration':
         return form.studentSignatureUrl && form.supervisorSignatureUrl && (form.fatherSignatureUrl || form.motherSignatureUrl);
       case 'remarks':
-        return isVal(form.homeVisitMarks) && isVal(form.supervisorRemarks);
+        return isVal(form.homeVisitMarks) && parseFloat(form.homeVisitMarks) <= 50 && isVal(form.supervisorRemarks);
       default:
         return true;
     }
@@ -771,12 +774,23 @@ const HomeVerificationPage = () => {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type, checked, min, max } = e.target;
     if (type === 'checkbox') {
       setForm(prev => {
         const arr = prev[name] ? [...prev[name]] : [];
         return { ...prev, [name]: checked ? [...arr, value] : arr.filter(v => v !== value) };
       });
+    } else if (type === 'number') {
+      let val = value;
+      if (val !== '') {
+        const num = parseFloat(val);
+        const minVal = parseFloat(min);
+        const maxVal = parseFloat(max);
+        
+        if (!isNaN(minVal) && num < minVal) val = min;
+        if (!isNaN(maxVal) && num > maxVal) val = max;
+      }
+      setForm(prev => ({ ...prev, [name]: val }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
     }
@@ -1615,7 +1629,7 @@ const HomeVerificationPage = () => {
                   <input name="schoolName" value={form.schoolName} onChange={handleChange} placeholder="School name" className={inputCls} />
                 </Field>
                 <Field label="12th Class Fees (₹)">
-                  <input name="classFees12" value={form.classFees12} onChange={handleChange} type="number" placeholder="Annual fees" className={inputCls} />
+                  <input name="classFees12" value={form.classFees12} onChange={handleChange} type="number" min="0" placeholder="Annual fees" className={inputCls} />
                 </Field>
                 <Field label="12th Stream">
                   <select
@@ -1890,7 +1904,7 @@ const HomeVerificationPage = () => {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <Field label="Total Annual Family Income (₹)" required>
-                  <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" placeholder="e.g. 150000" className={inputCls} />
+                  <input name="totalAnnualIncome" value={form.totalAnnualIncome} onChange={handleChange} type="number" min="0" placeholder="e.g. 150000" className={inputCls} />
                 </Field>
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-2">Income Sources</label>
@@ -2048,6 +2062,7 @@ const HomeVerificationPage = () => {
                         value={form.totalLand}
                         onChange={handleChange}
                         type="number"
+                        min="0"
                         placeholder="0"
                         className={`${inputCls} w-24`}
                       />

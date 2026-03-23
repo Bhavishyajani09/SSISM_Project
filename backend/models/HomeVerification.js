@@ -41,12 +41,12 @@ const homeVerificationSchema = new mongoose.Schema({
   studentId: { type: String, trim: true, unique: true, required: true },
 
   // --- Academic Details ---
-  marks10: { type: Number },
-  marks11: { type: Number },
-  marks12: { type: Number },
-  collegeExamMarks: { type: Number },
+  marks10: { type: Number, min: 0, max: 100 },
+  marks11: { type: Number, min: 0, max: 100 },
+  marks12: { type: Number, min: 0, max: 100 },
+  collegeExamMarks: { type: Number, min: 0, max: 50 },
   homeVisitMarks: { type: Number, min: 0, max: 50 },
-  attendance12: { type: Number },
+  attendance12: { type: Number, min: 0, max: 100 },
   totalMarks: { type: Number },
 
   // --- Personal Information ---
