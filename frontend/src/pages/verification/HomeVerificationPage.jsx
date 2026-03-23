@@ -1020,10 +1020,8 @@ const HomeVerificationPage = () => {
       }
     }
 
-    // 7. Signatures
-    if (!form.studentSignatureUrl) return "Student Signature is required.";
+    // 7. Signatures (ONLY Supervisor Signature required)
     if (!form.supervisorSignatureUrl) return "Supervisor Signature is required.";
-    if (!form.fatherSignatureUrl && !form.motherSignatureUrl) return "Either Father or Mother signature is required.";
 
     // 8. Evaluation & Remarks
     if (!isVal(form.attendance12)) return "Attendance in 12th is required.";
