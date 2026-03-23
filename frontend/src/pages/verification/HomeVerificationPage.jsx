@@ -949,8 +949,8 @@ const HomeVerificationPage = () => {
                 <p className="text-[10px] font-bold text-slate-400">{Math.round(((currentStep + 1) / STEPS.length) * 100)}% Complete</p>
               </div>
               <div className="h-8 w-[1px] bg-slate-100 hidden sm:block" />
-              <div className="w-10 h-10 rounded-full border-2 border-brand-500/20 flex items-center justify-center p-0.5">
-                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-xs">
+              <div className="w-8 h-8 rounded-full border-2 border-brand-500/20 flex items-center justify-center p-0.5">
+                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-[10px]">
                   {currentStep + 1}
                 </div>
               </div>
@@ -1203,16 +1203,16 @@ const HomeVerificationPage = () => {
         </div>{/* end form sections area */}
 
         {/* Persistent Bottom Navigation */}
-        <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 p-2.5 sm:p-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-          <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex gap-2 sm:gap-4 transition-all pb-2">
+        <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-slate-200 p-2 sm:p-3 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+          <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto flex gap-1.5 sm:gap-3 transition-all pb-1.5">
             {currentStep > 0 && (
               <button
                 onClick={() => {
                   setCurrentStep(prev => prev - 1);
                 }}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-1 sm:py-2 bg-slate-100/80 text-slate-500 font-bold rounded-xl hover:bg-slate-200 active:scale-95 transition-all text-[8px] sm:text-[10px] uppercase tracking-wider shrink-0 ${currentStep === STEPS.length - 1 ? 'w-10 sm:w-auto px-1 sm:px-4' : 'flex-1'}`}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-0.5 sm:py-1.5 bg-slate-100/80 text-slate-500 font-bold rounded-xl hover:bg-slate-200 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase tracking-wider shrink-0 ${currentStep === STEPS.length - 1 ? 'w-10 sm:w-auto px-1 sm:px-4' : 'flex-1'}`}
               >
-                <ArrowLeft size={14} sm:size={16} />
+                <ArrowLeft size={12} sm:size={14} />
                 <span>Back</span>
               </button>
             )}
@@ -1222,27 +1222,27 @@ const HomeVerificationPage = () => {
                 onClick={() => {
                   setCurrentStep(prev => prev + 1);
                 }}
-                className="flex-1 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] transition-all shadow-md flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-orange-200 hover:shadow-orange-300 active:scale-95"
+                className="flex-1 py-1.5 sm:py-2 rounded-xl font-black text-[9px] sm:text-[11px] uppercase tracking-[0.2em] transition-all shadow-md flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-orange-200 hover:shadow-orange-300 active:scale-95"
               >
                 Next Step
-                <ChevronRight size={14} sm:size={16} />
+                <ChevronRight size={12} sm:size={14} />
               </button>
             ) : (
               <div className="flex-[3] flex gap-2 w-full">
                 <button
                   onClick={() => setIsRejectModalOpen(true)}
                   disabled={isApiLoading || isReadOnly}
-                  className="flex-1 py-1 sm:py-2 px-0.5 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                  className="flex-1 py-0.5 sm:py-1.5 px-0.5 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
                 >
-                  {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="xs" color="red" /> : <XCircle size={12} sm:size={14} />}
+                  {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="xs" color="red" /> : <XCircle size={10} sm:size={12} />}
                   <span>Reject</span>
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={isApiLoading || isReadOnly}
-                  className="flex-1 py-1 sm:py-2 px-0.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                  className="flex-1 py-0.5 sm:py-1.5 px-0.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
                 >
-                  {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : <Save size={12} sm:size={14} />}
+                  {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : <Save size={10} sm:size={12} />}
                   <span>Draft</span>
                 </button>
                 <button
@@ -1252,12 +1252,12 @@ const HomeVerificationPage = () => {
                     confirmAction("Submit for final review?", () => handleSubmit('submitted'));
                   }}
                   disabled={isApiLoading || isReadOnly}
-                  className={`flex-[1.5] py-1 sm:py-2 px-0.5 rounded-xl font-black text-[8px] sm:text-[10px] uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
+                  className={`flex-[1.5] py-0.5 sm:py-1.5 px-0.5 rounded-xl font-black text-[8px] sm:text-[10px] uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
                     ${!isReadOnly
                       ? 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
                 >
-                  {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : <CheckCircle size={12} sm:size={14} />}
+                  {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : <CheckCircle size={10} sm:size={12} />}
                   <span>Submit</span>
                 </button>
               </div>

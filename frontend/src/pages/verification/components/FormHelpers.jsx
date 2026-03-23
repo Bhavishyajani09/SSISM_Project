@@ -278,7 +278,6 @@ export const PhotoUpload = React.memo(({ label, id, onUpload, previewUrl, studen
             <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-sm flex items-center justify-center transition-all duration-300 border ${label.includes("Other") ? 'text-orange-500 border-orange-100 scale-110 shadow-orange-100' : 'text-slate-300 border-slate-100'}`}>
               {label.includes("Other") ? <Plus size={20} strokeWidth={3} /> : <Camera size={18} />}
             </div>
-            {label.includes("Other") && <span className="text-[9px] sm:text-[10px] font-black text-orange-600 uppercase tracking-tight mt-1">Add Multiple</span>}
             <div className="flex gap-2 w-full mt-1">
               <button
                 type="button"
