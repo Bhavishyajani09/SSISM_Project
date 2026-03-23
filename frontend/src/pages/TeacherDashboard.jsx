@@ -88,6 +88,11 @@ export default function TeacherDashboard() {
         if (s.rollNumber) mapping[s.rollNumber] = s.currentStatus;
       });
       setVMap(mapping);
+      
+      // If admin, default to 'submitted' filter automatically if user wants that forced
+      if (userRole === 'admin' && statusFilter === 'all') {
+        setStatusFilter('submitted');
+      }
     } catch (err) {
       console.error('Error fetching students:', err);
       setStudents([]);
@@ -298,135 +303,139 @@ export default function TeacherDashboard() {
         </div>
 
         {/* KPI Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
           <KPICard title="Total Students" value={stats.total} icon={Users} color={colors.slate} onClick={() => navigate('/home-verification', { state: { filter: 'all' } })} />
-          <KPICard title="Submitted By Me" value={stats.submittedByMe} icon={Send} color={colors.blue} onClick={() => navigate('/home-verification', { state: { filter: 'submitted' } })} />
           <KPICard title="Admin Approved" value={stats.approved} icon={CheckCircle} color={colors.green} onClick={() => navigate('/home-verification', { state: { filter: 'approved' } })} />
           <KPICard title="Pending Cases" value={stats.pending} icon={Clock} color={colors.orange} onClick={() => navigate('/home-verification', { state: { filter: 'pending' } })} />
-          <KPICard title="Rejected" value={stats.rejected} icon={AlertCircle} color={colors.red} onClick={() => navigate('/home-verification', { state: { filter: 'rejected' } })} />
-          <KPICard title="Completion" value={`${stats.completionRate}%`} icon={TrendingUp} color={colors.brand} />
         </div>
 
         {/* Analytics & Layout Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 grid-flow-row-dense gap-6 mb-8">
-
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Quick Actions Grid */}
-          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full">
-              <h3 className="text-sm font-bold text-slate-800 mb-5">Quick Actions</h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/add-passed-students')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 transition-all border border-brand-100 group">
-                  <Plus size={20} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-semibold">{userRole === 'admin' ? 'Add Teacher' : 'Add Student'}</span>
-                </button>
-                <button onClick={() => navigate(userRole === 'admin' ? '/teachers' : '/home-verification')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-all border border-emerald-100 group">
-                  <Users size={20} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-semibold">{userRole === 'admin' ? 'View Teachers' : 'Verification'}</span>
-                </button>
-                <button onClick={() => navigate('/home-verification', { state: { filter: 'draft' } })} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-all border border-orange-100 group">
-                  <FileEdit size={20} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-semibold">Drafts</span>
-                </button>
-                <button onClick={() => navigate('/home-verification', { state: { filter: 'pending' } })} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-gray-50 hover:bg-gray-100 text-slate-700 transition-all border border-gray-100 group">
-                  <RefreshCcw size={20} className="group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-semibold">Pending</span>
-                </button>
-              </div>
-            </div>
-
-          {/* Activity & Insights - Right (1/3) */}
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full">
-            <h3 className="text-sm font-bold text-slate-800 mb-5">Insights</h3>
-            <div className="space-y-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-                  <MapPin size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Last Visited</p>
-                  <p className="text-sm font-bold text-slate-900">{getLastVisited()}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                  <TrendingUp size={20} />
-                </div>
-                <div>
-                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Today's Target</p>
-                  <p className="text-sm font-bold text-slate-900">{getTodayVisits()} Records</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Performance & Charts */}
-          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 mb-5">Location Statistics</h3>
-              <div className="space-y-4">
-                {getLocationStats().map(([loc, count]) => (
-                  <div key={loc} className="space-y-1.5">
-                    <div className="flex justify-between text-xs font-medium">
-                      <span className="text-gray-600">{loc}</span>
-                      <span className="text-slate-900">{count} Records</span>
-                    </div>
-                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-brand-500 rounded-full" style={{ width: `${(count / stats.total) * 100}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col items-center justify-center text-center">
-              <h3 className="text-sm font-bold text-slate-800 mb-5 w-full text-left">Status Distribution</h3>
-              <div className="relative w-32 h-32 flex items-center justify-center">
-                <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
-                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#10b981" strokeWidth="3"
-                    strokeDasharray={`${stats.total ? (stats.approved / stats.total) * 100 : 0} 100`} />
-                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#ef4444" strokeWidth="3"
-                    strokeDasharray={`${stats.total ? (stats.rejected / stats.total) * 100 : 0} 100`}
-                    strokeDashoffset={stats.total ? -(stats.approved / stats.total) * 100 : 0} />
-                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f59e0b" strokeWidth="3"
-                    strokeDasharray={`${stats.total ? (stats.pending / stats.total) * 100 : 0} 100`}
-                    strokeDashoffset={stats.total ? -((stats.approved + stats.rejected) / stats.total) * 100 : 0} />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-2xl font-bold text-slate-900">{stats.completionRate}%</span>
-                  <span className="text-[10px] font-medium text-slate-500 uppercase">Complete</span>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4 mt-6 w-full">
-                <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-medium text-slate-600">Approved</span></div>
-                <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[10px] font-medium text-slate-600">Rejected</span></div>
-                <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /><span className="text-[10px] font-medium text-slate-600">Pending</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col">
-            <h3 className="text-sm font-bold text-slate-800 mb-5">Recent Activity</h3>
-            <div className="space-y-4 flex-1">
-              {getRecentActivity().length > 0 ? getRecentActivity().map((activity, idx) => (
-                <div key={idx} className="flex items-start gap-4">
-                  <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${STATUS_CFG[activity.currentStatus]?.bg || 'bg-slate-50 text-slate-400'}`}>
-                    {activity.studentName.charAt(0)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex justify-between items-start gap-2">
-                      <p className="text-xs font-bold text-slate-900 truncate">{activity.studentName}</p>
-                      <span className="text-[10px] font-medium text-slate-400 shrink-0">{formatTimeAgo(activity.verification?.updatedAt)}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-500 mt-0.5 truncate font-medium">
-                      {activity.currentStatus === 'submitted' ? 'Sent for review' : (activity.currentStatus || 'pending').replace('_', ' ')}
-                    </p>
-                  </div>
-                </div>
-              )) : (
-                <p className="text-center text-xs text-slate-400 py-6 italic">No recent activity</p>
+          <div className={`${userRole === 'admin' ? 'lg:col-span-3' : 'lg:col-span-2'} bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full`}>
+            <h3 className="text-sm font-bold text-slate-800 mb-5">Quick Actions</h3>
+            <div className={`grid grid-cols-2 ${userRole === 'admin' ? 'sm:grid-cols-4' : 'sm:grid-cols-4'} gap-4`}>
+              <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/add-passed-students')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 transition-all border border-brand-100 group">
+                <Plus size={20} className="group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-semibold">{userRole === 'admin' ? 'Add Teacher' : 'Add Student'}</span>
+              </button>
+              <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/home-verification')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-all border border-emerald-100 group">
+                <Users size={20} className="group-hover:scale-110 transition-transform" />
+                <span className="text-xs font-semibold">{userRole === 'admin' ? 'View Teachers' : 'Verification'}</span>
+              </button>
+              {userRole !== 'admin' && (
+                <>
+                  <button onClick={() => navigate('/home-verification', { state: { filter: 'draft' } })} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 transition-all border border-orange-100 group">
+                    <FileEdit size={20} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-semibold">Drafts</span>
+                  </button>
+                  <button onClick={() => navigate('/home-verification', { state: { filter: 'pending' } })} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-gray-50 hover:bg-gray-100 text-slate-700 transition-all border border-gray-100 group">
+                    <RefreshCcw size={20} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-semibold">Pending</span>
+                  </button>
+                </>
               )}
             </div>
           </div>
+
+          {userRole !== 'admin' && (
+            <>
+              {/* Activity & Insights - Right (1/3) */}
+              <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full">
+                <h3 className="text-sm font-bold text-slate-800 mb-5">Insights</h3>
+                <div className="space-y-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                      <MapPin size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Last Visited</p>
+                      <p className="text-sm font-bold text-slate-900">{getLastVisited()}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <TrendingUp size={20} />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Today's Target</p>
+                      <p className="text-sm font-bold text-slate-900">{getTodayVisits()} Records</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Performance & Charts */}
+              <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+                  <h3 className="text-sm font-bold text-slate-800 mb-5">Location Statistics</h3>
+                  <div className="space-y-4">
+                    {getLocationStats().map(([loc, count]) => (
+                      <div key={loc} className="space-y-1.5">
+                        <div className="flex justify-between text-xs font-medium">
+                          <span className="text-gray-600">{loc}</span>
+                          <span className="text-slate-900">{count} Records</span>
+                        </div>
+                        <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-brand-500 rounded-full" style={{ width: `${(count / stats.total) * 100}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col items-center justify-center text-center">
+                  <h3 className="text-sm font-bold text-slate-800 mb-5 w-full text-left">Status Distribution</h3>
+                  <div className="relative w-32 h-32 flex items-center justify-center">
+                    <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+                      <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
+                      <circle cx="18" cy="18" r="16" fill="transparent" stroke="#10b981" strokeWidth="3"
+                        strokeDasharray={`${stats.total ? (stats.approved / stats.total) * 100 : 0} 100`} />
+                      <circle cx="18" cy="18" r="16" fill="transparent" stroke="#ef4444" strokeWidth="3"
+                        strokeDasharray={`${stats.total ? (stats.rejected / stats.total) * 100 : 0} 100`}
+                        strokeDashoffset={stats.total ? -(stats.approved / stats.total) * 100 : 0} />
+                      <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f59e0b" strokeWidth="3"
+                        strokeDasharray={`${stats.total ? (stats.pending / stats.total) * 100 : 0} 100`}
+                        strokeDashoffset={stats.total ? -((stats.approved + stats.rejected) / stats.total) * 100 : 0} />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-2xl font-bold text-slate-900">{stats.completionRate}%</span>
+                      <span className="text-[10px] font-medium text-slate-500 uppercase">Complete</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4 mt-6 w-full">
+                    <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-medium text-slate-600">Approved</span></div>
+                    <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[10px] font-medium text-slate-600">Rejected</span></div>
+                    <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /><span className="text-[10px] font-medium text-slate-600">Pending</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col">
+                <h3 className="text-sm font-bold text-slate-800 mb-5">Recent Activity</h3>
+                <div className="space-y-4 flex-1">
+                  {getRecentActivity().length > 0 ? getRecentActivity().map((activity, idx) => (
+                    <div key={idx} className="flex items-start gap-4">
+                      <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${STATUS_CFG[activity.currentStatus]?.bg || 'bg-slate-50 text-slate-400'}`}>
+                        {activity.studentName.charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <p className="text-xs font-bold text-slate-900 truncate">{activity.studentName}</p>
+                          <span className="text-[10px] font-medium text-slate-400 shrink-0">{formatTimeAgo(activity.verification?.updatedAt)}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-0.5 truncate font-medium">
+                          {activity.currentStatus === 'submitted' ? 'Sent for review' : (activity.currentStatus || 'pending').replace('_', ' ')}
+                        </p>
+                      </div>
+                    </div>
+                  )) : (
+                    <p className="text-center text-xs text-slate-400 py-6 italic">No recent activity</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Filters & Table Header */}
@@ -446,7 +455,7 @@ export default function TeacherDashboard() {
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            <div className={`flex flex-wrap items-center ${userRole === 'admin' ? 'justify-end' : 'gap-3'}`}>
               <div className="relative flex-1 min-w-[240px]">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                 <input
@@ -457,23 +466,25 @@ export default function TeacherDashboard() {
                   className="w-full pl-10 pr-4 py-2 text-sm border border-gray-100 rounded-lg bg-slate-50 focus:bg-white focus:ring-2 focus:ring-brand-500/10 focus:border-brand-300 outline-none transition-all"
                 />
               </div>
-              <div className="flex items-center gap-3">
-                <select
-                  className="px-3 py-2 text-xs font-semibold border border-gray-100 rounded-lg bg-slate-50 outline-none focus:ring-2 focus:ring-brand-500/10 transition-all cursor-pointer text-slate-700"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="draft">Draft</option>
-                  <option value="submitted">Submitted</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
-                </select>
-                <button className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-brand-600 transition-colors border border-gray-100">
-                  <Filter size={16} />
-                </button>
-              </div>
+              {userRole !== 'admin' && (
+                <div className="flex items-center gap-3 ml-3">
+                  <select
+                    className="px-3 py-2 text-xs font-semibold border border-gray-100 rounded-lg bg-slate-50 outline-none focus:ring-2 focus:ring-brand-500/10 transition-all cursor-pointer text-slate-700"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="all">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="draft">Draft</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <button className="p-2 rounded-lg bg-slate-50 text-slate-400 hover:text-brand-600 transition-colors border border-gray-100">
+                    <Filter size={16} />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -580,11 +591,11 @@ export default function TeacherDashboard() {
             )}
 
             {/* Registry List */}
-            <div className={`${userRole === 'admin' ? 'block' : 'hidden sm:block'} bg-white rounded-b-xl border-x border-b border-gray-100 overflow-hidden shadow-sm`}>
+            <div className={`${userRole === 'admin' ? 'block' : 'hidden sm:block'} bg-white rounded-b-xl border-x border-b border-gray-100 shadow-sm`}>
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 border-b border-gray-100">
                   <tr>
-                    {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Marks', 'Status', 'Actions'].map(h => (
+                    {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Marks', 'Status', userRole !== 'admin' ? 'Actions' : null].filter(Boolean).map(h => (
                       <th key={h} className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -611,19 +622,21 @@ export default function TeacherDashboard() {
                       <td className="px-6 py-4">
                         <StatusBadge status={getStatus(s.rollNumber)} />
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); handleVerify(s); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all shadow-sm">
-                            <TrendingUp size={14} />
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-brand-600 hover:bg-brand-50 hover:border-brand-100 transition-all shadow-sm">
-                            <Pencil size={14} />
-                          </button>
-                          <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all shadow-sm">
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
+                      {userRole !== 'admin' && (
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2 transition-opacity">
+                            <button onClick={(e) => { e.stopPropagation(); handleVerify(s); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all shadow-sm">
+                              <TrendingUp size={14} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleEdit(s); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-brand-600 hover:bg-brand-50 hover:border-brand-100 transition-all shadow-sm">
+                              <Pencil size={14} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDelete(s._id); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-all shadow-sm">
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>

@@ -250,93 +250,87 @@ export default function AdminVerificationPage() {
           </div>
 
           {/* ── Desktop Table ── */}
-          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto thin-scrollbar">
-            <table className="w-full text-sm min-w-[820px]">
+          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 shadow-sm">
+            <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-gray-100">
                 <tr>
-                  {['Date', 'Student Details', 'Roll / ID', 'Location', 'Mobile', 'Verifier', 'Status', isAdmin ? 'Actions' : null].filter(Boolean).map(h => (
-                    <th key={h} className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">{h}</th>
-                  ))}
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-28">Date</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest">Student Details</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-32">Roll / ID</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-48">Location</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-32">Mobile</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-36">Verifier</th>
+                  <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-widest w-32">Status</th>
+                  {isAdmin && <th className="px-6 py-4 text-center text-[11px] font-bold text-slate-500 uppercase tracking-widest w-32">Actions</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {currentItems.map(v => (
                   <tr key={v._id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 text-slate-400 text-xs cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
-                      {new Date(v.verificationDate).toLocaleDateString('en-IN')}
+                    <td className="px-6 py-4 text-slate-500 text-xs font-medium cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
+                      {new Date(v.verificationDate).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                     </td>
                     <td className="px-6 py-4 cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
                       <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors text-sm">{v.studentName}</p>
                     </td>
                     <td className="px-6 py-4 cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
-                      <span className="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">{v.studentId || '—'}</span>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">{v.studentId || '—'}</span>
                     </td>
                     <td className="px-6 py-4 text-slate-600 cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
                       <div className="flex items-center gap-2">
-                        <MapPin size={12} className="text-slate-400 shrink-0" />
-                        <span className="truncate max-w-[160px]">{v.village || '—'}, {v.district || '—'}</span>
+                        <MapPin size={11} className="text-slate-400 shrink-0" />
+                        <span className="truncate max-w-[140px] text-xs font-medium">{v.village || '—'}, {v.district || '—'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
+                    <td className="px-6 py-4 text-slate-600 text-xs font-semibold cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
                       {v.mobile || '—'}
                     </td>
-                    <td className="px-6 py-4 text-slate-500 font-medium text-xs cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
+                    <td className="px-6 py-4 text-slate-500 font-medium text-[10px] cursor-pointer" onClick={() => navigate(`/verification/home/${v._id}`)}>
                       {v.verifierName || '—'}
                     </td>
                     <td className="px-6 py-4">
                       <StatusBadge status={v.status} />
                     </td>
                     {isAdmin && (
-                      <td className="px-5 py-4">
-                        {statusFilter === 'submitted' && (
-                          <div className="flex items-center gap-2">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                          {statusFilter === 'submitted' && (
+                            <>
+                              <button
+                                onClick={() => handleAction(v._id, 'approve')}
+                                disabled={actionLoading === v._id + 'approve'}
+                                className="p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg border border-emerald-100 disabled:opacity-50 transition-all active:scale-[0.9] flex items-center justify-center h-8 w-8"
+                                title="Approve"
+                              >
+                                {actionLoading === v._id + 'approve' ? <Loader size="xs" /> : <CheckCircle size={14} />}
+                              </button>
+                              <button
+                                onClick={() => handleAction(v._id, 'reject')}
+                                disabled={actionLoading === v._id + 'reject'}
+                                className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-100 disabled:opacity-50 transition-all active:scale-[0.9] flex items-center justify-center h-8 w-8"
+                                title="Reject"
+                              >
+                                {actionLoading === v._id + 'reject' ? <Loader size="xs" /> : <XCircle size={14} />}
+                              </button>
+                            </>
+                          )}
+                          {statusFilter === 'rejected' && (
                             <button
                               onClick={() => handleAction(v._id, 'approve')}
-                              disabled={actionLoading === v._id + 'approve'}
-                              className="p-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg border border-green-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
-                              title="Approve"
+                              className="px-3 py-1.5 bg-white text-green-600 border border-green-200 rounded-lg text-[10px] font-bold hover:bg-green-50 active:scale-95 transition-all flex items-center gap-1.5"
                             >
-                              {actionLoading === v._id + 'approve' ? <Loader size="xs" color="brand" /> : <CheckCircle size={16} />}
+                              <CheckCircle size={12} /> Approve
                             </button>
-
+                          )}
+                          {(statusFilter === 'teacher_rejected' || statusFilter === 'student_rejected') && (
                             <button
-                              onClick={() => handleAction(v._id, 'reject')}
-                              disabled={actionLoading === v._id + 'reject'}
-                              className="p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg border border-red-200 disabled:opacity-50 transition-colors flex items-center justify-center min-w-[36px]"
-                              title="Reject"
+                              onClick={() => handleAction(v._id, 'submit-for-review')}
+                              className="px-3 py-1.5 bg-white text-blue-600 border border-blue-200 rounded-lg text-[10px] font-bold hover:bg-blue-50 active:scale-95 transition-all flex items-center gap-1.5"
                             >
-                              {actionLoading === v._id + 'reject' ? <Loader size="xs" color="slate" /> : <XCircle size={16} />}
+                              <Send size={12} /> Resubmit
                             </button>
-
-                          </div>
-                        )}
-                        {statusFilter === 'rejected' && (
-                          <button
-                            onClick={() => handleAction(v._id, 'approve')}
-                            disabled={actionLoading === v._id + 'approve'}
-                            className="px-4 py-2 bg-white text-green-600 border border-green-200 rounded-xl text-xs font-bold hover:bg-green-50 hover:border-green-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50"
-                          >
-                            {actionLoading === v._id + 'approve' ? <Loader size="xs" /> : <CheckCircle size={13} />}
-                            Approve
-                          </button>
-                        )}
-                        {(statusFilter === 'teacher_rejected' || statusFilter === 'student_rejected') && (
-                          <button
-                            onClick={() => handleAction(v._id, 'submit-for-review')}
-                            disabled={actionLoading === v._id + 'submit-for-review'}
-                            className="px-4 py-2 bg-white text-blue-600 border border-blue-200 rounded-xl text-xs font-bold hover:bg-blue-50 hover:border-blue-300 shadow-sm active:scale-95 transition-all flex items-center gap-2 group disabled:opacity-50"
-                          >
-                            {actionLoading === v._id + 'submit-for-review' ? (
-                              <Loader size="xs" />
-                            ) : (
-                              <Send size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                            )}
-                            Move to Submitted
-                          </button>
-                        )}
-                        {statusFilter === 'approved' && (
-                          <span className="text-gray-300 text-xs">—</span>
-                        )}
+                          )}
+                        </div>
                       </td>
                     )}
                   </tr>
