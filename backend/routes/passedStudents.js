@@ -284,6 +284,18 @@ router.post('/manual', auth, async (req, res) => {
             };
         });
 
+        // Check for duplicate roll numbers in database
+        const providedRolls = studentsWithSerial.map(s => s.rollNumber);
+        const existingStudents = await PassedStudent.find({ rollNumber: { $in: providedRolls } });
+        
+        if (existingStudents.length > 0) {
+            const dupRolls = existingStudents.map(s => s.rollNumber).join(', ');
+            return res.status(400).json({
+                success: false,
+                message: `Duplicate Roll Number(s) found: ${dupRolls}. Students not added.`
+            });
+        }
+
         const savedStudents = await PassedStudent.insertMany(studentsWithSerial);
         res.status(201).json({
             success: true,
@@ -357,24 +369,53 @@ router.post('/upload-excel', auth, upload.single('file'), async (req, res) => {
             if (!s.serialNumber) {
                 s.serialNumber = nextSerial++;
             } else {
-                // If serialNumber is provided, ensure nextSerial stays above it to avoid collisions next time
                 const sn = parseInt(s.serialNumber, 10);
                 if (!isNaN(sn) && sn >= nextSerial) {
                     nextSerial = sn + 1;
                 }
             }
-            // Generate Roll Number if not in Excel
             if (!s.rollNumber) {
                 s.rollNumber = `SCH${currentYear}${String(s.serialNumber).padStart(3, '0')}`;
             }
             return s;
         });
 
-        const savedStudents = await PassedStudent.insertMany(studentsWithSerial);
+        // ─── Filter out duplicates from database ───
+        const rollNumbers = studentsWithSerial.map(s => s.rollNumber);
+        const serialNumbers = studentsWithSerial.map(s => s.serialNumber);
+
+        const existingRecords = await PassedStudent.find({
+            $or: [
+                { rollNumber: { $in: rollNumbers } },
+                { serialNumber: { $in: serialNumbers } }
+            ]
+        }).select('rollNumber serialNumber');
+
+        const existingRolls = new Set(existingRecords.map(r => String(r.rollNumber)));
+        const existingSerials = new Set(existingRecords.map(r => Number(r.serialNumber)));
+
+        const newStudents = studentsWithSerial.filter(s => 
+            !existingRolls.has(String(s.rollNumber)) && 
+            !existingSerials.has(Number(s.serialNumber))
+        );
+
+        if (newStudents.length === 0) {
+            return res.status(200).json({
+                success: true,
+                message: 'All students in the file were already in the database.',
+                count: 0
+            });
+        }
+
+        const savedStudents = await PassedStudent.insertMany(newStudents);
+        const skippedCount = studentsWithSerial.length - newStudents.length;
+
         res.status(201).json({
             success: true,
-            message: `${savedStudents.length} student(s) uploaded successfully.`,
+            message: `${savedStudents.length} student(s) added. ${skippedCount > 0 ? skippedCount + ' duplicates skipped.' : ''}`,
             data: savedStudents,
+            count: savedStudents.length,
+            skipped: skippedCount
         });
     } catch (error) {
         console.error('Error uploading Excel:', error);

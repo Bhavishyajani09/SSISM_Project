@@ -4,6 +4,7 @@ const passedStudentSchema = new mongoose.Schema({
     serialNumber: {
         type: Number,
         required: true,
+        unique: true,
     },
     studentName: {
         type: String,
@@ -73,6 +74,7 @@ const passedStudentSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+        unique: true,
     },
     scholarshipExamMarks: {
         type: Number,
