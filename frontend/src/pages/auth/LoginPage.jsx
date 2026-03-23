@@ -29,7 +29,7 @@ const LoginPage = () => {
       const data = res.data;
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      
+
       // Redirect based on role
       if (data.user.role === 'admin') {
         navigate('/admin-verification');
@@ -116,7 +116,7 @@ const LoginPage = () => {
           <h2 className="text-xl lg:text-2xl font-semibold text-orange-50 mb-8 border-b border-orange-300 pb-4 inline-block drop-shadow-sm">
             Sant Singaji Educational Society, Sandalpur
           </h2>
-          <p className="text-base lg:text-lg text-orange-50/90 max-w-lg mx-auto leading-relaxed font-normal tracking-wide bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm shadow-sm">
+          <p className="text-base lg:text-lg text-orange-50/90 max-w-lg mx-auto leading-relaxed font-normal tracking-wide bg-white/10 p-6 rounded-2xl border border-white/20 backdrop-blur-md shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-[0_35px_60px_-15px_rgba(0,0,0,0.3)]">
             Empowering education through transparent field verifications. Log in to manage your assigned students and submit crucial home visit reports directly from the field.
           </p>
         </div>
@@ -131,7 +131,7 @@ const LoginPage = () => {
         </div>
 
         <div className="w-full max-w-md glass-card rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] p-8 sm:p-10 z-10 lg:mt-0 relative pt-20 sm:pt-10 animate-fade-up">
-          
+
           {/* Mobile Logo - Centered and Floating */}
           <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 lg:hidden flex flex-col items-center w-full">
             <div className="w-24 h-24 rounded-full flex items-center justify-center overflow-hidden shadow-2xl border-[6px] border-white bg-white">

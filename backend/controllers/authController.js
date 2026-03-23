@@ -95,6 +95,7 @@ exports.getUsersActivity = async (req, res) => {
             const count = await HomeVerification.countDocuments({ verifierId: u._id });
             return {
                 id: u._id,
+                name: u.name,
                 email: u.email,
                 role: u.role,
                 verificationCount: count,
