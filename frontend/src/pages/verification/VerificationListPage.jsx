@@ -276,13 +276,19 @@ export default function VerificationListPage() {
           </div>
 
           {/* ── Desktop Table ── */}
-          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm">
-            <table className="w-full text-xs">
+          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 overflow-x-auto lg:overflow-x-hidden shadow-sm">
+            <table className="w-full text-[11px] lg:text-xs table-fixed">
               <thead className="bg-slate-50 border-b border-gray-100">
                 <tr>
-                  {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Track', 'Mobile', 'Status', 'Action'].map(h => (
-                    <th key={h} className="px-6 py-4 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
-                  ))}
+                  <th className="w-12 px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">S.No</th>
+                  <th className="w-40 px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Student Details</th>
+                  <th className="w-40 px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Father Name</th>
+                  <th className="w-24 px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Roll No</th>
+                  <th className="px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Location</th>
+                  <th className="w-24 px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Track</th>
+                  <th className="w-28 px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Mobile</th>
+                  <th className="w-28 px-3 py-3 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="w-20 px-3 py-3 text-right font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -292,29 +298,29 @@ export default function VerificationListPage() {
                     onClick={() => handleOpen(s)}
                     className="hover:bg-slate-50/50 transition-colors cursor-pointer group"
                   >
-                    <td className="px-6 py-4 text-slate-400 text-xs">{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors text-sm">{s.studentName}</p>
+                    <td className="px-3 py-3 text-slate-400 font-medium">{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                    <td className="px-3 py-3">
+                      <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors truncate">{s.studentName}</p>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{s.fatherName}</td>
-                    <td className="px-6 py-4">
-                      <span className="px-2 py-1 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">{s.rollNumber}</span>
+                    <td className="px-3 py-3 text-slate-600 font-medium truncate">{s.fatherName}</td>
+                    <td className="px-3 py-3">
+                      <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">{s.rollNumber}</span>
                     </td>
-                    <td className="px-6 py-4 text-slate-600">
-                      <div className="flex items-center gap-2">
-                        <MapPin size={12} className="text-slate-400" />
+                    <td className="px-3 py-3 text-slate-600">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <MapPin size={10} className="text-slate-400 shrink-0" />
                         <span className="truncate">{s.villageTown || '—'}, {s.district || '—'}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{s.busTrack || '—'}</td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{s.mobileNumber || '—'}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 py-3 text-slate-600 font-medium truncate">{s.busTrack || '—'}</td>
+                    <td className="px-3 py-3 text-slate-600 font-medium whitespace-nowrap">{s.mobileNumber || '—'}</td>
+                    <td className="px-3 py-3">
                       <StatusBadge status={s.currentStatus} />
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end pr-4">
-                        <span className="text-xs font-bold text-brand-500 opacity-0 group-hover:opacity-100 transition-all flex items-center gap-1 group-hover:translate-x-1">
-                          {s.currentStatus === 'pending' ? 'Verify' : 'Open'} <ChevronRight size={16} />
+                    <td className="px-3 py-3 text-right">
+                      <div className="flex items-center justify-end">
+                        <span className="text-[10px] font-bold text-brand-500 flex items-center gap-0.5">
+                          {s.currentStatus === 'pending' ? 'Verify' : 'Open'} <ChevronRight size={14} />
                         </span>
                       </div>
                     </td>
