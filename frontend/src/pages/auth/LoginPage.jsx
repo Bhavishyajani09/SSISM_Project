@@ -114,7 +114,7 @@ const LoginPage = () => {
             Scholarship <br /> Verification Portal
           </h1>
           <h2 className="text-xl lg:text-2xl font-semibold text-orange-50 mb-8 border-b border-orange-300 pb-4 inline-block drop-shadow-sm">
-            Sant Singaji Institute, Sandalpur
+            Sant Singaji Educational Society, Sandalpur
           </h2>
           <p className="text-base lg:text-lg text-orange-50/90 max-w-lg mx-auto leading-relaxed font-normal tracking-wide bg-white/5 p-4 rounded-xl border border-white/10 backdrop-blur-sm shadow-sm">
             Empowering education through transparent field verifications. Log in to manage your assigned students and submit crucial home visit reports directly from the field.
