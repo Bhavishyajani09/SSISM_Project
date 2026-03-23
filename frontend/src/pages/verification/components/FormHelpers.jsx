@@ -49,7 +49,7 @@ export const SectionCard = React.memo(({ icon: Icon, title, color = 'orange', ch
       >
         <div className="flex items-center gap-2 sm:gap-3">
           <div className={`p-2 rounded-lg ${cfg.iconBg} ${cfg.iconText} transition-all`}>
-            <Icon size={18} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
+            <Icon size={18} strokeWidth={1.5} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
           </div>
           <h2 className={`font-bold text-xs sm:text-sm tracking-tight ${open ? 'text-slate-900' : 'text-slate-700'}`}>{title}</h2>
         </div>
@@ -59,7 +59,7 @@ export const SectionCard = React.memo(({ icon: Icon, title, color = 'orange', ch
               Manage
             </span>
           )}
-          {open ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          {open ? <ChevronUp size={16} strokeWidth={1.5} className="text-slate-400" /> : <ChevronDown size={16} strokeWidth={1.5} className="text-slate-400" />}
         </div>
       </button>
       {open && (
@@ -74,16 +74,16 @@ export const SectionCard = React.memo(({ icon: Icon, title, color = 'orange', ch
 // Helper: Form Field
 export const Field = React.memo(({ label, children, required }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-[11px] sm:text-xs font-semibold text-slate-700">
-      {label}{required && <span className="text-red-500 ml-1">*</span>}
+    <label className="text-[12px] sm:text-xs font-semibold text-slate-700">
+      {label}{required && <span className="text-red-500 ml-1 text-xs">*</span>}
     </label>
     {children}
   </div>
 ));
 
-export const inputCls = "w-full px-3 py-1.5 sm:py-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all placeholder:text-slate-400";
-export const selectCls = inputCls + " cursor-pointer";
-export const textareaCls = inputCls + " resize-none min-h-[80px] sm:min-h-[120px]";
+export const inputCls = "w-full px-3 py-2 sm:py-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-[13px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all placeholder:text-slate-400";
+export const selectCls = inputCls + " cursor-pointer h-[38px] sm:h-auto";
+export const textareaCls = inputCls + " resize-none min-h-[100px] sm:min-h-[120px]";
 
 export const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
   const videoRef = useRef(null);
@@ -262,21 +262,21 @@ export const PhotoUpload = React.memo(({ label, id, onUpload, previewUrl, studen
                 className="w-full py-1.5 sm:py-2 bg-white rounded-md text-slate-800 hover:bg-slate-50 flex items-center justify-center transition-all shadow-sm"
                 title="Retake Photo"
               >
-                <Camera size={14} />
+                <Camera size={14} strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => galleryRef.current.click()}
                 className="w-full py-1.5 sm:py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-md text-white hover:bg-white/30 flex items-center justify-center transition-all shadow-sm"
                 title="Replace from Gallery"
               >
-                <ImageIcon size={14} />
+                <ImageIcon size={14} strokeWidth={1.5} />
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-2 w-full px-4 mt-2 sm:mt-0">
             <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-sm flex items-center justify-center transition-all duration-300 border ${label.includes("Other") ? 'text-orange-500 border-orange-100 scale-110 shadow-orange-100' : 'text-slate-300 border-slate-100'}`}>
-              {label.includes("Other") ? <Plus size={20} strokeWidth={3} /> : <Camera size={18} />}
+              {label.includes("Other") ? <Plus size={20} strokeWidth={1.5} /> : <Camera size={18} strokeWidth={1.5} />}
             </div>
             <div className="flex gap-2 w-full mt-1">
               <button
@@ -285,7 +285,7 @@ export const PhotoUpload = React.memo(({ label, id, onUpload, previewUrl, studen
                 className="flex-1 flex items-center justify-center py-2 sm:py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 active:scale-95 transition-all shadow-md shadow-slate-200"
                 title="Capture Photo"
               >
-                <Camera size={14} sm:size={16} />
+                <Camera size={14} strokeWidth={1.5} sm:size={16} />
               </button>
               <button
                 type="button"
@@ -293,7 +293,7 @@ export const PhotoUpload = React.memo(({ label, id, onUpload, previewUrl, studen
                 className="flex-1 flex items-center justify-center py-2 sm:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
                 title="Add from Gallery"
               >
-                <ImageIcon size={14} sm:size={16} />
+                <ImageIcon size={14} strokeWidth={1.5} sm:size={16} />
               </button>
             </div>
           </div>
@@ -369,14 +369,14 @@ export const SignatureField = React.memo(({ label, onUpload, previewUrl, student
                 className="w-full py-1 sm:py-1.5 bg-white rounded-md text-slate-800 flex items-center justify-center shadow-sm transition-all text-xs"
                 title="Retake Signature"
               >
-                <Camera size={14} />
+                <Camera size={14} strokeWidth={1.5} />
               </button>
               <button
                 onClick={() => galleryRef.current.click()}
                 className="w-full py-1 sm:py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-md text-white flex items-center justify-center shadow-sm transition-all text-xs"
                 title="Replace from Gallery"
               >
-                <ImageIcon size={14} />
+                <ImageIcon size={14} strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -416,23 +416,32 @@ export const CheckItem = React.memo(({ name, value, label, checked, onChange }) 
         onChange={() => onChange(name, value)}
         className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
       />
-      <span className="text-[11px] sm:text-sm font-medium text-slate-700">{label}</span>
+      <span className="text-xs sm:text-sm font-medium text-slate-700">{label}</span>
     </label>
   );
 });
 
-export const RadioItem = React.memo(({ name, value, label, checked, onChange }) => {
+export const RadioItem = React.memo(({ name, value, label, checked, onChange, form, setForm }) => {
+  const isChecked = checked !== undefined ? checked : (form && form[name] === value);
+  const handleToggle = () => {
+    if (onChange) onChange(name, value);
+    else if (setForm) setForm(prev => ({ ...prev, [name]: value }));
+  };
+
   return (
-    <label className={`flex items-center gap-2 p-1.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${checked ? 'border-brand-500 bg-brand-50/30 shadow-sm' : 'border-slate-100 bg-slate-50/30 hover:bg-white'}`}>
+    <label 
+      onClick={handleToggle}
+      className={`flex items-center gap-2 p-1.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${isChecked ? 'border-brand-500 bg-brand-50/30 shadow-sm' : 'border-slate-100 bg-slate-50/30 hover:bg-white'}`}
+    >
       <input
         type="radio"
         name={name}
         value={value}
-        checked={checked}
-        onChange={() => onChange(name, value)}
+        checked={isChecked}
+        onChange={() => {}}
         className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-slate-300 text-brand-600 focus:ring-brand-500"
       />
-      <span className="text-[11px] sm:text-sm font-medium text-slate-700">{label}</span>
+      <span className="text-xs sm:text-sm font-medium text-slate-700">{label}</span>
     </label>
   );
 });

@@ -60,7 +60,7 @@ export const StudentInfoSection = React.memo(({
               title="Auto-filled from your logged-in account"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" title="Read-only">
-              <Lock size={16} />
+              <Lock size={16} strokeWidth={1.5} />
             </span>
           </div>
         </Field>
@@ -210,7 +210,7 @@ export const PersonalSection = React.memo(({
         </Field>
         <div className="sm:col-span-2 lg:col-span-3">
           <label className="text-sm font-semibold text-slate-700 block mb-2">
-            <div className="flex items-center gap-1.5"><Trophy size={14} className="text-amber-500" /> Any Special Achievements / Awards?</div>
+            <div className="flex items-center gap-1.5"><Trophy size={14} strokeWidth={1.5} className="text-amber-500" /> Any Special Achievements / Awards?</div>
           </label>
           <div className="flex gap-4 sm:gap-6 mb-3">
             <RadioItem name="hasAchievements" value="yes" label="Yes" form={form} setForm={setForm} />
@@ -276,27 +276,27 @@ export const FamilySection = React.memo(({ familyMembers, updateMember, addFamil
       onToggle={() => { }}
       locked={isReadOnly}
     >
-      <div className="overflow-x-auto rounded-xl border border-slate-200 thin-scrollbar">
-        <table className="w-full text-sm min-w-[600px]">
+      <div className="overflow-x-auto rounded-xl border border-slate-100 thin-scrollbar">
+        <table className="w-full text-sm min-w-[700px]">
           <thead>
-            <tr className="bg-slate-50 text-slate-600 uppercase tracking-tight text-[9px] sm:text-[10px]">
+            <tr className="bg-slate-50/80 text-slate-500 uppercase tracking-tight text-[9px] sm:text-[10px] border-b border-slate-100">
               {['Name', 'Relation', 'Occupation', 'Qualification', 'Income (₹)', 'Mobile', ''].map(h => (
-                <th key={h} className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold">{h}</th>
+                <th key={h} className="px-3 py-3 sm:px-4 sm:py-4 text-left font-bold">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {familyMembers.map((m, i) => (
               <tr key={i} className="border-t border-slate-100/60 hover:bg-slate-50/50 transition-colors">
-                <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
+                <td className="px-2 py-2 sm:px-3 sm:py-3">
                   <input value={m.name} onChange={e => updateMember(i, 'name', e.target.value)}
                     placeholder="Name"
-                    className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 transition-all font-medium" />
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-100 bg-white text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all font-medium" />
                 </td>
                 <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                   {['Father', 'Mother', 'Sister', 'Brother', ''].includes(m.relation) ? (
                     <select value={m.relation} onChange={e => updateMember(i, 'relation', e.target.value)}
-                      className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 cursor-pointer font-medium">
+                      className="w-full px-2 py-1.5 rounded-lg border border-slate-100 bg-white text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 cursor-pointer font-medium transition-all">
                       <option value="">Select</option>
                       <option value="Father">Father</option>
                       <option value="Mother">Mother</option>
@@ -311,13 +311,13 @@ export const FamilySection = React.memo(({ familyMembers, updateMember, addFamil
                         onChange={e => updateMember(i, 'relation', e.target.value)}
                         autoFocus
                         placeholder="Relation"
-                        className="w-full pl-1.5 pr-5 py-1 rounded-md border border-orange-400 bg-white text-[11px] sm:text-sm focus:outline-none font-bold text-orange-600"
+                        className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-200 bg-white text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500/30 font-bold text-orange-600 transition-all"
                       />
                       <button
                         onClick={() => updateMember(i, 'relation', '')}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-orange-500"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-orange-500"
                       >
-                        <X size={10} />
+                        <X size={12} strokeWidth={1.5} />
                       </button>
                     </div>
                   )}
@@ -325,7 +325,7 @@ export const FamilySection = React.memo(({ familyMembers, updateMember, addFamil
                 <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                   {['Labour', 'Farmer', 'Job', 'Student', ''].includes(m.occupation) ? (
                     <select value={m.occupation} onChange={e => updateMember(i, 'occupation', e.target.value)}
-                      className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 cursor-pointer font-medium">
+                      className="w-full px-2 py-1.5 rounded-lg border border-slate-100 bg-white text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 cursor-pointer font-medium transition-all">
                       <option value="">Select</option>
                       <option value="Labour">Labour</option>
                       <option value="Farmer">Farmer</option>
@@ -340,35 +340,35 @@ export const FamilySection = React.memo(({ familyMembers, updateMember, addFamil
                         onChange={e => updateMember(i, 'occupation', e.target.value)}
                         autoFocus
                         placeholder="Occupation"
-                        className="w-full pl-1.5 pr-5 py-1 rounded-md border border-orange-400 bg-white text-[11px] sm:text-sm focus:outline-none font-bold text-orange-600"
+                        className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-200 bg-white text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/10 focus:border-orange-500/30 font-bold text-orange-600 transition-all"
                       />
                       <button
                         onClick={() => updateMember(i, 'occupation', '')}
-                        className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-orange-500"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-300 hover:text-orange-500"
                       >
-                        <X size={10} />
+                        <X size={12} strokeWidth={1.5} />
                       </button>
                     </div>
                   )}
                 </td>
-                <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
+                <td className="px-2 py-2 sm:px-3 sm:py-3">
                   <input value={m.educationLevel || ''} onChange={e => updateMember(i, 'educationLevel', e.target.value)}
                     placeholder="Qualification"
-                    className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 transition-all font-medium" />
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-100 bg-white text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all font-medium" />
                 </td>
-                <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
+                <td className="px-2 py-2 sm:px-3 sm:py-3">
                   <input value={m.income} onChange={e => updateMember(i, 'income', e.target.value)}
                     type="number" placeholder="Income"
-                    className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-[11px] sm:text-sm focus:outline-none focus:border-brand-500" />
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-100 bg-slate-50 text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all" />
                 </td>
-                <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
+                <td className="px-2 py-2 sm:px-3 sm:py-3">
                   <input value={m.mobile} onChange={e => updateMember(i, 'mobile', e.target.value)}
                     placeholder="Mobile"
-                    className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-[11px] sm:text-sm focus:outline-none focus:border-brand-500" />
+                    className="w-full px-2 py-1.5 rounded-lg border border-slate-100 bg-slate-50 text-[12px] sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all" />
                 </td>
                 <td className="px-1.5 py-1.5">
                   <button onClick={() => removeFamilyMember(i)} className="text-red-400 hover:text-red-600">
-                    <Trash2 size={14} />
+                    <Trash2 size={14} strokeWidth={1.5} />
                   </button>
                 </td>
               </tr>
@@ -622,7 +622,7 @@ export const LandSection = React.memo(({ form, handleChange, isReadOnly, inputCl
         </div>
         <div className="sm:col-span-2 lg:col-span-4">
           <label className="text-[11px] font-bold text-slate-800 flex items-center gap-2 mb-3">
-            <Users size={14} className="text-emerald-500" /> Livestock Details
+            <Users size={14} strokeWidth={1.5} className="text-emerald-500" /> Livestock Details
           </label>
           <div className="flex flex-wrap items-start gap-x-8 gap-y-6">
             {['Cow', 'Buffalo', 'Goat', 'Other'].map(l => {
@@ -741,7 +741,7 @@ export const PhotosSection = React.memo(({ form, handlePhotoUpload, removePhoto,
                   className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600 active:scale-95"
                   title="Delete Photo"
                 >
-                  <Trash2 size={10} />
+                  <Trash2 size={10} strokeWidth={1.5} />
                 </button>
               </div>
             ))}
@@ -762,7 +762,7 @@ export const DeclarationSection = React.memo(({ form, handleChange, isReadOnly }
       onToggle={() => { }}
       locked={isReadOnly}
     >
-      <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-700 leading-relaxed italic mb-3">
+      <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs sm:text-sm text-slate-600 leading-relaxed italic mb-4">
         "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -798,7 +798,7 @@ export const RemarksSection = React.memo(({ form, handleChange, isReadOnly, inpu
               placeholder="0"
               className={`${inputCls} max-w-[80px] sm:max-w-[100px] font-bold text-brand-600 text-sm sm:text-base`}
             />
-            <span className="text-xs sm:text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 sm:px-3 sm:py-2 rounded-md border border-slate-200">/ 50 Points</span>
+            <span className="text-xs sm:text-sm font-medium text-slate-500 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100">/ 50 Points</span>
           </div>
         </Field>
 

@@ -928,155 +928,146 @@ const HomeVerificationPage = () => {
   return (
     <div className="min-h-screen bg-[#f8fbff] bg-gradient-to-br from-[#f8fbff] to-white font-sans">
 
-      {/* Main Form Container */}
-      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-5 pb-32 transition-all">
-        {/* Minimal Sticky Progress Header */}
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 -mx-4 px-6 pt-3 pb-2 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-3">
+      {/* Main Form Container - Restored comfortable spacing */}
+      <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-0 pb-32 transition-all">
+        {/* Minimal Sticky Progress Header - Aligned with Cards */}
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-x border-slate-100 rounded-b-xl px-4 sm:px-6 pt-3 pb-2 transition-all">
+          <div className="flex items-center justify-between gap-4 mb-1">
+            <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => navigate(-1)}
-                className="p-2 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 transition-all group"
+                className="p-1.5 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 transition-all group shrink-0"
                 title="Return to List"
               >
-                <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+                <ArrowLeft size={16} strokeWidth={1.5} className="group-hover:-translate-x-0.5 transition-transform" />
               </button>
-              <div>
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-[0.1em]">Verification Panel</p>
-                <h2 className="text-sm font-bold text-slate-900">{form.studentName || 'Student Registry'}</h2>
+              <div className="min-w-0">
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.1em] truncate">Verification Panel</p>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-slate-900 truncate">{form.studentName || 'Student Registry'}</h2>
+                  
+                  {/* Integrated Metadata (Location/Date) */}
+                  <div className="hidden md:flex items-center gap-2 ml-2 pl-2 border-l border-slate-100">
+                    <div className="flex items-center gap-1 text-slate-400 font-bold text-[9px] whitespace-nowrap bg-slate-50 border border-slate-100 rounded-md px-1.5 py-0.5">
+                      <Clock size={10} strokeWidth={1.5} />
+                      {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </div>
+                    {currentStep === 0 && (
+                      <button
+                        onClick={captureGPS}
+                        disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
+                        className="flex items-center gap-1.5 bg-brand-50 border border-brand-100/50 rounded-md px-1.5 py-0.5 text-[9px] font-bold text-brand-600 hover:bg-brand-100 transition-all shadow-sm"
+                      >
+                        <MapPin size={10} strokeWidth={1.5} className={isLocating ? 'animate-pulse text-brand-500' : 'text-brand-400'} />
+                        <span>{isLocating ? 'Capturing...' : (gpsCoords ? `Location Locked` : 'Lock GPS')}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-[10px] font-black text-brand-500 uppercase tracking-widest">Step {currentStep + 1} of {STEPS.length}</p>
-                <p className="text-[10px] font-bold text-slate-400">{Math.round(((currentStep + 1) / STEPS.length) * 100)}% Complete</p>
+
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <div className="text-right">
+                <p className="text-[9px] sm:text-[10px] font-black text-brand-500 uppercase tracking-widest leading-none">Step {currentStep + 1} of {STEPS.length}</p>
               </div>
-              <div className="h-8 w-[1px] bg-slate-100 hidden sm:block" />
-              <div className="w-8 h-8 rounded-full border-2 border-brand-500/20 flex items-center justify-center p-0.5">
-                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-[10px]">
+              <div className="h-6 w-[1px] bg-slate-100 hidden sm:block" />
+              <div className="w-7 h-7 rounded-full border border-brand-500/20 flex items-center justify-center p-0.5">
+                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-[9px]">
                   {currentStep + 1}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Truly Ultra-Thin Modern Progress Line */}
-          <div className="relative h-1 w-full bg-slate-100 rounded-full mb-6 overflow-hidden">
+          <div className="relative h-1 w-full bg-slate-100 mb-0 overflow-hidden shrink-0">
             <div
-              className="absolute top-0 left-0 h-full bg-brand-500 transition-all duration-500 ease-out rounded-full"
+              className="absolute top-0 left-0 h-full bg-brand-500 transition-all duration-500 ease-out"
               style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
             />
           </div>
 
           {/* Step Dots Indicator */}
-          <div className="flex items-center gap-3 overflow-x-auto pb-2 -mx-2 px-2 thin-scrollbar">
-            {STEPS.map((step, idx) => (
-              <button
-                key={step.id}
-                onClick={() => setCurrentStep(idx)}
-                className={`flex-shrink-0 flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 border ${idx === currentStep
-                  ? 'bg-brand-50 border-brand-100 text-brand-600 shadow-sm'
-                  : idx < currentStep
-                    ? 'bg-slate-50 border-transparent text-slate-400'
-                    : 'bg-white border-transparent text-slate-300 hover:text-slate-500 hover:bg-slate-50'
-                  }`}
-              >
-                <step.icon size={12} strokeWidth={idx === currentStep ? 2.5 : 2} />
-                <span className={`text-[10px] font-bold whitespace-nowrap ${idx === currentStep ? 'block' : 'hidden md:block'}`}>
-                  {step.title}
-                </span>
-              </button>
-            ))}
+          {/* Tabs Row */}
+          <div className="mt-2 mb-2">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar shrink-0">
+              {STEPS.map((step, idx) => (
+                <button
+                  key={step.id}
+                  onClick={() => setCurrentStep(idx)}
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 border ${idx === currentStep
+                    ? 'bg-brand-50 border-brand-100 text-brand-600 shadow-sm'
+                    : idx < currentStep
+                      ? 'bg-slate-50 border-transparent text-slate-400'
+                      : 'bg-white border-transparent text-slate-300 hover:text-slate-500 hover:bg-slate-50'
+                    }`}
+                >
+                  <step.icon size={11} strokeWidth={1.5} />
+                  <span className={`text-[9px] font-bold whitespace-nowrap ${idx === currentStep ? 'block' : 'hidden md:block'}`}>
+                    {step.title}
+                  </span>
+                </button>
+              ))}
+              
+              {/* Status Badge in Tab Row for mobile visibility */}
+              <div className="ml-auto shrink-0 md:hidden">
+                {status && (
+                  <div className={`px-2 py-0.5 rounded-md border text-[8px] font-black uppercase tracking-wider flex items-center gap-1 ${
+                    status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                    status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-700' :
+                    status.includes('rejected') ? 'bg-red-50 border-red-100 text-red-700' :
+                    'bg-slate-50 border-slate-100 text-slate-500'
+                  }`}>
+                    {status.replace('_', ' ')}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Info & Action Bar - Only on first page as per user request */}
-        {currentStep === 0 && (
-          <div className="flex flex-wrap items-center gap-3 text-[10px] sm:text-xs mb-4 px-1 animate-fade-in">
-            <button
-              onClick={captureGPS}
-              disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
-              className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2.5 hover:bg-slate-50 hover:text-brand-600 transition-all font-bold text-slate-600 disabled:opacity-50 shadow-sm disabled:cursor-not-allowed"
-            >
-              <MapPin size={12} sm:size={14} className={isLocating ? 'animate-pulse text-brand-500' : 'text-slate-400'} />
-              <span>{isLocating ? 'Capturing...' : (gpsCoords ? `Location Locked` : 'Lock GPS')}</span>
-              {(gpsCoords && (verificationId || id)) && <Lock size={10} sm:size={12} className="text-slate-300 ml-1" />}
-            </button>
-
-            {locationAddress && !isLocating && (
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-slate-600 font-bold shadow-sm">
-                <Home size={12} sm:size={14} className="text-slate-400" />
-                <span className="truncate max-w-[150px] sm:max-w-[300px]">{locationAddress}</span>
+        {/* ── Banners Area ── */}
+        <div className="pt-2 px-4 sm:px-6"> 
+          {/* ── Hold Reason Banner ── */}
+          {status === 'hold' && form.holdReason && (
+            <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm animate-fade-in mb-3">
+              <div className="p-2 bg-white rounded-xl text-orange-600 shadow-sm transition-all">
+                <AlertCircle size={18} strokeWidth={1.5} />
               </div>
-            )}
-
-            <div className="flex items-center gap-4 ml-auto">
-              <div className="hidden lg:flex items-center gap-2 text-slate-400 font-medium">
-                <Clock size={14} />
-                {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+              <div>
+                <p className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Reason for Hold</p>
+                <p className="text-sm text-orange-700 font-semibold leading-relaxed">{form.holdReason}</p>
               </div>
+            </div>
+          )}
 
-              {status && (
-                <div className={`px-4 py-2 rounded-lg border shadow-sm flex items-center gap-2 ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                  status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-700' :
-                    status.includes('rejected') ? 'bg-red-50 border-red-100 text-red-700' :
-                      status === 'hold' ? 'bg-amber-50 border-amber-100 text-amber-700' :
-                        'bg-slate-50 border-slate-100 text-slate-600'
-                  }`}>
-                  <div className={`w-2 h-2 rounded-full ${status === 'approved' ? 'bg-emerald-500' :
-                    status === 'submitted' ? 'bg-blue-500' :
-                      status.includes('rejected') ? 'bg-red-500' :
-                        status === 'hold' ? 'bg-amber-500' :
-                          'bg-slate-400'
-                    }`} />
-                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">
-                    {status.replace('_', ' ')}
-                  </span>
-                </div>
-              )}
+          {/* ── Read-Only Banner ── */}
+          {!isAdmin && isReadOnly && (
+            <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-sm font-semibold mb-3 transition-colors ${status === 'submitted'
+              ? 'bg-blue-50 border-blue-200 text-blue-800'
+              : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected'
+                ? 'bg-red-50 border-red-200 text-red-800'
+                : 'bg-green-50 border-green-200 text-green-800'
+              }`}>
+              <span className="text-xl mt-0.5">
+                {status === 'submitted' ? '🔒' : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected' ? '🚫' : '✅'}
+              </span>
+              <div>
+                <p className="font-bold">
+                  {status === 'submitted' && 'Form Submitted — Awaiting Admin Review'}
+                  {status === 'teacher_rejected' && 'Rejected by Teacher'}
+                  {status === 'student_rejected' && 'Rejected by Student'}
+                  {status === 'rejected' && 'Rejected by Admin'}
+                  {status === 'approved' && 'Approved by Admin — Read Only'}
+                </p>
+                {form.rejectReason && status.includes('rejected') && <p className="text-xs text-red-700/80 font-medium mt-1">Reason: {form.rejectReason}</p>}
+              </div>
             </div>
-          </div>
-        )}
-
-        {/* ── Hold Reason Banner ── */}
-        {status === 'hold' && form.holdReason && (
-          <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm animate-fade-in mb-6">
-            <div className="p-2 bg-white rounded-xl text-orange-600 shadow-sm">
-              <AlertCircle size={18} />
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-orange-800 uppercase tracking-widest mb-1">Reason for Hold</p>
-              <p className="text-sm text-orange-700 font-semibold leading-relaxed">{form.holdReason}</p>
-            </div>
-          </div>
-        )}
-
-        {/* ── Read-Only Banner ── */}
-        {!isAdmin && isReadOnly && (
-          <div className={`flex items-start gap-3 px-4 py-3.5 rounded-2xl border text-sm font-semibold mb-6 ${status === 'submitted'
-            ? 'bg-blue-50 border-blue-200 text-blue-800'
-            : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected'
-              ? 'bg-red-50 border-red-200 text-red-800'
-              : 'bg-green-50 border-green-200 text-green-800'
-            }`}>
-            <span className="text-xl mt-0.5">
-              {status === 'submitted' ? '🔒' : status === 'rejected' || status === 'teacher_rejected' || status === 'student_rejected' ? '🚫' : '✅'}
-            </span>
-            <div>
-              <p className="font-bold">
-                {status === 'submitted' && 'Form Submitted — Awaiting Admin Review'}
-                {status === 'teacher_rejected' && 'Rejected by Teacher'}
-                {status === 'student_rejected' && 'Rejected by Student'}
-                {status === 'rejected' && 'Rejected by Admin'}
-                {status === 'approved' && 'Approved by Admin — Read Only'}
-              </p>
-              {form.rejectReason && status.includes('rejected') && <p className="text-xs text-red-700/80 font-medium mt-1">Reason: {form.rejectReason}</p>}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Form Sections Area */}
-        <div className={`animate-fade-in-up ${isReadOnly ? 'select-none' : ''} min-h-[65vh]`}>
+        <div className={`animate-fade-in-up ${isReadOnly ? 'select-none' : ''} min-h-[65vh] pt-2 px-4 sm:px-6`}>
 
           {/* Step Sections Rendering */}
           {currentStep === 0 && (
@@ -1206,13 +1197,13 @@ const HomeVerificationPage = () => {
         </div>{/* end form sections area */}
 
         {/* Bottom Navigation */}
-        <div className="fixed bottom-0 right-0 left-0 lg:left-64 sm:left-20 bg-white/95 backdrop-blur-md border-t border-slate-200 p-3 sm:p-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+        <div className="fixed bottom-0 right-0 left-0 lg:left-64 sm:left-20 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
           <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
             <div className="flex-1 flex justify-start">
               {currentStep > 0 && (
                 <button
                   onClick={() => setCurrentStep(prev => prev - 1)}
-                  className="flex items-center justify-center h-8 sm:h-9 px-4 sm:px-6 bg-white border border-slate-200 text-slate-500 font-bold rounded-lg hover:bg-slate-50 active:scale-95 transition-all text-xs tracking-tight shadow-sm whitespace-nowrap"
+                  className="flex items-center justify-center h-10 min-w-[80px] sm:min-w-[120px] px-3 sm:px-5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[11px] sm:text-sm tracking-tight shadow-sm whitespace-nowrap"
                 >
                   Back
                 </button>
@@ -1223,38 +1214,38 @@ const HomeVerificationPage = () => {
               {currentStep < STEPS.length - 1 ? (
                 <button
                   onClick={() => setCurrentStep(prev => prev + 1)}
-                  className="h-8 sm:h-9 px-8 rounded-lg font-bold text-xs tracking-tight transition-all flex items-center justify-center bg-brand-600 text-white hover:bg-brand-700 active:scale-95 shadow-sm"
+                  className="h-10 min-w-[80px] sm:min-w-[120px] px-4 sm:px-10 rounded-xl font-bold text-sm tracking-tight transition-all flex items-center justify-center bg-brand-600 text-white hover:bg-brand-700 active:scale-95 shadow-sm whitespace-nowrap"
                 >
                   Next Step
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   {isAdmin && (status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected') ? (
-                    <button
-                      onClick={() => {
-                        const error = validateHomeVerification();
-                        if (error) { toast.error(error); return; }
-                        const label = status === 'submitted' ? "Save changes and keep as Submitted?" : "Resubmit this record to 'Submitted' status?";
-                        confirmAction(label, () => handleSubmit('submitted'));
-                      }}
-                      disabled={isApiLoading}
-                      className="h-8 sm:h-9 px-6 bg-brand-600 text-white font-bold rounded-lg hover:bg-brand-700 active:scale-95 transition-all text-xs tracking-tight flex items-center justify-center shadow-sm"
-                    >
-                      {isApiLoading ? <Loader size="xs" color="white" /> : (status === 'submitted' ? 'Update Record' : 'Shift to Submitted')}
-                    </button>
+                      <button
+                        onClick={() => {
+                          const error = validateHomeVerification();
+                          if (error) { toast.error(error); return; }
+                          const label = status === 'submitted' ? "Save changes and keep as Submitted?" : "Resubmit this record to 'Submitted' status?";
+                          confirmAction(label, () => handleSubmit('submitted'));
+                        }}
+                        disabled={isApiLoading}
+                        className="h-10 px-6 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 active:scale-95 transition-all text-sm tracking-tight flex items-center justify-center shadow-sm"
+                      >
+                        {isApiLoading ? <Loader size="xs" color="white" /> : (status === 'submitted' ? 'Update Record' : 'Shift to Submitted')}
+                      </button>
                   ) : (
-                    <>
+                    <div className="flex items-center gap-1.5 min-w-0">
                       <button
                         onClick={() => setIsRejectModalOpen(true)}
                         disabled={isApiLoading || isReadOnly}
-                        className="h-8 px-4 bg-red-50 border border-red-100 text-red-600 font-bold rounded-lg hover:bg-red-100 active:scale-95 transition-all text-xs flex items-center justify-center"
+                        className="h-10 px-2 sm:px-4 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all text-[11px] sm:text-sm flex items-center justify-center whitespace-nowrap"
                       >
                         {loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected' ? <Loader size="xs" color="red" /> : 'Reject'}
                       </button>
                       <button
                         onClick={handleSave}
                         disabled={isApiLoading || isReadOnly}
-                        className="h-8 px-4 bg-white border border-slate-200 text-slate-500 font-bold rounded-lg hover:bg-slate-50 active:scale-95 transition-all text-xs flex items-center justify-center"
+                        className="h-10 px-2 sm:px-4 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[11px] sm:text-sm flex items-center justify-center whitespace-nowrap"
                       >
                         {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : 'Draft'}
                       </button>
@@ -1265,14 +1256,14 @@ const HomeVerificationPage = () => {
                           confirmAction("Submit for final review?", () => handleSubmit('submitted'));
                         }}
                         disabled={isApiLoading || isReadOnly}
-                        className={`h-8 px-6 rounded-lg font-bold text-xs tracking-tight transition-all flex items-center justify-center shadow-sm
+                        className={`h-10 px-3 sm:px-6 rounded-xl font-bold text-[11px] sm:text-sm tracking-tight transition-all flex items-center justify-center shadow-sm whitespace-nowrap
                           ${!isReadOnly
                             ? 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
                             : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed shadow-none'}`}
                       >
                         {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : 'Submit'}
                       </button>
-                    </>
+                    </div>
                   )}
                 </div>
               )}
@@ -1341,7 +1332,6 @@ const HomeVerificationPage = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

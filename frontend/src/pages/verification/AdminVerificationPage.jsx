@@ -132,7 +132,7 @@ export default function AdminVerificationPage() {
       {/* Search + District */}
       <div className="flex flex-col sm:flex-row gap-4 mb-8">
         <div className="relative flex-1">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} strokeWidth={1.5} />
           <input
             type="text"
             placeholder="Search by student name or roll number..."
@@ -160,7 +160,7 @@ export default function AdminVerificationPage() {
         </div>
       ) : filteredVerifications.length === 0 ? (
         <div className="py-20 bg-white rounded-3xl border border-gray-100 shadow-sm text-center">
-          <FileText className="mx-auto mb-3 text-gray-300" size={40} />
+          <FileText className="mx-auto mb-3 text-gray-300" size={40} strokeWidth={1.5} />
           <p className="text-gray-400 font-medium">No {statusFilter} verifications found.</p>
         </div>
       ) : (
@@ -181,7 +181,7 @@ export default function AdminVerificationPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-brand-600">
-                      <User size={20} />
+                      <User size={20} strokeWidth={1.5} />
                     </div>
                     <div>
                       <h3
