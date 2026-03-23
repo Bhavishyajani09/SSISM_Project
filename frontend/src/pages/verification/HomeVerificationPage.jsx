@@ -919,16 +919,21 @@ const HomeVerificationPage = () => {
 
 
   const handleSave = async () => {
-    // Check if House Photo is uploaded - mandatory even for drafts
+    // Required for drafts: House Photo and Supervisor Signature
     const housePhoto = form.photos?.find(p => p.label === "4. Photo of House");
     if (!housePhoto || !housePhoto.url) {
-      toast.error("Photo of House is required before saving.", { position: 'top-center', duration: 4000 });
-      setActiveSection('photos');
-      // Small delay to ensure section is open before scrolling
+      toast.error("Photo of House is required.", { position: 'top-center', duration: 4000 });
+      setCurrentStep(9); // Step 10 is Photos
       setTimeout(() => {
         const photoSection = document.getElementById('photo4');
         if (photoSection) photoSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }, 100);
+      return;
+    }
+
+    if (!form.supervisorSignatureUrl) {
+      toast.error("Supervisor Signature is required before saving.", { position: 'top-center', duration: 4000 });
+      setCurrentStep(10); // Step 11 is Declaration (where signatures are)
       return;
     }
 
@@ -1004,11 +1009,8 @@ const HomeVerificationPage = () => {
     if (!isVal(form.numRooms)) return "Number of Rooms is required.";
     if (!isVal(form.houseBuilder)) return "House Builder Info is required.";
 
-    // 6. Documentation (Photos)
+    // 6. Documentation (House Photo only)
     const requiredPhotos = [
-      "1. Passport size photo",
-      "2. Photo with supervisor",
-      "3. Photo with family",
       "4. Photo of House"
     ];
     for (const label of requiredPhotos) {
