@@ -35,11 +35,11 @@ export default function VerificationListPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [districtFilter, setDistrictFilter] = useState('');
+  const [trackFilter, setTrackFilter] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
   const initialFilter = location.state?.filter || 'pending';
-  
+
   const [statusFilter, setStatusFilter] = useState(initialFilter);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
@@ -59,7 +59,7 @@ export default function VerificationListPage() {
         page: currentPage,
         limit: itemsPerPage,
         search: debouncedSearch,
-        district: districtFilter,
+        track: trackFilter,
         status: statusFilter
       };
       const res = await api.get('/passed-students', { params });
@@ -72,7 +72,7 @@ export default function VerificationListPage() {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, debouncedSearch, districtFilter, statusFilter]);
+  }, [currentPage, debouncedSearch, trackFilter, statusFilter]);
 
   useEffect(() => {
     fetchStudents();
@@ -81,7 +81,7 @@ export default function VerificationListPage() {
   // Reset to page 1 on filter change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, districtFilter, statusFilter]);
+  }, [debouncedSearch, trackFilter, statusFilter]);
 
   const STATUS_TABS = [
     { key: 'all', label: 'All', icon: LayoutGrid },
@@ -160,13 +160,13 @@ export default function VerificationListPage() {
         </div>
         <div className="w-full sm:w-56">
           <select
-            value={districtFilter}
-            onChange={e => setDistrictFilter(e.target.value)}
+            value={trackFilter}
+            onChange={e => setTrackFilter(e.target.value)}
             className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all text-slate-700 text-sm cursor-pointer"
           >
             <option value="">Everywhere</option>
-            {['Barwani', 'Dhar', 'Khargone', 'Jhabua', 'Alirajpur'].map(d => (
-              <option key={d} value={d}>{d}</option>
+            {['Khategaon', 'Kannod', 'Satwas', 'Gopalpur', 'Narsullaganj', 'Nemawar', 'Harda', 'Timarni', 'Narmadapuram'].map(t => (
+              <option key={t} value={t}>{t}</option>
             ))}
           </select>
         </div>
@@ -206,7 +206,7 @@ export default function VerificationListPage() {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 border-b border-gray-100">
                 <tr>
-                  {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Mobile', 'Status', 'Action'].map(h => (
+                  {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Track', 'Mobile', 'Status', 'Action'].map(h => (
                     <th key={h} className="px-6 py-4 text-left font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -259,9 +259,15 @@ export default function VerificationListPage() {
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
+                      <span className="font-semibold text-gray-600">Track:</span>
+                      <span>{student.busTrack || '—'}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-gray-500 text-[11px]">
                       <span className="font-semibold text-gray-600">Mobile:</span>
                       <span>{student.mobileNumber || '—'}</span>
                     </div>
+                  </div>
+                  <div className="flex items-center justify-end">
                     <span className="text-[10px] font-bold text-brand-500 flex items-center gap-0.5">
                       Verify <ChevronRight size={12} />
                     </span>
@@ -276,7 +282,7 @@ export default function VerificationListPage() {
             <table className="w-full text-xs">
               <thead className="bg-slate-50 border-b border-gray-100">
                 <tr>
-                  {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Mobile', 'Status', 'Action'].map(h => (
+                  {['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Track', 'Mobile', 'Status', 'Action'].map(h => (
                     <th key={h} className="px-6 py-4 text-left font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -302,6 +308,7 @@ export default function VerificationListPage() {
                         <span className="truncate">{s.villageTown || '—'}, {s.district || '—'}</span>
                       </div>
                     </td>
+                    <td className="px-6 py-4 text-slate-600 font-medium">{s.busTrack || '—'}</td>
                     <td className="px-6 py-4 text-slate-600 font-medium">{s.mobileNumber || '—'}</td>
                     <td className="px-6 py-4">
                       <StatusBadge status={s.currentStatus} />

@@ -11,8 +11,8 @@ exports.saveVerification = async (req, res) => {
     }
 
     const existing = await HomeVerification.findOne({ studentId });
-    const data = { 
-      ...req.body, 
+    const data = {
+      ...req.body,
       status: req.body.status || 'draft',
       verifierId: req.user.id,
       verifierName: req.user.name || req.user.email?.split('@')[0] || 'Unknown'
@@ -38,11 +38,11 @@ exports.saveVerification = async (req, res) => {
     );
 
     console.log('Verification saved/updated (upsert):', verification._id);
-    res.status(200).json({ 
-      message: 'Verification saved successfully', 
-      verification 
+    res.status(200).json({
+      message: 'Verification saved successfully',
+      verification
     });
-    
+
   } catch (err) {
     console.error('Save error:', err.message);
     if (err.code === 11000) {
@@ -74,11 +74,11 @@ exports.submitVerification = async (req, res) => {
     const { id } = req.params;
     const existing = await HomeVerification.findById(id);
     const targetStatus = req.body.status || 'submitted';
-    const updateData = { 
-      ...req.body, 
+    const updateData = {
+      ...req.body,
       status: targetStatus,
       verifierId: req.user.id,
-      verifierName: req.user.name || req.user.email?.split('@')[0] || 'Unknown' 
+      verifierName: req.user.name || req.user.email?.split('@')[0] || 'Unknown'
     };
 
     // Strict Location Handling: Prevent overwriting existing GPS data
@@ -90,7 +90,7 @@ exports.submitVerification = async (req, res) => {
 
     console.log(`Updating verification ${id} to status: ${targetStatus}`);
     console.log('Update payload studentId:', req.body.studentId);
-    
+
     const verification = await HomeVerification.findByIdAndUpdate(
       id,
       updateData,
@@ -161,10 +161,10 @@ exports.getAllVerifications = async (req, res) => {
     const limitNum = parseInt(limit, 10);
 
     const filter = status ? { status } : {};
-    
+
     // If limit is -1, fetch all (useful for frontend mapping if dataset is small)
     let query = HomeVerification.find(filter).sort({ createdAt: -1 });
-    
+
     if (limitNum !== -1) {
       query = query.skip((pageNum - 1) * limitNum).limit(limitNum);
     }
@@ -174,8 +174,8 @@ exports.getAllVerifications = async (req, res) => {
       HomeVerification.countDocuments(filter)
     ]);
 
-    res.json({ 
-      count: verifications.length, 
+    res.json({
+      count: verifications.length,
       verifications,
       total,
       page: pageNum,
