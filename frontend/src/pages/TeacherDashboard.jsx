@@ -308,13 +308,10 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Analytics & Layout Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 grid-flow-row-dense gap-6 mb-8">
 
-          {/* Progress & Data - Left (2/3) */}
-          <div className="lg:col-span-2 space-y-6">
-
-            {/* Quick Actions Grid */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+          {/* Quick Actions Grid */}
+          <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full">
               <h3 className="text-sm font-bold text-slate-800 mb-5">Quick Actions</h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/add-passed-students')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 transition-all border border-brand-100 group">
@@ -336,183 +333,101 @@ export default function TeacherDashboard() {
               </div>
             </div>
 
-            {/* Performance & Charts */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-                <h3 className="text-sm font-bold text-slate-800 mb-5">Location Statistics</h3>
-                <div className="space-y-4">
-                  {getLocationStats().map(([loc, count]) => (
-                    <div key={loc} className="space-y-1.5">
-                      <div className="flex justify-between text-xs font-medium">
-                        <span className="text-gray-600">{loc}</span>
-                        <span className="text-slate-900">{count} Records</span>
-                      </div>
-                      <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-brand-500 rounded-full" style={{ width: `${(count / stats.total) * 100}%` }} />
-                      </div>
-                    </div>
-                  ))}
+          {/* Activity & Insights - Right (1/3) */}
+          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full">
+            <h3 className="text-sm font-bold text-slate-800 mb-5">Insights</h3>
+            <div className="space-y-5">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                  <MapPin size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Last Visited</p>
+                  <p className="text-sm font-bold text-slate-900">{getLastVisited()}</p>
                 </div>
               </div>
-
-              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col items-center justify-center text-center">
-                <h3 className="text-sm font-bold text-slate-800 mb-5 w-full text-left">Status Distribution</h3>
-                <div className="relative w-32 h-32 flex items-center justify-center">
-                  <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
-                    <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
-                    <circle cx="18" cy="18" r="16" fill="transparent" stroke="#10b981" strokeWidth="3"
-                      strokeDasharray={`${stats.total ? (stats.approved / stats.total) * 100 : 0} 100`} />
-                    <circle cx="18" cy="18" r="16" fill="transparent" stroke="#ef4444" strokeWidth="3"
-                      strokeDasharray={`${stats.total ? (stats.rejected / stats.total) * 100 : 0} 100`}
-                      strokeDashoffset={stats.total ? -(stats.approved / stats.total) * 100 : 0} />
-                    <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f59e0b" strokeWidth="3"
-                      strokeDasharray={`${stats.total ? (stats.pending / stats.total) * 100 : 0} 100`}
-                      strokeDashoffset={stats.total ? -((stats.approved + stats.rejected) / stats.total) * 100 : 0} />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-bold text-slate-900">{stats.completionRate}%</span>
-                    <span className="text-[10px] font-medium text-slate-500 uppercase">Complete</span>
-                  </div>
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                  <TrendingUp size={20} />
                 </div>
-                <div className="grid grid-cols-3 gap-4 mt-6 w-full">
-                  <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-medium text-slate-600">Approved</span></div>
-                  <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[10px] font-medium text-slate-600">Rejected</span></div>
-                  <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /><span className="text-[10px] font-medium text-slate-600">Pending</span></div>
-                </div>
-              </div>
-            </div>
-            {/* Performance & Charts - Moved to Main for better 50/50 split */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full">
-                <h3 className="text-sm font-bold text-slate-800 mb-5">Quick Metrics</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Approval Rate</p>
-                    <p className="text-lg font-bold text-slate-900">{stats.approvalRate}%</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
-                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide mb-1">Today's Forms</p>
-                    <p className="text-lg font-bold text-slate-900">{getTodayVisits()}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm h-full flex flex-col">
-                <h3 className="text-sm font-bold text-slate-800 mb-5">Recent Activity</h3>
-                <div className="space-y-4 flex-1">
-                  {getRecentActivity().length > 0 ? getRecentActivity().map((activity, idx) => (
-                    <div key={idx} className="flex items-start gap-4">
-                      <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${STATUS_CFG[activity.currentStatus]?.bg || 'bg-slate-50 text-slate-400'}`}>
-                        {activity.studentName.charAt(0)}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex justify-between items-start gap-2">
-                          <p className="text-xs font-bold text-slate-900 truncate">{activity.studentName}</p>
-                          <span className="text-[10px] font-medium text-slate-400 shrink-0">{formatTimeAgo(activity.verification?.updatedAt)}</span>
-                        </div>
-                        <p className="text-[10px] text-slate-500 mt-0.5 truncate font-medium">
-                          {activity.currentStatus === 'submitted' ? 'Sent for review' : (activity.currentStatus || 'pending').replace('_', ' ')}
-                        </p>
-                      </div>
-                    </div>
-                  )) : (
-                    <p className="text-center text-xs text-slate-400 py-6 italic">No recent activity</p>
-                  )}
+                <div>
+                  <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Today's Target</p>
+                  <p className="text-sm font-bold text-slate-900">{getTodayVisits()} Records</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Activity & Insights - Right (1/3) */}
-          <div className="space-y-6">
+          {/* Performance & Charts */}
+          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-              <h3 className="text-sm font-bold text-slate-800 mb-5">Insights</h3>
-              <div className="space-y-5">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-                    <MapPin size={20} />
+              <h3 className="text-sm font-bold text-slate-800 mb-5">Location Statistics</h3>
+              <div className="space-y-4">
+                {getLocationStats().map(([loc, count]) => (
+                  <div key={loc} className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-medium">
+                      <span className="text-gray-600">{loc}</span>
+                      <span className="text-slate-900">{count} Records</span>
+                    </div>
+                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full bg-brand-500 rounded-full" style={{ width: `${(count / stats.total) * 100}%` }} />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Last Visited</p>
-                    <p className="text-sm font-bold text-slate-900">{getLastVisited()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                    <TrendingUp size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-medium text-slate-500 uppercase tracking-wide">Today's Target</p>
-                    <p className="text-sm font-bold text-slate-900">{getTodayVisits()} Records</p>
-                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col items-center justify-center text-center">
+              <h3 className="text-sm font-bold text-slate-800 mb-5 w-full text-left">Status Distribution</h3>
+              <div className="relative w-32 h-32 flex items-center justify-center">
+                <svg viewBox="0 0 36 36" className="w-full h-full transform -rotate-90">
+                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f1f5f9" strokeWidth="3" />
+                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#10b981" strokeWidth="3"
+                    strokeDasharray={`${stats.total ? (stats.approved / stats.total) * 100 : 0} 100`} />
+                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#ef4444" strokeWidth="3"
+                    strokeDasharray={`${stats.total ? (stats.rejected / stats.total) * 100 : 0} 100`}
+                    strokeDashoffset={stats.total ? -(stats.approved / stats.total) * 100 : 0} />
+                  <circle cx="18" cy="18" r="16" fill="transparent" stroke="#f59e0b" strokeWidth="3"
+                    strokeDasharray={`${stats.total ? (stats.pending / stats.total) * 100 : 0} 100`}
+                    strokeDashoffset={stats.total ? -((stats.approved + stats.rejected) / stats.total) * 100 : 0} />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold text-slate-900">{stats.completionRate}%</span>
+                  <span className="text-[10px] font-medium text-slate-500 uppercase">Complete</span>
                 </div>
               </div>
-
-              {/* Priority Tasks here */}
-              <div className="mt-8 pt-8 border-t border-gray-50">
-                <div className="flex items-center justify-between mb-5">
-                  <h4 className="text-[10px] font-bold text-red-600 uppercase tracking-widest">Priority Actions</h4>
-                  {(stats.rejected > 0 || stats.drafts > 0 || stats.olderThan5Days > 0) && (
-                    <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-bold">
-                      REQUIRED
-                    </span>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <div
-                    onClick={() => stats.rejected > 0 && navigate('/home-verification', { state: { filter: 'rejected' } })}
-                    className={`p-4 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.rejected > 0 ? 'bg-white border-red-100 hover:border-red-200' : 'bg-slate-50 border-transparent opacity-60'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.rejected > 0 ? 'bg-red-50 text-red-600' : 'bg-slate-100 text-slate-400'}`}>
-                        <AlertCircle size={18} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase">Rejected</p>
-                        <p className={`text-sm font-bold ${stats.rejected > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{stats.rejected} Records</p>
-                      </div>
-                    </div>
-                    {stats.rejected > 0 && <ChevronRight size={16} className="text-slate-300 group-hover:text-red-500 transition-colors" />}
-                  </div>
-
-                  <div
-                    onClick={() => stats.drafts > 0 && navigate('/home-verification', { state: { filter: 'draft' } })}
-                    className={`p-4 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.drafts > 0 ? 'bg-white border-orange-100 hover:border-orange-200' : 'bg-slate-50 border-transparent opacity-60'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.drafts > 0 ? 'bg-orange-50 text-orange-600' : 'bg-slate-100 text-slate-400'}`}>
-                        <FileEdit size={18} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase">Incomplete</p>
-                        <p className={`text-sm font-bold ${stats.drafts > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{stats.drafts} Records</p>
-                      </div>
-                    </div>
-                    {stats.drafts > 0 && <ChevronRight size={16} className="text-slate-300 group-hover:text-orange-500 transition-colors" />}
-                  </div>
-
-                  <div
-                    onClick={() => stats.olderThan5Days > 0 && navigate('/home-verification', { state: { filter: 'pending' } })}
-                    className={`p-4 rounded-xl border transition-all flex items-center justify-between group cursor-pointer ${stats.olderThan5Days > 0 ? 'bg-white border-amber-100 hover:border-amber-200' : 'bg-slate-50 border-transparent opacity-60'}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stats.olderThan5Days > 0 ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-400'}`}>
-                        <Clock size={18} />
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-medium text-slate-500 uppercase">Stale Cases</p>
-                        <p className={`text-sm font-bold ${stats.olderThan5Days > 0 ? 'text-slate-900' : 'text-slate-400'}`}>{stats.olderThan5Days} Records</p>
-                      </div>
-                    </div>
-                    {stats.olderThan5Days > 0 && <ChevronRight size={16} className="text-slate-300 group-hover:text-amber-500 transition-colors" />}
-                  </div>
-                </div>
+              <div className="grid grid-cols-3 gap-4 mt-6 w-full">
+                <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /><span className="text-[10px] font-medium text-slate-600">Approved</span></div>
+                <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-red-500" /><span className="text-[10px] font-medium text-slate-600">Rejected</span></div>
+                <div className="flex items-center justify-center gap-1.5"><div className="w-2 h-2 rounded-full bg-orange-500" /><span className="text-[10px] font-medium text-slate-600">Pending</span></div>
               </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-1 bg-white rounded-xl border border-gray-100 p-6 shadow-sm flex flex-col">
+            <h3 className="text-sm font-bold text-slate-800 mb-5">Recent Activity</h3>
+            <div className="space-y-4 flex-1">
+              {getRecentActivity().length > 0 ? getRecentActivity().map((activity, idx) => (
+                <div key={idx} className="flex items-start gap-4">
+                  <div className={`w-8 h-8 rounded-full shrink-0 flex items-center justify-center text-xs font-bold ${STATUS_CFG[activity.currentStatus]?.bg || 'bg-slate-50 text-slate-400'}`}>
+                    {activity.studentName.charAt(0)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex justify-between items-start gap-2">
+                      <p className="text-xs font-bold text-slate-900 truncate">{activity.studentName}</p>
+                      <span className="text-[10px] font-medium text-slate-400 shrink-0">{formatTimeAgo(activity.verification?.updatedAt)}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-500 mt-0.5 truncate font-medium">
+                      {activity.currentStatus === 'submitted' ? 'Sent for review' : (activity.currentStatus || 'pending').replace('_', ' ')}
+                    </p>
+                  </div>
+                </div>
+              )) : (
+                <p className="text-center text-xs text-slate-400 py-6 italic">No recent activity</p>
+              )}
             </div>
           </div>
         </div>
-
 
         {/* Filters & Table Header */}
         <div className="bg-white rounded-t-xl border-x border-t border-gray-100 p-6 sticky top-0 z-10">
@@ -697,7 +612,7 @@ export default function TeacherDashboard() {
                         <StatusBadge status={getStatus(s.rollNumber)} />
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-2 transition-opacity">
                           <button onClick={(e) => { e.stopPropagation(); handleVerify(s); }} className="p-2 rounded-lg bg-white border border-gray-100 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 hover:border-emerald-100 transition-all shadow-sm">
                             <TrendingUp size={14} />
                           </button>

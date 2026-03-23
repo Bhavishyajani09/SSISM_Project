@@ -63,25 +63,25 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onTo
       <button
         type="button"
         onClick={onToggle}
-        className={`group w-full flex items-center justify-between p-4 sm:p-5 text-left transition-all duration-300 ${open ? 'bg-white border-b' : 'bg-slate-50/30 hover:bg-white'}`}
+        className={`group w-full flex items-center justify-between p-3 sm:p-4 text-left transition-all duration-300 ${open ? 'bg-white border-b' : 'bg-slate-50/30 hover:bg-white'}`}
       >
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className={`p-2.5 rounded-lg ${cfg.iconBg} ${cfg.iconText} transition-all`}>
-            <Icon size={20} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className={`p-2 rounded-lg ${cfg.iconBg} ${cfg.iconText} transition-all`}>
+            <Icon size={18} className={`${open ? 'scale-110' : 'scale-100'} transition-transform`} />
           </div>
-          <h2 className={`font-bold text-sm sm:text-base tracking-tight ${open ? 'text-slate-900' : 'text-slate-700'}`}>{title}</h2>
+          <h2 className={`font-bold text-xs sm:text-sm tracking-tight ${open ? 'text-slate-900' : 'text-slate-700'}`}>{title}</h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           {!open && (
-            <span className="hidden sm:inline-block px-2 py-1 rounded-md bg-slate-50 border border-slate-100/50 text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-brand-600 group-hover:bg-brand-50 transition-all">
+            <span className="hidden sm:inline-block px-1.5 py-0.5 rounded-md bg-slate-50 border border-slate-100/50 text-[9px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-brand-600 group-hover:bg-brand-50 transition-all">
               Manage
             </span>
           )}
-          {open ? <ChevronUp size={18} className="text-slate-400" /> : <ChevronDown size={18} className="text-slate-400" />}
+          {open ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
         </div>
       </button>
       {open && (
-        <div className={`p-5 sm:p-6 space-y-6 animate-fade-in-up ${locked ? 'pointer-events-none opacity-80' : ''}`}>
+        <div className={`p-4 sm:p-5 space-y-4 animate-fade-in-up ${locked ? 'pointer-events-none opacity-80' : ''}`}>
           {children}
         </div>
       )}
@@ -92,16 +92,16 @@ const SectionCard = ({ icon: Icon, title, color = 'orange', children, open, onTo
 // Helper: Form Field
 const Field = ({ label, children, required }) => (
   <div className="flex flex-col gap-1.5">
-    <label className="text-xs sm:text-sm font-semibold text-slate-700">
+    <label className="text-[11px] sm:text-xs font-semibold text-slate-700">
       {label}{required && <span className="text-red-500 ml-1">*</span>}
     </label>
     {children}
   </div>
 );
 
-const inputCls = "w-full px-4 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all placeholder:text-slate-400";
+const inputCls = "w-full px-3 py-1.5 sm:py-2.5 rounded-lg border border-slate-200 bg-white text-slate-800 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-500/30 transition-all placeholder:text-slate-400";
 const selectCls = inputCls + " cursor-pointer";
-const textareaCls = inputCls + " resize-none min-h-[100px]";
+const textareaCls = inputCls + " resize-none min-h-[80px] sm:min-h-[120px]";
 
 const CameraCaptureModal = ({ isOpen, onClose, onCapture }) => {
   const videoRef = useRef(null);
@@ -266,60 +266,60 @@ const PhotoUpload = ({ label, id, onUpload, previewUrl, studentId, required, isM
   };
 
   return (
-    <div className="flex flex-col gap-1 w-full mx-auto" id={id}>
-      <span className="text-[10px] font-bold text-slate-500 truncate px-1 uppercase tracking-wider">{label} {required && <span className="text-red-500">*</span>}</span>
+    <div className="flex flex-col gap-0.5 w-full mx-auto" id={id}>
+      <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 truncate px-1 uppercase tracking-wider">{label} {required && <span className="text-red-500 ml-1">*</span>}</span>
       <div
-        className={`relative border-2 border-dashed rounded-2xl overflow-hidden transition-all flex items-center justify-center h-32 group ${isMissing && required ?
+        className={`relative border-2 border-dashed rounded-xl overflow-hidden transition-all flex items-center justify-center h-24 sm:h-32 group ${isMissing && required ?
           'border-red-400 bg-red-50/50 hover:bg-red-50 hover:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)]' :
           'border-slate-200 bg-slate-50/50 hover:bg-slate-50 hover:border-orange-300'}`}
       >
         {loading ? (
-          <div className="flex flex-col items-center gap-2">
-            <Loader color="orange" size="sm" />
-            <span className="text-[10px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
+          <div className="flex flex-col items-center gap-1.5">
+            <Loader color="orange" size="xs" />
+            <span className="text-[9px] sm:text-[10px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
           </div>
         ) : displayUrl ? (
           <div className="relative w-full h-full">
             <img src={displayUrl} alt="preview" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-3">
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-2">
               <button
                 onClick={() => setIsCameraOpen(true)}
-                className="w-full py-2 bg-white rounded-lg text-slate-800 hover:bg-slate-50 flex items-center justify-center transition-all shadow-sm"
+                className="w-full py-1.5 sm:py-2 bg-white rounded-md text-slate-800 hover:bg-slate-50 flex items-center justify-center transition-all shadow-sm"
                 title="Retake Photo"
-              >
-                <Camera size={18} />
-              </button>
-              <button
-                onClick={() => galleryRef.current.click()}
-                className="w-full py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white hover:bg-white/30 flex items-center justify-center transition-all shadow-sm"
-                title="Replace from Gallery"
-              >
-                <ImageIcon size={18} />
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2 w-full px-4 mt-2">
-            <div className={`w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center transition-all duration-300 border ${label.includes("Other") ? 'text-orange-500 border-orange-100 scale-110 shadow-orange-100' : 'text-slate-300 border-slate-100'}`}>
-              {label.includes("Other") ? <Plus size={20} strokeWidth={3} /> : <Camera size={18} />}
-            </div>
-            {label.includes("Other") && <span className="text-[9px] font-black text-orange-600 uppercase tracking-tight mt-1">Add Multiple</span>}
-            <div className="flex gap-2 w-full mt-1">
-              <button
-                type="button"
-                onClick={() => setIsCameraOpen(true)}
-                className="flex-1 flex items-center justify-center py-2 bg-slate-800 text-white rounded-xl hover:bg-slate-900 active:scale-95 transition-all shadow-md shadow-slate-200"
-                title="Capture Photo"
               >
                 <Camera size={14} />
               </button>
               <button
-                type="button"
                 onClick={() => galleryRef.current.click()}
-                className="flex-1 flex items-center justify-center py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
-                title="Add from Gallery"
+                className="w-full py-1.5 sm:py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-md text-white hover:bg-white/30 flex items-center justify-center transition-all shadow-sm"
+                title="Replace from Gallery"
               >
                 <ImageIcon size={14} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 w-full px-4 mt-2 sm:mt-0">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white shadow-sm flex items-center justify-center transition-all duration-300 border ${label.includes("Other") ? 'text-orange-500 border-orange-100 scale-110 shadow-orange-100' : 'text-slate-300 border-slate-100'}`}>
+              {label.includes("Other") ? <Plus size={20} strokeWidth={3} /> : <Camera size={18} sm:size={20} />}
+            </div>
+            {label.includes("Other") && <span className="text-[9px] sm:text-[10px] font-black text-orange-600 uppercase tracking-tight mt-1">Add Multiple</span>}
+            <div className="flex gap-2 w-full mt-1">
+              <button
+                type="button"
+                onClick={() => setIsCameraOpen(true)}
+                className="flex-1 flex items-center justify-center py-2 sm:py-2.5 bg-slate-800 text-white rounded-xl hover:bg-slate-900 active:scale-95 transition-all shadow-md shadow-slate-200"
+                title="Capture Photo"
+              >
+                <Camera size={14} sm:size={16} />
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryRef.current.click()}
+                className="flex-1 flex items-center justify-center py-2 sm:py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 active:scale-95 transition-all shadow-sm"
+                title="Add from Gallery"
+              >
+                <ImageIcon size={14} sm:size={16} />
               </button>
             </div>
           </div>
@@ -379,53 +379,53 @@ const SignatureField = ({ label, onUpload, previewUrl, studentId }) => {
   };
 
   return (
-    <div className="flex flex-col gap-1 w-full mx-auto">
-      <span className="text-[10px] font-bold text-slate-500 truncate px-1 uppercase tracking-wider">{label}</span>
+    <div className="flex flex-col gap-0.5 w-full mx-auto">
+      <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 truncate px-1 uppercase tracking-wider">{label}</span>
       <div
-        className="relative border-2 border-dashed border-slate-200 rounded-2xl overflow-hidden bg-slate-50/50 hover:bg-slate-50 hover:border-orange-300 transition-all flex items-center justify-center h-28 group"
+        className="relative border-2 border-dashed border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 hover:bg-slate-50 hover:border-orange-300 transition-all flex items-center justify-center h-20 sm:h-28 group"
       >
         {loading ? (
-          <div className="flex flex-col items-center gap-2">
-            <Loader color="orange" size="sm" />
-            <span className="text-[9px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
+          <div className="flex flex-col items-center gap-1.5">
+            <Loader color="orange" size="xs" />
+            <span className="text-[9px] sm:text-[10px] text-orange-600 font-bold uppercase tracking-tight">Uploading</span>
           </div>
         ) : displayUrl ? (
           <div className="relative w-full h-full">
-            <img src={displayUrl} alt="signature" className="w-full h-full object-contain p-2" />
-            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-2">
+            <img src={displayUrl} alt="signature" className="w-full h-full object-contain p-1.5" />
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 sm:gap-2 p-1.5">
               <button
                 onClick={() => setIsCameraOpen(true)}
-                className="w-full py-1.5 bg-white rounded-lg text-slate-800 flex items-center justify-center shadow-sm transition-all"
+                className="w-full py-1 sm:py-1.5 bg-white rounded-md text-slate-800 flex items-center justify-center shadow-sm transition-all text-xs"
                 title="Retake Signature"
               >
-                <Camera size={16} />
+                <Camera size={14} />
               </button>
               <button
                 onClick={() => galleryRef.current.click()}
-                className="w-full py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-lg text-white flex items-center justify-center shadow-sm transition-all"
+                className="w-full py-1 sm:py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-md text-white flex items-center justify-center shadow-sm transition-all text-xs"
                 title="Replace from Gallery"
               >
-                <ImageIcon size={16} />
+                <ImageIcon size={14} />
               </button>
             </div>
           </div>
         ) : (
-          <div className="flex gap-2 w-full px-3">
+          <div className="flex gap-1.5 sm:gap-2.5 w-full px-2 sm:px-5">
             <button
               type="button"
               onClick={() => setIsCameraOpen(true)}
-              className="flex-1 flex items-center justify-center py-2 bg-slate-800 text-white rounded-xl active:scale-95 transition-all shadow-md shadow-slate-200"
+              className="flex-1 flex items-center justify-center py-1.5 sm:py-2 bg-slate-800 text-white rounded-lg active:scale-95 transition-all shadow-md shadow-slate-200"
               title="Capture Signature"
             >
-              <Camera size={14} />
+              <Camera size={12} sm:size={16} />
             </button>
             <button
               type="button"
               onClick={() => galleryRef.current.click()}
-              className="flex-1 flex items-center justify-center py-2 bg-white border border-slate-200 text-slate-600 rounded-xl active:scale-95 transition-all shadow-sm"
+              className="flex-1 flex items-center justify-center py-1.5 sm:py-2 bg-white border border-slate-200 text-slate-600 rounded-lg active:scale-95 transition-all shadow-sm"
               title="Add from Gallery"
             >
-              <ImageIcon size={14} />
+              <ImageIcon size={12} sm:size={16} />
             </button>
           </div>
         )}
@@ -470,6 +470,46 @@ const STEPS = [
   { id: 'declaration', title: 'Declaration', icon: FileText, color: 'slate' },
   { id: 'remarks', title: 'Remarks', icon: AlertCircle, color: 'sky' },
 ];
+
+const CheckItem = ({ name, value, label, form, setForm }) => {
+  const isSelected = Array.isArray(form[name]) ? form[name].includes(value) : form[name] === value;
+  return (
+    <label className={`flex items-center gap-2 p-1.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${isSelected ? 'border-brand-500 bg-brand-50/30' : 'border-slate-100 bg-slate-50/30 hover:bg-white'}`}>
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={() => {
+          setForm(prev => {
+            const list = Array.isArray(prev[name]) ? [...prev[name]] : [];
+            return {
+              ...prev,
+              [name]: list.includes(value) ? list.filter(v => v !== value) : [...list, value]
+            };
+          });
+        }}
+        className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
+      />
+      <span className="text-[11px] sm:text-sm font-medium text-slate-700">{label}</span>
+    </label>
+  );
+};
+
+const RadioItem = ({ name, value, label, form, setForm }) => {
+  const isSelected = form[name] === value;
+  return (
+    <label className={`flex items-center gap-2 p-1.5 sm:p-2.5 rounded-lg border transition-all cursor-pointer ${isSelected ? 'border-brand-500 bg-brand-50/30 shadow-sm' : 'border-slate-100 bg-slate-50/30 hover:bg-white'}`}>
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={isSelected}
+        onChange={() => setForm(prev => ({ ...prev, [name]: value }))}
+        className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-slate-300 text-brand-600 focus:ring-brand-500"
+      />
+      <span className="text-[11px] sm:text-sm font-medium text-slate-700">{label}</span>
+    </label>
+  );
+};
 
 const HomeVerificationPage = () => {
   const { id } = useParams();
@@ -1367,36 +1407,14 @@ const HomeVerificationPage = () => {
     }
   };
 
-
-
-
-  const CheckItem = ({ name, value, label }) => (
-    <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
-      <input type="checkbox" name={name} value={value}
-        checked={(form[name] || []).includes(value)}
-        onChange={handleChange}
-        className="w-4 h-4 accent-brand-600" />
-      {label}
-    </label>
-  );
-
-  const RadioItem = ({ name, value, label }) => (
-    <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
-      <input type="radio" name={name} value={value}
-        checked={form[name] === value}
-        onChange={handleChange}
-        className="w-4 h-4 accent-brand-600" />
-      {label}
-    </label>
-  );
   return (
     <div className="min-h-screen bg-[#f8fbff] bg-gradient-to-br from-[#f8fbff] to-white font-sans">
 
       {/* Main Form Container */}
       <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-5 pb-32 transition-all">
         {/* Minimal Sticky Progress Header */}
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 -mx-4 px-6 pt-5 pb-3 mb-8">
-          <div className="flex items-center justify-between mb-4">
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 -mx-4 px-6 pt-3 pb-2 mb-4">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate(-1)}
@@ -1438,16 +1456,15 @@ const HomeVerificationPage = () => {
               <button
                 key={step.id}
                 onClick={() => setCurrentStep(idx)}
-                className={`flex-shrink-0 flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 border ${
-                  idx === currentStep
-                    ? 'bg-brand-50 border-brand-100 text-brand-600 shadow-sm'
-                    : idx < currentStep
-                      ? 'bg-slate-50 border-transparent text-slate-400'
-                      : 'bg-white border-transparent text-slate-300 hover:text-slate-500 hover:bg-slate-50'
-                }`}
+                className={`flex-shrink-0 flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 border ${idx === currentStep
+                  ? 'bg-brand-50 border-brand-100 text-brand-600 shadow-sm'
+                  : idx < currentStep
+                    ? 'bg-slate-50 border-transparent text-slate-400'
+                    : 'bg-white border-transparent text-slate-300 hover:text-slate-500 hover:bg-slate-50'
+                  }`}
               >
-                <step.icon size={14} strokeWidth={idx === currentStep ? 2.5 : 2} />
-                <span className={`text-[11px] font-bold whitespace-nowrap ${idx === currentStep ? 'block' : 'hidden md:block'}`}>
+                <step.icon size={12} strokeWidth={idx === currentStep ? 2.5 : 2} />
+                <span className={`text-[10px] font-bold whitespace-nowrap ${idx === currentStep ? 'block' : 'hidden md:block'}`}>
                   {step.title}
                 </span>
               </button>
@@ -1455,53 +1472,53 @@ const HomeVerificationPage = () => {
           </div>
         </div>
 
-        {/* Info & Action Bar */}
-        <div className="flex flex-wrap items-center gap-4 text-xs mb-8 px-1">
-          <button
-            onClick={captureGPS}
-            disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
-            className="flex items-center gap-2.5 bg-white border border-slate-200 rounded-lg px-4 py-2 hover:bg-slate-50 hover:text-brand-600 transition-all font-bold text-slate-600 disabled:opacity-50 shadow-sm disabled:cursor-not-allowed"
-          >
-            <MapPin size={14} className={isLocating ? 'animate-pulse text-brand-500' : 'text-slate-400'} />
-            <span>{isLocating ? 'Capturing Location...' : (gpsCoords ? `Location Locked` : 'Lock GPS Location')}</span>
-            {(gpsCoords && (verificationId || id)) && <Lock size={12} className="text-slate-300 ml-1" />}
-          </button>
+        {/* Info & Action Bar - Only on first page as per user request */}
+        {currentStep === 0 && (
+          <div className="flex flex-wrap items-center gap-3 text-[10px] sm:text-xs mb-4 px-1 animate-fade-in">
+            <button
+              onClick={captureGPS}
+              disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
+              className="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2.5 hover:bg-slate-50 hover:text-brand-600 transition-all font-bold text-slate-600 disabled:opacity-50 shadow-sm disabled:cursor-not-allowed"
+            >
+              <MapPin size={12} sm:size={14} className={isLocating ? 'animate-pulse text-brand-500' : 'text-slate-400'} />
+              <span>{isLocating ? 'Capturing...' : (gpsCoords ? `Location Locked` : 'Lock GPS')}</span>
+              {(gpsCoords && (verificationId || id)) && <Lock size={10} sm:size={12} className="text-slate-300 ml-1" />}
+            </button>
 
-          {locationAddress && !isLocating && (
-            <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-lg px-4 py-2 text-slate-600 font-bold shadow-sm">
-              <Home size={14} className="text-slate-400" />
-              <span className="truncate max-w-[200px]">{locationAddress}</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-4 ml-auto">
-            <div className="hidden lg:flex items-center gap-2 text-slate-400 font-medium">
-              <Clock size={14} />
-              {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-            </div>
-
-            {status && (
-              <div className={`px-4 py-2 rounded-lg border shadow-sm flex items-center gap-2 ${
-                status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-700' :
-                status.includes('rejected') ? 'bg-red-50 border-red-100 text-red-700' :
-                status === 'hold' ? 'bg-amber-50 border-amber-100 text-amber-700' :
-                'bg-slate-50 border-slate-100 text-slate-600'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  status === 'approved' ? 'bg-emerald-500' :
-                  status === 'submitted' ? 'bg-blue-500' :
-                  status.includes('rejected') ? 'bg-red-500' :
-                  status === 'hold' ? 'bg-amber-500' :
-                  'bg-slate-400'
-                }`} />
-                <span className="text-[10px] font-black uppercase tracking-wider">
-                  {status.replace('_', ' ')}
-                </span>
+            {locationAddress && !isLocating && (
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1.5 sm:px-4 sm:py-2.5 text-slate-600 font-bold shadow-sm">
+                <Home size={12} sm:size={14} className="text-slate-400" />
+                <span className="truncate max-w-[150px] sm:max-w-[300px]">{locationAddress}</span>
               </div>
             )}
+
+            <div className="flex items-center gap-4 ml-auto">
+              <div className="hidden lg:flex items-center gap-2 text-slate-400 font-medium">
+                <Clock size={14} />
+                {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+              </div>
+
+              {status && (
+                <div className={`px-4 py-2 rounded-lg border shadow-sm flex items-center gap-2 ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                  status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-700' :
+                    status.includes('rejected') ? 'bg-red-50 border-red-100 text-red-700' :
+                      status === 'hold' ? 'bg-amber-50 border-amber-100 text-amber-700' :
+                        'bg-slate-50 border-slate-100 text-slate-600'
+                  }`}>
+                  <div className={`w-2 h-2 rounded-full ${status === 'approved' ? 'bg-emerald-500' :
+                    status === 'submitted' ? 'bg-blue-500' :
+                      status.includes('rejected') ? 'bg-red-500' :
+                        status === 'hold' ? 'bg-amber-500' :
+                          'bg-slate-400'
+                    }`} />
+                  <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider">
+                    {status.replace('_', ' ')}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* ── Hold Reason Banner ── */}
         {status === 'hold' && form.holdReason && (
@@ -1735,9 +1752,9 @@ const HomeVerificationPage = () => {
                   <label className="text-sm font-semibold text-slate-700 block mb-2">
                     <div className="flex items-center gap-1.5"><Trophy size={14} className="text-amber-500" /> Any Special Achievements / Awards?</div>
                   </label>
-                  <div className="flex gap-6 mb-3">
-                    <RadioItem name="hasAchievements" value="yes" label="Yes" />
-                    <RadioItem name="hasAchievements" value="no" label="No" />
+                  <div className="flex gap-4 sm:gap-6 mb-3">
+                    <RadioItem name="hasAchievements" value="yes" label="Yes" form={form} setForm={setForm} />
+                    <RadioItem name="hasAchievements" value="no" label="No" form={form} setForm={setForm} />
                   </div>
                   {form.hasAchievements === 'yes' && (
                     <Field label="Describe Achievements">
@@ -1768,9 +1785,9 @@ const HomeVerificationPage = () => {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <Field label="Do you have any illness?">
-                  <div className="flex gap-6 pt-1">
-                    <RadioItem name="hasIllness" value="yes" label="Yes" />
-                    <RadioItem name="hasIllness" value="no" label="No" />
+                  <div className="flex gap-4 sm:gap-6 pt-1">
+                    <RadioItem name="hasIllness" value="yes" label="Yes" form={form} setForm={setForm} />
+                    <RadioItem name="hasIllness" value="no" label="No" form={form} setForm={setForm} />
                   </div>
                 </Field>
                 {form.hasIllness === 'yes' && (
@@ -1800,25 +1817,25 @@ const HomeVerificationPage = () => {
               <div className="overflow-x-auto rounded-xl border border-slate-200 thin-scrollbar">
                 <table className="w-full text-sm min-w-[600px]">
                   <thead>
-                    <tr className="bg-slate-50 text-slate-600 uppercase tracking-wider text-[10px]">
-                      {['Name', 'Relation', 'Occupation', 'Education Qualification', 'Income (₹)', 'Mobile', ''].map(h => (
-                        <th key={h} className="px-3 py-2.5 text-left font-bold">{h}</th>
+                    <tr className="bg-slate-50 text-slate-600 uppercase tracking-tight text-[9px] sm:text-[10px]">
+                      {['Name', 'Relation', 'Occupation', 'Qualification', 'Income (₹)', 'Mobile', ''].map(h => (
+                        <th key={h} className="px-2 py-2 sm:px-4 sm:py-3 text-left font-bold">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {familyMembers.map((m, i) => (
                       <tr key={i} className="border-t border-slate-100/60 hover:bg-slate-50/50 transition-colors">
-                        <td className="px-2 py-2">
+                        <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                           <input value={m.name} onChange={e => updateMember(i, 'name', e.target.value)}
                             placeholder="Name"
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all font-medium" />
+                            className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 transition-all font-medium" />
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                           {['Father', 'Mother', 'Sister', 'Brother', ''].includes(m.relation) ? (
                             <select value={m.relation} onChange={e => updateMember(i, 'relation', e.target.value)}
-                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 cursor-pointer font-medium">
-                              <option value="">Select Relation</option>
+                              className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 cursor-pointer font-medium">
+                              <option value="">Select</option>
                               <option value="Father">Father</option>
                               <option value="Mother">Mother</option>
                               <option value="Sister">Sister</option>
@@ -1831,24 +1848,23 @@ const HomeVerificationPage = () => {
                                 value={m.relation === 'Other' ? '' : m.relation}
                                 onChange={e => updateMember(i, 'relation', e.target.value)}
                                 autoFocus
-                                placeholder="Enter Relation"
-                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none font-bold text-orange-600"
+                                placeholder="Relation"
+                                className="w-full pl-1.5 pr-5 py-1 rounded-md border border-orange-400 bg-white text-[11px] sm:text-sm focus:outline-none font-bold text-orange-600"
                               />
                               <button
                                 onClick={() => updateMember(i, 'relation', '')}
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 p-0.5"
-                                title="Back to dropdown"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-orange-500"
                               >
-                                <X size={12} strokeWidth={3} />
+                                <X size={10} />
                               </button>
                             </div>
                           )}
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                           {['Labour', 'Farmer', 'Job', 'Student', ''].includes(m.occupation) ? (
                             <select value={m.occupation} onChange={e => updateMember(i, 'occupation', e.target.value)}
-                              className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 cursor-pointer font-medium">
-                              <option value="">Select Occupation</option>
+                              className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 cursor-pointer font-medium">
+                              <option value="">Select</option>
                               <option value="Labour">Labour</option>
                               <option value="Farmer">Farmer</option>
                               <option value="Job">Job</option>
@@ -1861,37 +1877,36 @@ const HomeVerificationPage = () => {
                                 value={m.occupation === 'Other' ? '' : m.occupation}
                                 onChange={e => updateMember(i, 'occupation', e.target.value)}
                                 autoFocus
-                                placeholder="Enter Occupation"
-                                className="w-full pl-2 pr-6 py-1.5 rounded-lg border border-orange-400 bg-white shadow-[0_0_8px_rgba(251,146,60,0.15)] text-xs focus:outline-none font-bold text-orange-600"
+                                placeholder="Occupation"
+                                className="w-full pl-1.5 pr-5 py-1 rounded-md border border-orange-400 bg-white text-[11px] sm:text-sm focus:outline-none font-bold text-orange-600"
                               />
                               <button
                                 onClick={() => updateMember(i, 'occupation', '')}
-                                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-orange-500 p-0.5"
-                                title="Back to dropdown"
+                                className="absolute right-1 top-1/2 -translate-y-1/2 text-slate-300 hover:text-orange-500"
                               >
-                                <X size={12} strokeWidth={3} />
+                                <X size={10} />
                               </button>
                             </div>
                           )}
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                           <input value={m.educationLevel || ''} onChange={e => updateMember(i, 'educationLevel', e.target.value)}
                             placeholder="Qualification"
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:border-orange-400 focus:ring-4 focus:ring-orange-50 transition-all font-medium" />
+                            className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white text-[11px] sm:text-sm focus:outline-none focus:border-brand-500 transition-all font-medium" />
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                           <input value={m.income} onChange={e => updateMember(i, 'income', e.target.value)}
                             type="number" placeholder="Income"
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                            className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-[11px] sm:text-sm focus:outline-none focus:border-brand-500" />
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-1.5 py-1.5 sm:px-3 sm:py-2.5">
                           <input value={m.mobile} onChange={e => updateMember(i, 'mobile', e.target.value)}
                             placeholder="Mobile"
-                            className="w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:outline-none focus:border-orange-400" />
+                            className="w-full px-1.5 py-1 rounded-md border border-slate-200 bg-slate-50 text-[11px] sm:text-sm focus:outline-none focus:border-brand-500" />
                         </td>
-                        <td className="px-2 py-2">
+                        <td className="px-1.5 py-1.5">
                           <button onClick={() => removeFamilyMember(i)} className="text-red-400 hover:text-red-600">
-                            <Trash2 size={15} />
+                            <Trash2 size={14} />
                           </button>
                         </td>
                       </tr>
@@ -1924,7 +1939,7 @@ const HomeVerificationPage = () => {
                   <label className="text-sm font-semibold text-slate-700 block mb-2">Income Sources</label>
                   <div className="grid grid-cols-2 gap-2">
                     {['Farming', 'Labor Work', 'Job', 'Business', 'Government Pension', 'Other'].map(src => (
-                      <CheckItem key={src} name="incomeSources" value={src} label={src} />
+                      <CheckItem key={src} name="incomeSources" value={src} label={src} form={form} setForm={setForm} />
                     ))}
                   </div>
                 </div>
@@ -1954,20 +1969,20 @@ const HomeVerificationPage = () => {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 xl:gap-6">
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Type of House</label>
-                  <div className="flex flex-wrap gap-4">
-                    {['Pucca', 'Kaccha', 'Semi Pucca'].map(t => <RadioItem key={t} name="houseType" value={t} label={t} />)}
+                  <label className="text-[11px] sm:text-sm font-semibold text-slate-700 block mb-2">Type of House</label>
+                  <div className="flex flex-wrap gap-2.5 sm:gap-4">
+                    {['Pucca', 'Kaccha', 'Semi Pucca'].map(t => <RadioItem key={t} name="houseType" value={t} label={t} form={form} setForm={setForm} />)}
                   </div>
                 </div>
                 <Field label="Number of Rooms">
                   <input name="numRooms" value={form.numRooms} onChange={handleChange} type="number" min="1" placeholder="e.g. 3" className={inputCls} />
                 </Field>
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Who Built the House?</label>
-                  <div className="flex flex-wrap gap-x-6 gap-y-2 mb-3">
-                    <RadioItem name="houseBuilder" value="Self" label="Self" />
-                    <RadioItem name="houseBuilder" value="Government Scheme" label="Government Scheme" />
-                    <RadioItem name="houseBuilder" value="Loan" label="Loan" />
+                  <label className="text-[11px] sm:text-sm font-semibold text-slate-700 block mb-2">Who Built the House?</label>
+                  <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 mb-3">
+                    <RadioItem name="houseBuilder" value="Self" label="Self" form={form} setForm={setForm} />
+                    <RadioItem name="houseBuilder" value="Government Scheme" label="Government Scheme" form={form} setForm={setForm} />
+                    <RadioItem name="houseBuilder" value="Loan" label="Loan" form={form} setForm={setForm} />
                   </div>
                   {form.houseBuilder === 'Government Scheme' && (
                     <div className="mt-3">
@@ -2022,10 +2037,10 @@ const HomeVerificationPage = () => {
             >
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 xl:gap-6">
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Appliances</label>
+                  <label className="text-[11px] sm:text-sm font-semibold text-slate-700 block mb-2">Appliances</label>
                   <div className="flex flex-col gap-2">
                     {['Refrigerator', 'Washing Machine', 'Air Conditioner'].map(a => (
-                      <CheckItem key={a} name="appliances" value={a} label={a} />
+                      <CheckItem key={a} name="appliances" value={a} label={a} form={form} setForm={setForm} />
                     ))}
                   </div>
                 </div>
@@ -2033,10 +2048,10 @@ const HomeVerificationPage = () => {
                   <Field label="Number of Vehicles">
                     <input name="numVehicles" value={form.numVehicles} onChange={handleChange} type="number" min="0" placeholder="0" className={inputCls} />
                   </Field>
-                  <label className="text-sm font-semibold text-slate-700 block mt-3 mb-2">Vehicle Types</label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <label className="text-[11px] sm:text-xs font-semibold text-slate-700 block mt-2 mb-1.5">Vehicle Types</label>
+                  <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
                     {['Bicycle', 'Bike', 'Car', 'Tractor', 'Other'].map(v => (
-                      <CheckItem key={v} name="vehicleTypes" value={v} label={v} />
+                      <CheckItem key={v} name="vehicleTypes" value={v} label={v} form={form} setForm={setForm} />
                     ))}
                   </div>
                   {(form.vehicleTypes || []).includes('Other') && (
@@ -2093,24 +2108,24 @@ const HomeVerificationPage = () => {
                   </Field>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Ownership</label>
-                  <div className="flex gap-5">
-                    <RadioItem name="landOwnership" value="Personal Land" label="Personal" />
-                    <RadioItem name="landOwnership" value="Family Land" label="Family" />
+                  <label className="text-[11px] sm:text-xs font-semibold text-slate-700 block mb-1.5">Ownership</label>
+                  <div className="flex gap-4">
+                    <RadioItem name="landOwnership" value="Personal Land" label="Personal" form={form} setForm={setForm} />
+                    <RadioItem name="landOwnership" value="Family Land" label="Family" form={form} setForm={setForm} />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Land Type</label>
-                  <div className="flex gap-5">
-                    <RadioItem name="landType" value="Irrigated" label="Irrigated" />
-                    <RadioItem name="landType" value="Non Irrigated" label="Non Irrigated" />
+                  <label className="text-[11px] sm:text-xs font-semibold text-slate-700 block mb-1.5">Land Type</label>
+                  <div className="flex gap-4">
+                    <RadioItem name="landType" value="Irrigated" label="Irrigated" form={form} setForm={setForm} />
+                    <RadioItem name="landType" value="Non Irrigated" label="Non Irrigated" form={form} setForm={setForm} />
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-semibold text-slate-700 block mb-2">Irrigation Source</label>
-                  <div className="grid grid-cols-2 gap-1 mb-2">
+                  <label className="text-[11px] sm:text-xs font-semibold text-slate-700 block mb-1.5">Irrigation Source</label>
+                  <div className="grid grid-cols-2 gap-1.5 mb-1.5">
                     {['Tube Well', 'Canal', 'Rain Based', 'Well', 'Other'].map(s => (
-                      <RadioItem key={s} name="irrigationSource" value={s} label={s} />
+                      <RadioItem key={s} name="irrigationSource" value={s} label={s} form={form} setForm={setForm} />
                     ))}
                   </div>
                   {form.irrigationSource === 'Other' && (
@@ -2128,8 +2143,8 @@ const HomeVerificationPage = () => {
                   )}
                 </div>
                 <div className="sm:col-span-2 lg:col-span-4">
-                  <label className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4">
-                    <Users size={16} className="text-emerald-500" /> Livestock Details
+                  <label className="text-[11px] font-bold text-slate-800 flex items-center gap-2 mb-3">
+                    <Users size={14} className="text-emerald-500" /> Livestock Details
                   </label>
                   <div className="flex flex-wrap items-start gap-x-8 gap-y-6">
                     {['Cow', 'Buffalo', 'Goat', 'Other'].map(l => {
@@ -2137,9 +2152,9 @@ const HomeVerificationPage = () => {
                       const currentItem = form.livestock?.find(ls => ls.name === l);
 
                       return (
-                        <div key={l} className="flex flex-col gap-2 min-w-[130px]">
-                          <div className="flex items-center gap-2 group">
-                            <label className="flex items-center gap-2.5 cursor-pointer">
+                        <div key={l} className="flex flex-col gap-1.5 min-w-[110px]">
+                          <div className="flex items-center gap-1.5 group">
+                            <label className="flex items-center gap-2 cursor-pointer">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
@@ -2156,13 +2171,13 @@ const HomeVerificationPage = () => {
                                     }
                                   });
                                 }}
-                                className="w-4 h-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500 transition-all cursor-pointer"
+                                className="w-3.5 h-3.5 rounded border-slate-300 text-orange-600 focus:ring-orange-500 transition-all cursor-pointer"
                               />
-                              <span className={`text-sm font-semibold transition-all ${isSelected ? 'text-slate-900 border-b-2 border-slate-900/10' : 'text-slate-600 group-hover:text-slate-900'}`}>{l}</span>
+                              <span className={`text-xs font-semibold transition-all ${isSelected ? 'text-slate-900 border-b-2 border-slate-900/10' : 'text-slate-600 group-hover:text-slate-900'}`}>{l}</span>
                             </label>
 
                             {isSelected && (
-                              <div className="flex items-center animate-fade-in text-[14px] text-slate-400 font-normal">
+                              <div className="flex items-center animate-fade-in text-[10px] sm:text-xs text-slate-400 font-normal">
                                 (
                                 <input
                                   type="number"
@@ -2180,7 +2195,7 @@ const HomeVerificationPage = () => {
                                     }
                                   }}
                                   placeholder="0"
-                                  className="w-10 px-1.5 py-0 bg-transparent text-center border-b border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-slate-500 placeholder:text-slate-200"
+                                  className="w-8 sm:w-10 px-1 py-0 bg-transparent text-center border-b border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-slate-500 placeholder:text-slate-200 text-xs sm:text-sm"
                                 />
                                 )
                               </div>
@@ -2188,12 +2203,12 @@ const HomeVerificationPage = () => {
                           </div>
 
                           {isSelected && l === 'Other' && (
-                            <div className="animate-fade-in pl-6.5 mt-1">
+                            <div className="animate-fade-in ml-1 mt-0.5">
                               <input
                                 value={form.livestockOther || ''}
                                 onChange={(e) => setForm(prev => ({ ...prev, livestockOther: e.target.value }))}
                                 placeholder="Specify Name"
-                                className="w-full px-2 py-1.5 rounded-lg border border-orange-100 bg-white text-[10px] font-bold text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400/30 shadow-sm"
+                                className="w-full px-1.5 py-1 sm:py-2 rounded-md border border-orange-100 bg-white text-[9px] sm:text-xs font-bold text-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400/30 shadow-sm"
                                 autoFocus
                               />
                             </div>
@@ -2235,19 +2250,19 @@ const HomeVerificationPage = () => {
 
               {/* Display list of uploaded "Other photos" */}
               {(form.photos || []).filter(p => p.label.includes("Other")).length > 0 && (
-                <div className="mt-6 border-t border-slate-100 pt-6">
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-1 block mb-3">Uploaded Other Photos</span>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                <div className="mt-4 border-t border-slate-100 pt-4">
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider px-1 block mb-2">Uploaded Other Photos</span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                     {(form.photos || []).filter(p => p.label.includes("Other")).map((p, idx) => (
-                      <div key={idx} className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-slate-100 shadow-sm bg-slate-50">
+                      <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border-2 border-slate-100 shadow-sm bg-slate-50">
                         <img src={p.url} alt="Other document" className="w-full h-full object-cover" />
                         <button
                           type="button"
                           onClick={() => removePhoto(p.url)}
-                          className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600 active:scale-95"
+                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center hover:bg-red-600 active:scale-95"
                           title="Delete Photo"
                         >
-                          <Trash2 size={12} />
+                          <Trash2 size={10} />
                         </button>
                       </div>
                     ))}
@@ -2268,7 +2283,7 @@ const HomeVerificationPage = () => {
               onToggle={() => { }}
               locked={isReadOnly}
             >
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700 leading-relaxed italic mb-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs text-slate-700 leading-relaxed italic mb-3">
                 "I hereby declare that the information provided above is true and correct to the best of my knowledge. If any information is found incorrect or false, the scholarship may be cancelled."
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -2301,9 +2316,9 @@ const HomeVerificationPage = () => {
                       min="0"
                       max="50"
                       placeholder="0"
-                      className={`${inputCls} max-w-[120px] font-bold text-brand-600 text-lg`}
+                      className={`${inputCls} max-w-[80px] sm:max-w-[100px] font-bold text-brand-600 text-sm sm:text-base`}
                     />
-                    <span className="text-sm font-medium text-slate-500 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">/ 50 Points</span>
+                    <span className="text-xs sm:text-sm font-medium text-slate-500 bg-slate-100 px-2 py-1 sm:px-3 sm:py-2 rounded-md border border-slate-200">/ 50 Points</span>
                   </div>
                 </Field>
 
@@ -2325,9 +2340,9 @@ const HomeVerificationPage = () => {
                 onClick={() => {
                   setCurrentStep(prev => prev - 1);
                 }}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2 sm:py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl sm:rounded-2xl hover:bg-slate-200 active:scale-95 transition-all text-[9.5px] sm:text-sm uppercase tracking-wider shrink-0 ${currentStep === STEPS.length - 1 ? 'w-14 sm:w-auto px-1 sm:px-6' : 'flex-1'}`}
+                className={`flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-1 sm:py-2 bg-slate-100/80 text-slate-500 font-bold rounded-xl hover:bg-slate-200 active:scale-95 transition-all text-[8px] sm:text-[10px] uppercase tracking-wider shrink-0 ${currentStep === STEPS.length - 1 ? 'w-10 sm:w-auto px-1 sm:px-4' : 'flex-1'}`}
               >
-                <ArrowLeft size={currentStep === STEPS.length - 1 ? 16 : 18} />
+                <ArrowLeft size={14} sm:size={16} />
                 <span>Back</span>
               </button>
             )}
@@ -2337,27 +2352,27 @@ const HomeVerificationPage = () => {
                 onClick={() => {
                   setCurrentStep(prev => prev + 1);
                 }}
-                className="flex-[2] py-3.5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all shadow-lg flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-orange-200 hover:shadow-orange-300 active:scale-95"
+                className="flex-1 py-2 sm:py-2.5 rounded-xl font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] transition-all shadow-md flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-rose-500 text-white shadow-orange-200 hover:shadow-orange-300 active:scale-95"
               >
                 Next Step
-                <ChevronRight size={18} />
+                <ChevronRight size={14} sm:size={16} />
               </button>
             ) : (
               <div className="flex-[3] flex gap-2 w-full">
                 <button
                   onClick={() => setIsRejectModalOpen(true)}
                   disabled={isApiLoading || isReadOnly}
-                  className="flex-1 py-1.5 sm:py-3 px-1 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl sm:rounded-2xl hover:bg-red-100 active:scale-95 transition-all text-[9px] sm:text-xs uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                  className="flex-1 py-1 sm:py-2 px-0.5 bg-red-50 border border-red-100 text-red-600 font-bold rounded-xl hover:bg-red-100 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
                 >
-                  {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="sm" color="red" /> : <XCircle size={16} />}
+                  {(loadingAction === 'teacher_rejected' || loadingAction === 'student_rejected') ? <Loader size="xs" color="red" /> : <XCircle size={12} sm:size={14} />}
                   <span>Reject</span>
                 </button>
                 <button
                   onClick={handleSave}
                   disabled={isApiLoading || isReadOnly}
-                  className="flex-1 py-1.5 sm:py-3 px-1 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl sm:rounded-2xl hover:bg-slate-50 active:scale-95 transition-all text-[9px] sm:text-xs uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
+                  className="flex-1 py-1 sm:py-2 px-0.5 bg-white border border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 active:scale-95 transition-all text-[8px] sm:text-[9px] uppercase flex flex-col sm:flex-row items-center justify-center gap-1"
                 >
-                  {loadingAction === 'draft' ? <Loader size="sm" color="orange" /> : <Save size={16} />}
+                  {loadingAction === 'draft' ? <Loader size="xs" color="orange" /> : <Save size={12} sm:size={14} />}
                   <span>Draft</span>
                 </button>
                 <button
@@ -2367,12 +2382,12 @@ const HomeVerificationPage = () => {
                     confirmAction("Submit for final review?", () => handleSubmit('submitted'));
                   }}
                   disabled={isApiLoading || isReadOnly}
-                  className={`flex-[1.5] py-1.5 sm:py-3 px-1 rounded-xl sm:rounded-2xl font-black text-[10px] sm:text-xs uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
+                  className={`flex-[1.5] py-1 sm:py-2 px-0.5 rounded-xl font-black text-[8px] sm:text-[10px] uppercase tracking-wider transition-all shadow-md flex flex-col sm:flex-row items-center justify-center gap-1
                     ${!isReadOnly
                       ? 'bg-emerald-500 text-white shadow-emerald-200 hover:bg-emerald-600'
                       : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'}`}
                 >
-                  {loadingAction === 'submitted' ? <Loader size="sm" color="white" /> : <CheckCircle size={16} />}
+                  {loadingAction === 'submitted' ? <Loader size="xs" color="white" /> : <CheckCircle size={12} sm:size={14} />}
                   <span>Submit</span>
                 </button>
               </div>
@@ -2383,42 +2398,42 @@ const HomeVerificationPage = () => {
         {/* ── Hold Reason Modal ── */}
         {isHoldModalOpen && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-in">
-              <div className="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h3 className="font-black text-slate-800 flex items-center gap-2 text-sm">
-                  <Clock size={18} className="text-orange-500" />
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-scale-in">
+              <div className="px-4 py-3.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 className="font-black text-slate-800 flex items-center gap-2 text-xs">
+                  <Clock size={16} className="text-orange-500" />
                   Put Verification on Hold
                 </h3>
-                <button onClick={() => setIsHoldModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                  <X size={20} className="text-slate-400" />
+                <button onClick={() => setIsHoldModalOpen(false)} className="p-1.5 hover:bg-slate-100 rounded-full transition-colors">
+                  <X size={18} className="text-slate-400" />
                 </button>
               </div>
-              <div className="p-6">
-                <p className="text-xs text-slate-500 mb-4 font-medium leading-relaxed">
-                  Please provide a reason for putting this student's verification on hold. This will help other staff understand the status.
+              <div className="p-4">
+                <p className="text-[11px] text-slate-500 mb-3 font-medium leading-relaxed">
+                  Please provide a reason for putting this student's verification on hold.
                 </p>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Reason for Hold</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Reason for Hold</label>
                 <textarea
                   value={holdReason}
                   onChange={(e) => {
                     setHoldReason(e.target.value);
                     if (e.target.value.trim()) setHoldReasonError('');
                   }}
-                  placeholder="E.g. Missing documents, Student not available for visit..."
-                  className={`w-full p-4 rounded-2xl border ${holdReasonError ? 'border-red-300 ring-4 ring-red-50' : 'border-slate-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-50'} transition-all text-sm min-h-[120px] outline-none font-medium text-slate-700`}
+                  placeholder="E.g. Missing documents..."
+                  className={`w-full p-3 rounded-xl border ${holdReasonError ? 'border-red-300 ring-4 ring-red-50' : 'border-slate-200 focus:border-orange-400 focus:ring-4 focus:ring-orange-50'} transition-all text-xs min-h-[80px] outline-none font-medium text-slate-700`}
                 />
-                {holdReasonError && <p className="text-red-500 text-[10px] mt-2 font-bold flex items-center gap-1"><AlertCircle size={12} /> {holdReasonError}</p>}
+                {holdReasonError && <p className="text-red-500 text-[9px] mt-1.5 font-bold flex items-center gap-1"><AlertCircle size={12} /> {holdReasonError}</p>}
               </div>
-              <div className="px-6 py-4 bg-slate-50 flex gap-3 justify-end border-t border-slate-100">
-                <button onClick={() => setIsHoldModalOpen(false)} className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200">
+              <div className="px-4 py-3 bg-slate-50 flex gap-2.5 justify-end border-t border-slate-100">
+                <button onClick={() => setIsHoldModalOpen(false)} className="px-4 py-2 text-[11px] font-bold text-slate-500 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200">
                   Cancel
                 </button>
                 <button
                   onClick={handleHold}
                   disabled={isApiLoading}
-                  className="px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-black rounded-xl shadow-lg shadow-orange-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white text-[11px] font-black rounded-xl shadow-lg shadow-orange-200 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  {isApiLoading && loadingAction === 'hold' ? <Loader size="sm" color="white" /> : 'Confirm Hold'}
+                  {isApiLoading && loadingAction === 'hold' ? <Loader size="xs" color="white" /> : 'Confirm Hold'}
                 </button>
               </div>
             </div>
@@ -2442,24 +2457,24 @@ const HomeVerificationPage = () => {
                 <p className="text-xs text-slate-500 mb-4 font-medium leading-relaxed">
                   Select who opted to reject/cancel this application and provide a short reason.
                 </p>
-                <div className="flex flex-col gap-3 mb-5">
-                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${rejectType === 'student_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
-                    <input type="radio" value="student_rejected" checked={rejectType === 'student_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-4 h-4 accent-red-500" />
+                <div className="flex flex-col gap-2 mb-4">
+                  <label className={`flex items-center gap-2.5 p-2 rounded-xl border cursor-pointer transition-all ${rejectType === 'student_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
+                    <input type="radio" value="student_rejected" checked={rejectType === 'student_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-3.5 h-3.5 accent-red-500" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-slate-700 block text-left">Rejected by Student</span>
-                      <span className="text-[10px] text-slate-500 font-medium block text-left mt-0.5">Student no longer wants to proceed.</span>
+                      <span className="text-xs font-bold text-slate-700 block text-left">Rejected by Student</span>
+                      <span className="text-[9px] text-slate-500 font-medium block text-left mt-0.5">Student no longer wants to proceed.</span>
                     </div>
                   </label>
-                  <label className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${rejectType === 'teacher_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
-                    <input type="radio" value="teacher_rejected" checked={rejectType === 'teacher_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-4 h-4 accent-red-500" />
+                  <label className={`flex items-center gap-2.5 p-2 rounded-xl border cursor-pointer transition-all ${rejectType === 'teacher_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
+                    <input type="radio" value="teacher_rejected" checked={rejectType === 'teacher_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-3.5 h-3.5 accent-red-500" />
                     <div className="flex-1">
-                      <span className="text-sm font-bold text-slate-700 block text-left">Rejected by Teacher</span>
-                      <span className="text-[10px] text-slate-500 font-medium block text-left mt-0.5">Form invalid or unverified conditions.</span>
+                      <span className="text-xs font-bold text-slate-700 block text-left">Rejected by Teacher</span>
+                      <span className="text-[9px] text-slate-500 font-medium block text-left mt-0.5">Form invalid or unverified conditions.</span>
                     </div>
                   </label>
                 </div>
 
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block text-left">Reason for Rejection *</label>
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block text-left">Reason for Rejection *</label>
                 <textarea
                   value={rejectReason}
                   onChange={(e) => {
@@ -2467,9 +2482,9 @@ const HomeVerificationPage = () => {
                     if (e.target.value.trim()) setRejectReasonError('');
                   }}
                   placeholder="Type specific reason here..."
-                  className={`w-full p-4 rounded-2xl border ${rejectReasonError ? 'border-red-300 ring-4 ring-red-50' : 'border-slate-200 focus:border-red-400 focus:ring-4 focus:ring-red-50'} transition-all text-sm min-h-[100px] outline-none font-medium text-slate-700`}
+                  className={`w-full p-3 rounded-xl border ${rejectReasonError ? 'border-red-300 ring-4 ring-red-50' : 'border-slate-200 focus:border-red-400 focus:ring-4 focus:ring-red-50'} transition-all text-xs min-h-[80px] outline-none font-medium text-slate-700`}
                 />
-                {rejectReasonError && <p className="text-red-500 text-[10px] mt-2 font-bold flex items-center gap-1 justify-start"><AlertCircle size={12} /> {rejectReasonError}</p>}
+                {rejectReasonError && <p className="text-red-500 text-[9px] mt-1.5 font-bold flex items-center gap-1 justify-start"><AlertCircle size={12} /> {rejectReasonError}</p>}
               </div>
               <div className="px-6 py-4 bg-slate-50 flex gap-3 justify-end border-t border-slate-100">
                 <button onClick={() => setIsRejectModalOpen(false)} className="px-5 py-2.5 text-xs font-bold text-slate-500 hover:bg-white rounded-xl transition-all border border-transparent hover:border-slate-200">

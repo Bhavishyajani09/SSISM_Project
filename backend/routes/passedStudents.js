@@ -181,7 +181,7 @@ router.get('/stats', auth, async (req, res) => {
 // ─── GET all passed students ────────────────────────────────────────────────
 router.get('/', auth, async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = '', district = '', status = 'all' } = req.query;
+        const { page = 1, limit = 10, search = '', district = '', track = '', status = 'all' } = req.query;
         const pageNum = parseInt(page, 10);
         const limitNum = parseInt(limit, 10);
 
@@ -195,6 +195,9 @@ router.get('/', auth, async (req, res) => {
         }
         if (district && district !== 'all') {
             matchQuery.district = district;
+        }
+        if (track && track !== 'all') {
+            matchQuery.busTrack = track;
         }
 
         const pipeline = [
