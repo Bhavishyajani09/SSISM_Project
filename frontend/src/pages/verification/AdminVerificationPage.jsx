@@ -10,7 +10,7 @@ const STATUS_CFG = {
   submitted: { bg: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-400', label: 'Submitted' },
   approved: { bg: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-400', label: 'Approved' },
   rejected: { bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', label: 'Admin Rejected' },
-  teacher_rejected: { bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', label: 'Teacher Rejected' },
+  teacher_rejected: { bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', label: 'Verifier Rejected' },
   student_rejected: { bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', label: 'Student Rejected' },
 };
 
@@ -97,7 +97,7 @@ export default function AdminVerificationPage() {
   const STATUS_TABS = [
     { key: 'submitted', label: 'Submitted', icon: Send },
     { key: 'student_rejected', label: 'Student Rejected', icon: AlertCircle },
-    { key: 'teacher_rejected', label: 'Teacher Rejected', icon: AlertCircle },
+    { key: 'teacher_rejected', label: 'Verifier Rejected', icon: AlertCircle },
     { key: 'approved', label: 'Approved', icon: CheckCircle },
     { key: 'rejected', label: 'Admin Rejected', icon: XCircle },
   ];

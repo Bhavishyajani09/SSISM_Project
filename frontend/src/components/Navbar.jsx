@@ -68,7 +68,7 @@ export default function Navbar() {
     },
     {
        to: '/register-teacher',
-       label: 'Add Teacher',
+       label: 'Add Verifier',
        roles: ['admin'],
        icon: (
          <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24">

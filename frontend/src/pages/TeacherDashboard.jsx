@@ -202,7 +202,7 @@ export default function TeacherDashboard() {
     submitted: { label: 'Submitted', bg: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-400' },
     approved: { label: 'Approved', bg: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-400' },
     rejected: { label: 'Admin Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400' },
-    teacher_rejected: { label: 'Teacher Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400' },
+    teacher_rejected: { label: 'Verifier Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400' },
     student_rejected: { label: 'Student Rejected', bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400' },
   };
 
@@ -217,14 +217,14 @@ export default function TeacherDashboard() {
   }
 
   const handleDelete = async (id) => {
-    const message = userRole === 'admin' ? "Delete this teacher?" : "Delete this student?";
+    const message = userRole === 'admin' ? "Delete this verifier?" : "Delete this student?";
     confirmAction(
       message,
       async () => {
         try {
           if (userRole === 'admin') {
             await api.delete(`/auth/users/${id}`);
-            toast.success("Teacher deleted successfully.");
+            toast.success("Verifier deleted successfully.");
           } else {
             await api.delete(`/passed-students/${id}`);
             toast.success("Student deleted successfully.");
@@ -299,7 +299,7 @@ export default function TeacherDashboard() {
             <div className="flex items-center gap-2 mb-1">
               <LayoutDashboard size={20} strokeWidth={1.5} className="text-brand-500" />
               <h1 className="text-2xl font-bold text-slate-900">
-                {userRole === 'admin' ? 'Admin Portal' : 'Teacher Dashboard'}
+                {userRole === 'admin' ? 'Admin Portal' : 'Verifier Dashboard'}
               </h1>
             </div>
           </div>
@@ -324,11 +324,11 @@ export default function TeacherDashboard() {
             <div className={`grid grid-cols-2 ${userRole === 'admin' ? 'sm:grid-cols-4' : 'sm:grid-cols-4'} gap-4`}>
               <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/add-passed-students')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 transition-all border border-brand-100 group">
                 <Plus size={20} className="group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-semibold">{userRole === 'admin' ? 'Add Teacher' : 'Add Student'}</span>
+                <span className="text-xs font-semibold">{userRole === 'admin' ? 'Add Verifier' : 'Add Student'}</span>
               </button>
               <button onClick={() => navigate(userRole === 'admin' ? '/register-teacher' : '/home-verification')} className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 transition-all border border-emerald-100 group">
                 <Users size={20} className="group-hover:scale-110 transition-transform" />
-                <span className="text-xs font-semibold">{userRole === 'admin' ? 'View Teachers' : 'Verification'}</span>
+                <span className="text-xs font-semibold">{userRole === 'admin' ? 'View Verifiers' : 'Verification'}</span>
               </button>
               {userRole !== 'admin' && (
                 <>
@@ -449,9 +449,9 @@ export default function TeacherDashboard() {
         <div className="bg-white rounded-t-xl border-x border-t border-gray-100 p-6 sticky top-0 z-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <h2 className="text-base font-bold text-slate-900">{userRole === 'admin' ? 'Teacher Management' : 'Verification Registry'}</h2>
+              <h2 className="text-base font-bold text-slate-900">{userRole === 'admin' ? 'Verifier Management' : 'Verification Registry'}</h2>
               <span className="px-3 py-0.5 rounded-full text-xs font-semibold bg-brand-50 text-brand-700">
-                {totalRecords} {userRole === 'admin' ? 'Teachers' : 'Records'}
+                {totalRecords} {userRole === 'admin' ? 'Verifiers' : 'Records'}
               </span>
               <button
                 onClick={fetchDashboardData}
@@ -530,18 +530,18 @@ export default function TeacherDashboard() {
               <svg className="w-14 h-14 text-gray-400" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
             </div>
             <h3 className="text-base font-semibold text-gray-700 mb-1">
-              {userRole === 'admin' ? 'No Teachers Yet' : 'No Students Yet'}
+              {userRole === 'admin' ? 'No Verifiers Yet' : 'No Students Yet'}
             </h3>
             <p className="text-gray-400 text-sm mb-6">
               {userRole === 'admin'
-                ? 'Add your first teacher to start managing student records.'
+                ? 'Add your first verifier to start managing student records.'
                 : 'Add your first batch of passed students to see them here.'}
             </p>
             <Link
               to={userRole === 'admin' ? "/register-teacher" : "/add-passed-students"}
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 transition-colors"
             >
-              {userRole === 'admin' ? 'Add Teacher' : 'Add Students'}
+              {userRole === 'admin' ? 'Add Verifier' : 'Add Students'}
             </Link>
           </div>
         ) : (
@@ -603,7 +603,7 @@ export default function TeacherDashboard() {
                 <thead className="bg-slate-50 border-b border-gray-100">
                   <tr>
                     {(userRole === 'admin' 
-                      ? ['S.No', 'Teacher Details', 'Role', 'Email', 'Verifications', 'Last Active', 'Actions']
+                      ? ['S.No', 'Verifier Details', 'Role', 'Email', 'Verifications', 'Last Active', 'Actions']
                       : ['S.No', 'Student Details', 'Father Name', 'Roll No', 'Location', 'Marks', 'Status', 'Actions']
                     ).map(h => (
                       <th key={h} className="px-6 py-4 text-left text-[11px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">{h}</th>

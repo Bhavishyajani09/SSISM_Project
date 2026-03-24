@@ -1101,7 +1101,7 @@ const HomeVerificationPage = () => {
               <div>
                 <p className="font-bold">
                   {status === 'submitted' && 'Form Submitted — Awaiting Admin Review'}
-                  {status === 'teacher_rejected' && 'Rejected by Teacher'}
+                  {status === 'teacher_rejected' && 'Rejected by Verifier'}
                   {status === 'student_rejected' && 'Rejected by Student'}
                   {status === 'rejected' && 'Rejected by Admin'}
                   {status === 'approved' && 'Approved by Admin — Read Only'}
@@ -1355,7 +1355,7 @@ const HomeVerificationPage = () => {
                   <label className={`flex items-center gap-2.5 p-2 rounded-xl border cursor-pointer transition-all ${rejectType === 'teacher_rejected' ? 'border-red-400 bg-red-50 ring-2 ring-red-500/20' : 'border-slate-200 hover:border-red-200'}`}>
                     <input type="radio" value="teacher_rejected" checked={rejectType === 'teacher_rejected'} onChange={(e) => setRejectType(e.target.value)} className="w-3.5 h-3.5 accent-red-500" />
                     <div className="flex-1">
-                      <span className="text-xs font-bold text-slate-700 block text-left">Rejected by Teacher</span>
+                      <span className="text-xs font-bold text-slate-700 block text-left">Rejected by Verifier</span>
                       <span className="text-[9px] text-slate-500 font-medium block text-left mt-0.5">Form invalid or unverified conditions.</span>
                     </div>
                   </label>

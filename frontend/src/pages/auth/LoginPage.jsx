@@ -164,7 +164,7 @@ const LoginPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="teacher@ssism.org"
+                  placeholder="verifier@ssism.org"
                   className="w-full pl-10 pr-4 py-3 sm:py-4 bg-white/50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500 transition-all placeholder:text-slate-400 font-medium shadow-sm hover:border-slate-300"
                   required
                 />
