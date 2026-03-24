@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,6 +7,7 @@
 
 /* ── Base Layer ── */
 @layer base {
+
   *,
   *::before,
   *::after {
@@ -24,47 +26,73 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: #f8fafc;
     color: #1e293b;
+    overflow-x: hidden; /* Prevent global horizontal scroll */
   }
 
-  /* Scrollbar */
+  /* Scrollbar - Global Chrome/Safari/Opera */
   ::-webkit-scrollbar {
-    width: 5px;
+    width: 3px;
+    height: 3px;
   }
+
   ::-webkit-scrollbar-track {
     background: transparent;
   }
+
   ::-webkit-scrollbar-thumb {
-    background: #cbd5e1; /* slate-300 */
-    border-radius: 10px;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8; /* slate-400 */
+    background: rgba(203, 213, 225, 0.4); /* subtle slate-300 */
+    border-radius: 20px;
   }
 
-  /* Thin Horizontal Scrollbar */
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.6); /* subtle slate-400 */
+  }
+
+  /* Thin Horizontal Scrollbar Utility */
   .thin-scrollbar::-webkit-scrollbar {
     height: 3px;
     width: 3px;
   }
+
   .thin-scrollbar::-webkit-scrollbar-track {
     background: transparent;
   }
+
   .thin-scrollbar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(203, 213, 225, 0.5);
     border-radius: 20px;
   }
+
   .thin-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+    background: rgba(148, 163, 184, 0.7);
   }
-  /* Firefox */
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for IE, Edge and Firefox */
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  /* Firefox Global Support */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(203, 213, 225, 0.4) transparent;
+  }
+
   .thin-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-color: rgba(203, 213, 225, 0.6) transparent;
   }
 }
 
 /* ── Component Layer ── */
 @layer components {
+
   /* Animations */
   .animate-fade-in-up {
     animation: fadeInUp 0.45s ease-out forwards;
@@ -75,6 +103,7 @@
       opacity: 0;
       transform: translateY(16px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -90,6 +119,7 @@
       opacity: 0;
       transform: translateY(-8px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -101,8 +131,13 @@
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   .animate-bounce-in {
@@ -114,6 +149,7 @@
       opacity: 0;
       transform: scale(0.7);
     }
+
     to {
       opacity: 1;
       transform: scale(1);

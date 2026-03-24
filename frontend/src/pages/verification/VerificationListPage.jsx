@@ -276,7 +276,7 @@ export default function VerificationListPage() {
           </div>
 
           {/* ── Desktop Table ── */}
-          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 overflow-x-auto lg:overflow-x-hidden shadow-sm">
+          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 overflow-x-auto lg:overflow-x-hidden thin-scrollbar shadow-sm">
             <table className="w-full text-[11px] lg:text-xs table-fixed">
               <thead className="bg-slate-50 border-b border-gray-100">
                 <tr>

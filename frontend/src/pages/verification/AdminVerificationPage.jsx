@@ -7,11 +7,11 @@ import toast from 'react-hot-toast';
 import { confirmAction } from '../../utils/notifications';
 
 const STATUS_CFG = {
-  submitted:        { bg: 'bg-blue-100 text-blue-700 border-blue-200',   dot: 'bg-blue-400',   label: 'Submitted' },
-  approved:         { bg: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-400', label: 'Approved'  },
-  rejected:         { bg: 'bg-red-100 text-red-700 border-red-200',       dot: 'bg-red-400',   label: 'Admin Rejected'  },
-  teacher_rejected: { bg: 'bg-red-100 text-red-700 border-red-200',     dot: 'bg-red-400',   label: 'Teacher Rejected' },
-  student_rejected: { bg: 'bg-red-100 text-red-700 border-red-200',     dot: 'bg-red-400',   label: 'Student Rejected' },
+  submitted: { bg: 'bg-blue-100 text-blue-700 border-blue-200', dot: 'bg-blue-400', label: 'Submitted' },
+  approved: { bg: 'bg-green-100 text-green-700 border-green-200', dot: 'bg-green-400', label: 'Approved' },
+  rejected: { bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', label: 'Admin Rejected' },
+  teacher_rejected: { bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', label: 'Teacher Rejected' },
+  student_rejected: { bg: 'bg-red-100 text-red-700 border-red-200', dot: 'bg-red-400', label: 'Student Rejected' },
 };
 
 function StatusBadge({ status }) {
@@ -25,13 +25,13 @@ function StatusBadge({ status }) {
 }
 
 export default function AdminVerificationPage() {
-  const [verifications, setVerifications]   = useState([]);
-  const [loading, setLoading]               = useState(true);
-  const [searchTerm, setSearchTerm]         = useState('');
+  const [verifications, setVerifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [districtFilter, setDistrictFilter] = useState('');
-  const [statusFilter, setStatusFilter]     = useState('submitted');
-  const [currentPage, setCurrentPage]       = useState(1);
-  const [actionLoading, setActionLoading]   = useState(null); // id of row being actioned
+  const [statusFilter, setStatusFilter] = useState('submitted');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [actionLoading, setActionLoading] = useState(null); // id of row being actioned
   const itemsPerPage = 10;
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -54,8 +54,8 @@ export default function AdminVerificationPage() {
   useEffect(() => { fetchVerifications(); }, [fetchVerifications]);
 
   const filteredVerifications = verifications.filter(v => {
-    const matchesSearch   = v.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            v.studentId?.toString().includes(searchTerm);
+    const matchesSearch = v.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      v.studentId?.toString().includes(searchTerm);
     const matchesDistrict = districtFilter ? v.district === districtFilter : true;
     return matchesSearch && matchesDistrict;
   });
@@ -64,23 +64,23 @@ export default function AdminVerificationPage() {
 
   useEffect(() => { setCurrentPage(1); }, [searchTerm, districtFilter, statusFilter]);
 
-  const total          = filteredVerifications.length;
-  const indexOfLast    = currentPage * itemsPerPage;
-  const indexOfFirst   = indexOfLast - itemsPerPage;
-  const currentItems   = filteredVerifications.slice(indexOfFirst, indexOfLast);
-  const totalPages     = Math.ceil(total / itemsPerPage);
+  const total = filteredVerifications.length;
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentItems = filteredVerifications.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(total / itemsPerPage);
 
   const handleAction = async (id, action) => {
     const isReview = action === 'submit-for-review';
-    const confirmMsg = action === 'approve' ? 'Approve this verification?' : 
-                       action === 'reject' ? 'REJECT this verification?' : 
-                       'Move this back to submitted for review?';
-    
+    const confirmMsg = action === 'approve' ? 'Approve this verification?' :
+      action === 'reject' ? 'REJECT this verification?' :
+        'Move this back to submitted for review?';
+
     confirmAction(confirmMsg, async () => {
       setActionLoading(id + action);
       try {
         const endpoint = isReview ? 'submit-for-review' : action;
-  
+
         await api.patch(`/verifications/${id}/${endpoint}`, { remarks: `Admin ${action}d` });
         toast.success(isReview ? 'Moved to Submitted Successfully' : `Verification ${action === 'approve' ? 'Approved ✅' : 'Rejected ❌'}`);
         fetchVerifications();
@@ -95,11 +95,11 @@ export default function AdminVerificationPage() {
 
 
   const STATUS_TABS = [
-    { key: 'submitted',        label: 'Submitted',        icon: Send },
+    { key: 'submitted', label: 'Submitted', icon: Send },
     { key: 'student_rejected', label: 'Student Rejected', icon: AlertCircle },
     { key: 'teacher_rejected', label: 'Teacher Rejected', icon: AlertCircle },
-    { key: 'approved',         label: 'Approved',         icon: CheckCircle },
-    { key: 'rejected',         label: 'Admin Rejected',   icon: XCircle },
+    { key: 'approved', label: 'Approved', icon: CheckCircle },
+    { key: 'rejected', label: 'Admin Rejected', icon: XCircle },
   ];
 
   return (
@@ -117,11 +117,10 @@ export default function AdminVerificationPage() {
           <button
             key={key}
             onClick={() => setStatusFilter(key)}
-            className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${
-              statusFilter === key
+            className={`flex-shrink-0 flex items-center gap-2.5 px-4 py-2 text-xs font-semibold rounded-lg transition-all duration-200 ${statusFilter === key
                 ? 'bg-white text-brand-600 shadow-sm border border-gray-100'
                 : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
-            }`}
+              }`}
           >
             <Icon size={14} className={statusFilter === key ? 'text-brand-500' : 'text-slate-400'} />
             {label}
@@ -250,7 +249,7 @@ export default function AdminVerificationPage() {
           </div>
 
           {/* ── Desktop Table ── */}
-          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 shadow-sm">
+          <div className="hidden sm:block bg-white rounded-xl border border-gray-100 overflow-x-auto thin-scrollbar shadow-sm">
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-gray-100">
                 <tr>

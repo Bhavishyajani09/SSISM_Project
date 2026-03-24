@@ -17,24 +17,24 @@ import api from '../../api';
 import { confirmAction } from '../../utils/notifications';
 
 // Imported Components
-import { 
-  inputCls, 
-  selectCls, 
-  textareaCls 
+import {
+  inputCls,
+  selectCls,
+  textareaCls
 } from './components/FormHelpers';
-import { 
-  StudentInfoSection, 
-  AcademicSection, 
-  PersonalSection, 
-  HealthSection, 
-  FamilySection, 
-  IncomeSection, 
-  HousingSection, 
-  ResourcesSection, 
-  LandSection, 
-  PhotosSection, 
-  DeclarationSection, 
-  RemarksSection 
+import {
+  StudentInfoSection,
+  AcademicSection,
+  PersonalSection,
+  HealthSection,
+  FamilySection,
+  IncomeSection,
+  HousingSection,
+  ResourcesSection,
+  LandSection,
+  PhotosSection,
+  DeclarationSection,
+  RemarksSection
 } from './components/StepSections';
 
 // Derive the logged-in user's display name from localStorage
@@ -118,6 +118,7 @@ const HomeVerificationPage = () => {
 
   const subjectRef = useRef(null);
   const trackRef = useRef(null);
+  const tabsRef = useRef(null);
 
   useEffect(() => {
     if (form.subject12 === 'Other' && subjectRef.current) subjectRef.current.focus();
@@ -140,6 +141,18 @@ const HomeVerificationPage = () => {
       setCurrentStep(prev => prev - 1);
     }
   };
+
+  // Automatic Horizontal Scroll for Tabs
+  useEffect(() => {
+    if (tabsRef.current) {
+      const activeTab = tabsRef.current.querySelector(`#step-tab-${currentStep}`);
+      if (activeTab) {
+        const container = tabsRef.current;
+        const scrollLeft = activeTab.offsetLeft - (container.offsetWidth / 2) + (activeTab.offsetWidth / 2);
+        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+      }
+    }
+  }, [currentStep]);
 
   const canGoNext = () => {
     const isVal = (v) => v !== '' && v !== null && v !== undefined;
@@ -188,7 +201,7 @@ const HomeVerificationPage = () => {
 
   // Form is locked if submitted, teacher_rejected, student_rejected, rejected, or approved
   // Admin can edit in 'submitted' state
-  const isReadOnly = isAdmin 
+  const isReadOnly = isAdmin
     ? (status === 'approved' || status === 'rejected')
     : (status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected' || status === 'rejected' || status === 'approved');
 
@@ -931,21 +944,21 @@ const HomeVerificationPage = () => {
       {/* Main Form Container - Restored comfortable spacing */}
       <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-0 pb-32 transition-all">
         {/* Minimal Sticky Progress Header - Aligned with Cards */}
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-x border-slate-100 rounded-b-xl px-4 sm:px-6 pt-3 pb-2 transition-all">
+        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-x border-slate-100 rounded-b-xl px-4 sm:px-6 pt-5 pb-2 transition-all">
           <div className="flex items-center justify-between gap-4 mb-1">
             <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => navigate(-1)}
-                className="p-1.5 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 transition-all group shrink-0"
+                className="p-1.5 bg-white hover:bg-slate-50 text-slate-500 hover:text-brand-600 rounded-lg border border-slate-200 transition-all group shrink-0 shadow-sm hover:shadow"
                 title="Return to List"
               >
-                <ArrowLeft size={16} strokeWidth={1.5} className="group-hover:-translate-x-0.5 transition-transform" />
+                <ArrowLeft size={18} strokeWidth={2} className="group-hover:-translate-x-0.5 transition-transform" />
               </button>
               <div className="min-w-0">
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-[0.1em] truncate">Verification Panel</p>
+                <p className="text-[10px] font-bold uppercase text-slate-500 tracking-[0.15em] mb-1">Verification Panel</p>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-bold text-slate-900 truncate">{form.studentName || 'Student Registry'}</h2>
-                  
+                  <h2 className="text-lg sm:text-xl font-semibold font-['Outfit'] text-slate-900 tracking-tight leading-none">{form.studentName || 'Student Registry'}</h2>
+
                   {/* Integrated Metadata (Location/Date) */}
                   <div className="hidden md:flex items-center gap-2 ml-2 pl-2 border-l border-slate-100">
                     <div className="flex items-center gap-1 text-slate-400 font-bold text-[9px] whitespace-nowrap bg-slate-50 border border-slate-100 rounded-md px-1.5 py-0.5">
@@ -968,38 +981,35 @@ const HomeVerificationPage = () => {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              <div className="text-right">
-                <p className="text-[9px] sm:text-[10px] font-black text-brand-500 uppercase tracking-widest leading-none">Step {currentStep + 1} of {STEPS.length}</p>
-              </div>
-              <div className="h-6 w-[1px] bg-slate-100 hidden sm:block" />
-              <div className="w-7 h-7 rounded-full border border-brand-500/20 flex items-center justify-center p-0.5">
-                <div className="w-full h-full rounded-full bg-brand-50 flex items-center justify-center text-brand-600 font-bold text-[9px]">
+              <div className="w-7 h-7 rounded-full border border-slate-200 flex items-center justify-center p-0.5 shadow-sm">
+                <div className="w-full h-full rounded-full bg-slate-50 flex items-center justify-center text-slate-600 font-bold text-[9px]">
                   {currentStep + 1}
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="relative h-1 w-full bg-slate-100 mb-0 overflow-hidden shrink-0">
+          <div className="relative h-[2px] w-full bg-slate-100 mt-5 mb-4 overflow-hidden shrink-0">
             <div
-              className="absolute top-0 left-0 h-full bg-brand-500 transition-all duration-500 ease-out"
+              className="absolute top-0 left-0 h-full bg-slate-400 transition-all duration-500 ease-out"
               style={{ width: `${((currentStep + 1) / STEPS.length) * 100}%` }}
             />
           </div>
 
           {/* Step Dots Indicator */}
           {/* Tabs Row */}
-          <div className="mt-2 mb-2">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar shrink-0">
+          <div className="mt-6 mb-2">
+            <div ref={tabsRef} className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar shrink-0">
               {STEPS.map((step, idx) => (
                 <button
                   key={step.id}
+                  id={`step-tab-${idx}`}
                   onClick={() => setCurrentStep(idx)}
                   className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 border ${idx === currentStep
                     ? 'bg-brand-50 border-brand-100 text-brand-600 shadow-sm'
                     : idx < currentStep
-                      ? 'bg-slate-50 border-transparent text-slate-400'
-                      : 'bg-white border-transparent text-slate-300 hover:text-slate-500 hover:bg-slate-50'
+                      ? 'bg-slate-50 border-transparent text-slate-600'
+                      : 'bg-white border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
                     }`}
                 >
                   <step.icon size={11} strokeWidth={1.5} />
@@ -1008,16 +1018,15 @@ const HomeVerificationPage = () => {
                   </span>
                 </button>
               ))}
-              
+
               {/* Status Badge in Tab Row for mobile visibility */}
               <div className="ml-auto shrink-0 md:hidden">
                 {status && (
-                  <div className={`px-2 py-0.5 rounded-md border text-[8px] font-black uppercase tracking-wider flex items-center gap-1 ${
-                    status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                  <div className={`px-2 py-0.5 rounded-md border text-[8px] font-black uppercase tracking-wider flex items-center gap-1 ${status === 'approved' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
                     status === 'submitted' ? 'bg-blue-50 border-blue-100 text-blue-700' :
-                    status.includes('rejected') ? 'bg-red-50 border-red-100 text-red-700' :
-                    'bg-slate-50 border-slate-100 text-slate-500'
-                  }`}>
+                      status.includes('rejected') ? 'bg-red-50 border-red-100 text-red-700' :
+                        'bg-slate-50 border-slate-100 text-slate-500'
+                    }`}>
                     {status.replace('_', ' ')}
                   </div>
                 )}
@@ -1027,7 +1036,7 @@ const HomeVerificationPage = () => {
         </div>
 
         {/* ── Banners Area ── */}
-        <div className="pt-2 px-4 sm:px-6"> 
+        <div className="pt-2 px-4 sm:px-6">
           {/* ── Hold Reason Banner ── */}
           {status === 'hold' && form.holdReason && (
             <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start gap-3 shadow-sm animate-fade-in mb-3">
@@ -1221,18 +1230,18 @@ const HomeVerificationPage = () => {
               ) : (
                 <div className="flex items-center gap-1.5">
                   {isAdmin && (status === 'submitted' || status === 'teacher_rejected' || status === 'student_rejected') ? (
-                      <button
-                        onClick={() => {
-                          const error = validateHomeVerification();
-                          if (error) { toast.error(error); return; }
-                          const label = status === 'submitted' ? "Save changes and keep as Submitted?" : "Resubmit this record to 'Submitted' status?";
-                          confirmAction(label, () => handleSubmit('submitted'));
-                        }}
-                        disabled={isApiLoading}
-                        className="h-10 px-6 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 active:scale-95 transition-all text-sm tracking-tight flex items-center justify-center shadow-sm"
-                      >
-                        {isApiLoading ? <Loader size="xs" color="white" /> : (status === 'submitted' ? 'Update Record' : 'Shift to Submitted')}
-                      </button>
+                    <button
+                      onClick={() => {
+                        const error = validateHomeVerification();
+                        if (error) { toast.error(error); return; }
+                        const label = status === 'submitted' ? "Save changes and keep as Submitted?" : "Resubmit this record to 'Submitted' status?";
+                        confirmAction(label, () => handleSubmit('submitted'));
+                      }}
+                      disabled={isApiLoading}
+                      className="h-10 px-6 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 active:scale-95 transition-all text-sm tracking-tight flex items-center justify-center shadow-sm"
+                    >
+                      {isApiLoading ? <Loader size="xs" color="white" /> : (status === 'submitted' ? 'Update Record' : 'Shift to Submitted')}
+                    </button>
                   ) : (
                     <div className="flex items-center gap-1.5 min-w-0">
                       <button
