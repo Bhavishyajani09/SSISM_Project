@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  User, BookOpen, Heart, Users, FileText, Home, Tractor, Camera, AlertCircle, Trash2, Plus, X, Lock, Trophy
+  User, BookOpen, Heart, Users, FileText, Home, Tractor, Camera, AlertCircle, Trash2, Plus, X, Lock, Trophy, MapPin
 } from 'lucide-react';
 import { SectionCard, Field, CheckItem, RadioItem, PhotoUpload, SignatureField } from './FormHelpers';
 

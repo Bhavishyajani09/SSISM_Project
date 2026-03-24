@@ -1231,13 +1231,23 @@ const HomeVerificationPage = () => {
           )}
 
           {currentStep === 11 && (
-            <RemarksSection
-              form={form}
-              handleChange={handleChange}
-              isReadOnly={isReadOnly}
-              inputCls={inputCls}
-              textareaCls={textareaCls}
-            />
+            <>
+              <RemarksSection
+                form={form}
+                handleChange={handleChange}
+                isReadOnly={isReadOnly}
+                inputCls={inputCls}
+                textareaCls={textareaCls}
+              />
+              
+              {/* Location Pill "Outside the box" - Final Confirmation */}
+              {gpsCoords && (
+                <div className="flex items-center gap-1.5 bg-brand-50 border border-brand-100/50 rounded-full px-3 py-1.5 text-[10px] font-bold text-brand-600 w-fit mt-3 ml-0.5 shadow-sm transition-all animate-in fade-in slide-in-from-left-1 duration-500">
+                  <MapPin size={10} strokeWidth={2.5} className="text-brand-400" />
+                  <span className="truncate max-w-[280px] uppercase tracking-wide">{locationAddress || 'Location Locked'}</span>
+                </div>
+              )}
+            </>
           )}
 
         </div>{/* end form sections area */}
