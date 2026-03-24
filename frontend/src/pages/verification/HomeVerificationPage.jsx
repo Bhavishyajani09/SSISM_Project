@@ -116,6 +116,7 @@ const HomeVerificationPage = () => {
   const userRole = storedUser.role || 'teacher';
   const isAdmin = userRole === 'admin';
 
+  const firstLoadDone = useRef(false);
   const subjectRef = useRef(null);
   const trackRef = useRef(null);
   const tabsRef = useRef(null);
@@ -211,11 +212,22 @@ const HomeVerificationPage = () => {
       const data = await res.json();
       if (data.address) {
         const a = data.address;
-        const main = a.neighbourhood || a.suburb || a.city_district || a.village || a.hamlet || a.town || a.city || '';
-        const district = a.district || a.county || '';
+        // Aggressive mapping for Indian addresses
+        const village = a.village || a.hamlet || a.suburb || a.locality || a.neighbourhood || a.subdistrict || a.town || a.city || '';
+        const district = a.state_district || a.district || a.county || a.city || '';
         const state = a.state || '';
-        const parts = [main, district, state].filter(Boolean);
-        setLocationAddress(parts.join(', '));
+
+        const districtDisplay = district ? `Dist: ${district}` : '';
+        const formatted = [village, districtDisplay, state].filter(Boolean).join(', ');
+        setLocationAddress(formatted);
+
+        // Auto-fill form fields
+        setForm(prev => ({
+          ...prev,
+          village: prev.village || village,
+          district: prev.district || district,
+          state: prev.state || state
+        }));
       }
     } catch (err) {
       console.error("Reverse geocoding error:", err);
@@ -223,27 +235,40 @@ const HomeVerificationPage = () => {
   }, []);
 
   const captureGPS = useCallback(() => {
-    if (gpsCoords && verificationId) {
-      toast.error("Location is already locked for this record.");
+    if (gpsCoords && (verificationId || id)) {
+      toast.error("Location is already locked for this record.", { id: 'gps-lock-error' });
       return;
     }
+
     if (navigator.geolocation) {
       setIsLocating(true);
+      const toastId = toast.loading("Capturing precise location...", { position: 'top-center' });
+
       navigator.geolocation.getCurrentPosition(
         pos => {
           const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setGpsCoords(coords);
           handleReverseGeocode(coords.lat, coords.lng);
           setIsLocating(false);
+          toast.success("Location locked successfully!", { id: toastId });
         },
         err => {
           console.error("GPS Error:", err);
           setIsLocating(false);
-          setApiMsg("Location permission denied. Please enable GPS.");
-        }
+          let errorMsg = "Unable to capture location.";
+          if (err.code === 1) errorMsg = "Location permission denied. Please enable GPS.";
+          else if (err.code === 2) errorMsg = "Location information is unavailable.";
+          else if (err.code === 3) errorMsg = "Location capture timed out.";
+
+          toast.error(errorMsg, { id: toastId });
+          setApiMsg(errorMsg);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
+    } else {
+      toast.error("Geolocation is not supported by this browser.");
     }
-  }, [gpsCoords, verificationId, handleReverseGeocode]);
+  }, [gpsCoords, verificationId, id, handleReverseGeocode]);
 
   const fetchExistingVerification = useCallback(async (sid) => {
     if (!sid || id) return;
@@ -364,11 +389,12 @@ const HomeVerificationPage = () => {
             if (fm) setFamilyMembers(fm);
             setStatus(data.verification.status);
             if (data.verification.gpsLat && data.verification.gpsLng) {
-              setGpsCoords({ lat: data.verification.gpsLat, lng: data.verification.gpsLng });
+              const coords = { lat: data.verification.gpsLat, lng: data.verification.gpsLng };
+              setGpsCoords(coords);
               if (data.verification.gpsAddress) {
                 setLocationAddress(data.verification.gpsAddress);
               } else {
-                handleReverseGeocode(data.verification.gpsLat, data.verification.gpsLng);
+                handleReverseGeocode(coords.lat, coords.lng);
               }
             }
           }
@@ -384,10 +410,14 @@ const HomeVerificationPage = () => {
 
   // Auto-capture GPS on mount if not already set (replaces older logic to capture only on new)
   useEffect(() => {
-    if (!gpsCoords) {
-      captureGPS();
+    // Attempt auto-capture once initial load is complete
+    if (!isApiLoading && !firstLoadDone.current) {
+      firstLoadDone.current = true;
+      if (!gpsCoords && !isReadOnly) {
+        captureGPS();
+      }
     }
-  }, []);
+  }, [isApiLoading, gpsCoords, isReadOnly, captureGPS]);
 
   // Handlers wrapped in useCallback for performance
   const handleChange = useCallback((e) => {
@@ -943,8 +973,8 @@ const HomeVerificationPage = () => {
 
       {/* Main Form Container - Restored comfortable spacing */}
       <div className="w-full max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 pt-0 pb-32 transition-all">
-        {/* Minimal Sticky Progress Header - Aligned with Cards */}
-        <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-x border-slate-100 rounded-b-xl px-4 sm:px-6 pt-5 pb-2 transition-all">
+        {/* Minimal Sticky Progress Header - Adjusted for "Go Behind" Scroll Effect */}
+        <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-x border-slate-100 rounded-b-xl px-4 sm:px-6 pt-5 pb-2 transition-all">
           <div className="flex items-center justify-between gap-4 mb-1">
             <div className="flex items-center gap-3 min-w-0">
               <button
@@ -965,16 +995,23 @@ const HomeVerificationPage = () => {
                       <Clock size={10} strokeWidth={1.5} />
                       {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
-                    {currentStep === 0 && (
+
+                    {/* GPS Display - Persistent after capture, button only on step 0 if not captured */}
+                    {gpsCoords ? (
+                      <div className="flex items-center gap-1.5 bg-brand-50 border border-brand-100/50 rounded-md px-2 py-0.5 text-[9px] font-bold text-brand-600 shadow-sm transition-all max-w-[200px] hover:max-w-[400px] cursor-default">
+                        <MapPin size={10} strokeWidth={2} className="text-brand-400 shrink-0" />
+                        <span className="truncate whitespace-nowrap">{locationAddress || 'Location Locked'}</span>
+                      </div>
+                    ) : (currentStep === 0 && (
                       <button
                         onClick={captureGPS}
-                        disabled={isReadOnly || isLocating || (gpsCoords && (verificationId || id))}
+                        disabled={isReadOnly || isLocating}
                         className="flex items-center gap-1.5 bg-brand-50 border border-brand-100/50 rounded-md px-1.5 py-0.5 text-[9px] font-bold text-brand-600 hover:bg-brand-100 transition-all shadow-sm"
                       >
                         <MapPin size={10} strokeWidth={1.5} className={isLocating ? 'animate-pulse text-brand-500' : 'text-brand-400'} />
-                        <span>{isLocating ? 'Capturing...' : (gpsCoords ? `Location Locked` : 'Lock GPS')}</span>
+                        <span>{isLocating ? 'Capturing...' : 'Lock GPS'}</span>
                       </button>
-                    )}
+                    ))}
                   </div>
                 </div>
               </div>
