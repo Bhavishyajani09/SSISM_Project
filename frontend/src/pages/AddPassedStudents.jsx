@@ -45,11 +45,19 @@ const FIELDS = [
 
 const EXCEL_COL_MAP = {
   'serial number': 'serialNumber',
+  's.no': 'serialNumber',
+  's.no.': 'serialNumber',
+  'sn': 'serialNumber',
   'student name': 'studentName',
+  'name': 'studentName',
   'father name': 'fatherName',
   'bus track': 'busTrack',
+  'track': 'busTrack',
   'mobile number': 'mobileNumber',
+  'mobile': 'mobileNumber',
+  'contact': 'mobileNumber',
   'whatsapp number': 'whatsappNumber',
+  'whatsapp': 'whatsappNumber',
   'subject in 12th': 'subjectIn12th',
   'subject (12th)': 'subjectIn12th',
   '12 subject': 'subjectIn12th',
@@ -77,12 +85,16 @@ const EXCEL_COL_MAP = {
   '11th %': 'marks11',
   'village / town': 'villageTown',
   'village/town': 'villageTown',
+  'village': 'villageTown',
   'district': 'district',
   'roll number': 'rollNumber',
+  'roll no': 'rollNumber',
+  'roll no.': 'rollNumber',
   'scholarship exam marks (out of 50)': 'scholarshipExamMarks',
   'scholarship exam marks': 'scholarshipExamMarks',
   'exam mark': 'scholarshipExamMarks',
   'exam marks': 'scholarshipExamMarks',
+  'marks': 'scholarshipExamMarks',
 };
 
 export default function AddPassedStudents() {

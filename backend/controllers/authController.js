@@ -20,11 +20,22 @@ exports.forgotPassword = async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
+        // --- Rate Limiting for OTP ---
+        const cooldown = 2 * 60 * 1000; // 2 minutes
+        if (user.lastOTPGenerated && (Date.now() - user.lastOTPGenerated.getTime() < cooldown)) {
+            const remaining = Math.ceil((cooldown - (Date.now() - user.lastOTPGenerated.getTime())) / 1000);
+            return res.status(429).json({ 
+                error: `Please wait ${remaining} seconds before requesting another OTP.` 
+            });
+        }
+
         const otp = generateOTP();
         const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
         user.resetPasswordOTP = otp;
         user.resetPasswordExpires = otpExpires;
+        user.lastOTPGenerated = new Date();
+        
         console.log('Saving user with OTP...');
         await user.save();
         console.log('User saved successfully');
@@ -138,10 +149,49 @@ exports.login = async (req, res) => {
         const user = await User.findOne({ email: email?.toLowerCase().trim() });
         if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-        const isMatch = await bcrypt.compare(String(password), user.password);
-        if (!isMatch) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+        // --- Brute Force Protection ---
+        if (user.lockUntil && user.lockUntil > Date.now()) {
+            const remaining = Math.ceil((user.lockUntil - Date.now()) / (60 * 1000));
+            return res.status(403).json({ 
+                error: `Account temporarily locked due to too many failed attempts. Try again in ${remaining} minutes.` 
+            });
         }
+
+        const isMatch = await bcrypt.compare(String(password), user.password);
+        console.log(`[Auth Debug] User: ${email}, Match: ${isMatch}, Prev Attempts: ${user.loginAttempts}`);
+        
+        if (!isMatch) {
+            // Increment failed attempts in DB directly
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                { $inc: { loginAttempts: 1 } },
+                { new: true }
+            );
+            
+            console.log(`[Auth Debug] New Attempts count: ${updatedUser.loginAttempts}`);
+
+            if (updatedUser.loginAttempts >= 5) {
+                const lockTime = new Date(Date.now() + 10 * 60 * 1000);
+                await User.updateOne(
+                    { _id: user._id },
+                    { $set: { lockUntil: lockTime, loginAttempts: 0 } }
+                );
+                console.log(`[Auth Debug] ACCOUNT LOCKED until: ${lockTime}`);
+                return res.status(403).json({ 
+                    error: 'Account locked for 10 minutes due to 5 failed attempts.' 
+                });
+            }
+            
+            const remaining = 5 - updatedUser.loginAttempts;
+            return res.status(401).json({ 
+                error: `Invalid email or password. ${remaining} attempts remaining.` 
+            });
+        }
+
+        // Reset protection on successful login
+        user.loginAttempts = 0;
+        user.lockUntil = undefined;
+        await user.save();
 
         // Generate JWT Token
         const token = jwt.sign(

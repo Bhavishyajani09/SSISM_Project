@@ -29,11 +29,19 @@ const EXPECTED_COLUMNS = [
 // Map Excel column names to DB field names
 const COLUMN_MAP = {
     'serial number': 'serialNumber',
+    's.no': 'serialNumber',
+    's.no.': 'serialNumber',
+    'sn': 'serialNumber',
     'student name': 'studentName',
+    'name': 'studentName',
     'father name': 'fatherName',
     'bus track': 'busTrack',
+    'track': 'busTrack',
     'mobile number': 'mobileNumber',
+    'mobile': 'mobileNumber',
+    'contact': 'mobileNumber',
     'whatsapp number': 'whatsappNumber',
+    'whatsapp': 'whatsappNumber',
     'subject in 12th': 'subjectIn12th',
     'subject (12th)': 'subjectIn12th',
     '12 subject': 'subjectIn12th',
@@ -61,12 +69,16 @@ const COLUMN_MAP = {
     '11th %': 'marks11',
     'village / town': 'villageTown',
     'village/town': 'villageTown',
+    'village': 'villageTown',
     'district': 'district',
     'roll number': 'rollNumber',
+    'roll no': 'rollNumber',
+    'roll no.': 'rollNumber',
     'scholarship exam marks (out of 50)': 'scholarshipExamMarks',
     'scholarship exam marks': 'scholarshipExamMarks',
     'exam mark': 'scholarshipExamMarks',
     'exam marks': 'scholarshipExamMarks',
+    'marks': 'scholarshipExamMarks',
 };
 
 const { auth, adminOnly } = require('../middleware/auth');
@@ -347,7 +359,22 @@ router.post('/upload-excel', auth, upload.single('file'), async (req, res) => {
                 const normalizedKey = key.trim().toLowerCase();
                 const dbField = COLUMN_MAP[normalizedKey];
                 if (dbField) {
-                    student[dbField] = typeof value === 'string' ? value.trim() : value;
+                    let val = typeof value === 'string' ? value.trim() : value;
+                    
+                    // Sanitize phone numbers: remove non-digits and keep exactly 10
+                    if (dbField === 'mobileNumber' || dbField === 'whatsappNumber') {
+                        val = String(val).replace(/\D/g, ''); // all non-digits
+                        if (val.length > 10) val = val.slice(0, 10);
+                    }
+                    
+                    // Sanitize numeric fields: ensure they are actual Numbers
+                    const numericFields = ['classFees12th', 'marks10', 'marks11', 'scholarshipExamMarks', 'serialNumber'];
+                    if (numericFields.includes(dbField)) {
+                        val = val === '' ? 0 : Number(val);
+                        if (isNaN(val)) val = 0;
+                    }
+
+                    student[dbField] = val;
                 }
             });
             return student;
@@ -407,7 +434,7 @@ router.post('/upload-excel', auth, upload.single('file'), async (req, res) => {
             });
         }
 
-        const savedStudents = await PassedStudent.insertMany(newStudents);
+        const savedStudents = await PassedStudent.insertMany(newStudents, { ordered: false });
         const skippedCount = studentsWithSerial.length - newStudents.length;
 
         res.status(201).json({
@@ -419,7 +446,29 @@ router.post('/upload-excel', auth, upload.single('file'), async (req, res) => {
         });
     } catch (error) {
         console.error('Error uploading Excel:', error);
-        res.status(500).json({ success: false, message: 'Server error while processing the Excel file.' });
+        
+        // Handle Mongoose Validation Errors
+        if (error.name === 'ValidationError') {
+            const messages = Object.values(error.errors).map(err => err.message);
+            return res.status(400).json({ 
+                success: false, 
+                message: `Validation failed: ${messages.join(', ')}`,
+                details: error.message 
+            });
+        }
+
+        // Handle BulkWriteError (from insertMany with ordered: false)
+        if (error.name === 'BulkWriteError' || error.code === 11000) {
+            const insertedCount = error.result?.nInserted || 0;
+            return res.status(201).json({
+                success: true,
+                message: `${insertedCount} student(s) added. Some records were skipped due to duplicate Roll Numbers or validation issues.`,
+                count: insertedCount,
+                partial: true
+            });
+        }
+
+        res.status(500).json({ success: false, message: 'Server error while processing the Excel file. Please ensure all data (especially mobile numbers and marks) is in the correct format.' });
     }
 });
 

@@ -98,7 +98,7 @@ export default function Navbar() {
         </div>
         <button 
           onClick={() => setIsMobileOpen(true)} 
-          className="p-1.5 text-slate-400 hover:text-brand-600 focus:outline-none rounded-lg hover:bg-slate-50 transition-colors"
+          className="p-2 text-slate-400 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 border border-transparent hover:border-brand-100 rounded-xl transition-all duration-200 active:scale-90"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
@@ -121,7 +121,7 @@ export default function Navbar() {
         }`}
       >
         {/* Sidebar Header */}
-        <div className="h-[72px] shrink-0 flex items-center px-6 border-b border-gray-50 bg-white">
+        <div className="h-[72px] shrink-0 flex items-center px-6 border-b border-gray-50 bg-white relative">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-brand-500 flex items-center justify-center overflow-hidden border border-brand-400 shadow-sm">
               <img src={ssismLogo} alt="SSISM" className="w-full h-full object-cover" />
@@ -134,9 +134,10 @@ export default function Navbar() {
           {/* Mobile Close Button */}
           <button 
             onClick={() => setIsMobileOpen(false)} 
-            className="absolute right-4 top-1/2 -translate-y-1/2 lg:hidden p-1.5 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg transition-colors border border-gray-100"
+            className="lg:hidden absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-brand-600 bg-slate-50 hover:bg-brand-50 rounded-xl transition-all duration-200 border border-gray-100 group shadow-sm active:scale-95"
+            aria-label="Close menu"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <svg className="w-5 h-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>

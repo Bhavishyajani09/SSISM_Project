@@ -99,7 +99,7 @@ const HomeVerificationPage = () => {
   ]);
   const [status, setStatus] = useState(null);
   const [verificationId, setVerificationId] = useState(null);
-  const [isApiLoading, setIsApiLoading] = useState(false);
+  const [isApiLoading, setIsApiLoading] = useState(!!(id || location.state?.studentData));
   const [apiMsg, setApiMsg] = useState('');
   const [gpsCoords, setGpsCoords] = useState(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -272,6 +272,7 @@ const HomeVerificationPage = () => {
 
   const fetchExistingVerification = useCallback(async (sid) => {
     if (!sid || id) return;
+    setIsApiLoading(true);
     try {
       const res = await api.get(`/verifications/check/${sid}`);
       if (res.data.verification) {
@@ -345,6 +346,8 @@ const HomeVerificationPage = () => {
     } catch (err) {
       console.error('Fetch existing verification error:', err);
       setApiMsg('Error checking existing data: ' + err.message);
+    } finally {
+      setIsApiLoading(false);
     }
   }, [id, navigate, handleReverseGeocode]);
 
@@ -352,6 +355,7 @@ const HomeVerificationPage = () => {
   useEffect(() => {
     if (id) {
       setVerificationId(id);
+      setIsApiLoading(true);
       api.get(`/verifications/${id}`)
         .then(res => {
           const data = res.data;
@@ -399,7 +403,8 @@ const HomeVerificationPage = () => {
             }
           }
         })
-        .catch(err => setApiMsg('Error loading record: ' + err.message));
+        .catch(err => setApiMsg('Error loading record: ' + err.message))
+        .finally(() => setIsApiLoading(false));
     } else if (location.state?.studentData) {
       // Coming from List or Dashboard
       const s = location.state.studentData;
@@ -408,16 +413,19 @@ const HomeVerificationPage = () => {
     }
   }, [id, location.state]);
 
-  // Auto-capture GPS on mount if not already set (replaces older logic to capture only on new)
+  // Auto-capture GPS ONLY on very first load of a COMPLETELY NEW form.
+  // If it's a draft, submitted, or admin view, we DO NOT auto-capture.
   useEffect(() => {
-    // Attempt auto-capture once initial load is complete
+    // Wait until initial API check/load is completely finished
     if (!isApiLoading && !firstLoadDone.current) {
       firstLoadDone.current = true;
-      if (!gpsCoords && !isReadOnly) {
+
+      // Only auto-capture for Teachers on a brand new (null status) record
+      if (!isAdmin && status === null && !gpsCoords && !isReadOnly) {
         captureGPS();
       }
     }
-  }, [isApiLoading, gpsCoords, isReadOnly, captureGPS]);
+  }, [isApiLoading, status, gpsCoords, isReadOnly, isAdmin, captureGPS]);
 
   // Handlers wrapped in useCallback for performance
   const handleChange = useCallback((e) => {
